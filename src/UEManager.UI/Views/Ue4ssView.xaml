@@ -1,0 +1,124 @@
+<UserControl x:Class="UEManager.UI.Views.Ue4ssView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="clr-namespace:UEManager.UI"
+             xmlns:vm="clr-namespace:UEManager.UI.ViewModels"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:MainViewModel}">
+    <UserControl.Resources>
+        <Style x:Key="FieldLabel" TargetType="TextBlock" BasedOn="{StaticResource Text.Caption}">
+            <Setter Property="Width" Value="150" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+        <Style x:Key="Field" TargetType="DockPanel">
+            <Setter Property="Margin" Value="0,0,0,10" />
+        </Style>
+    </UserControl.Resources>
+
+    <StackPanel>
+        <StackPanel Margin="0,6,0,0">
+            <TextBlock Style="{StaticResource Text.Overline}" Text="{ui:Tracked 'Script loader'}" />
+            <TextBlock Margin="0,10,0,0" Style="{StaticResource Text.Display}" Text="UE4SS" />
+            <Rectangle Width="200" Height="2" Margin="0,14,0,14" HorizontalAlignment="Left" Fill="{StaticResource Brush.Stroke}" />
+            <TextBlock MaxWidth="640" HorizontalAlignment="Left" Style="{StaticResource Text.Body}"
+                       Text="UE4SS lets the game load Lua, C++ (DLL) and Blueprint mods. Packaged mods (.pak, .utoc, .ucas) work without it." />
+        </StackPanel>
+
+        <!-- Runtime -->
+        <Border Margin="0,28,0,0" Style="{StaticResource Card}">
+            <StackPanel>
+                <TextBlock Style="{StaticResource Text.Title}" Text="Runtime" />
+                <TextBlock Margin="0,6,0,18" Style="{StaticResource Text.Body}"
+                           Text="Install and update keep your UE4SS settings, mods.txt and the files of your mods. Close the game before you change UE4SS." />
+                <DockPanel Style="{StaticResource Field}">
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Tracked 'Status'}" />
+                    <TextBlock Style="{StaticResource Text.Small}" Foreground="{StaticResource Brush.Text}" Text="{Binding Ue4ssText}" />
+                </DockPanel>
+                <DockPanel Style="{StaticResource Field}">
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Tracked 'UE4SS folder'}" />
+                    <TextBlock Style="{StaticResource Text.Path}" Text="{Binding Ue4ssFolderPath}" />
+                </DockPanel>
+                <DockPanel Style="{StaticResource Field}">
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Tracked 'Mods folder'}" />
+                    <TextBlock Style="{StaticResource Text.Path}" Text="{Binding Ue4ssModsPath}" />
+                </DockPanel>
+                <DockPanel Style="{StaticResource Field}">
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Tracked 'Your mods'}" />
+                    <TextBlock Style="{StaticResource Text.Small}" Foreground="{StaticResource Brush.Text}" Text="{Binding Ue4ssModsText}" />
+                </DockPanel>
+                <WrapPanel Margin="0,10,0,0">
+                    <Button Margin="0,0,8,8" Style="{StaticResource Button.Primary}" Content="Install UE4SS…" ui:Icon.Glyph="&#xE896;"
+                            Command="{Binding ShowUe4ssGuideCommand}"
+                            Visibility="{Binding IsUe4ssMissing, Converter={StaticResource Visible}}" />
+                    <Button Margin="0,0,8,8" Style="{StaticResource Button.Primary}" Content="{Binding Ue4ssUpdateText}"
+                            ui:Icon.Glyph="&#xE896;" Command="{Binding UpdateUe4ssCommand}"
+                            Visibility="{Binding IsUe4ssUpdateAvailable, Converter={StaticResource Visible}}" />
+                    <Button Margin="0,0,8,8" Content="Open UE4SS folder" ui:Icon.Glyph="&#xE838;" Command="{Binding OpenUe4ssFolderCommand}"
+                            Visibility="{Binding IsUe4ssInstalled, Converter={StaticResource Visible}}" />
+                    <Button Margin="0,0,8,8" Content="Remove UE4SS…" ui:Icon.Glyph="&#xE74D;" Command="{Binding RemoveUe4ssCommand}"
+                            Visibility="{Binding IsUe4ssInstalled, Converter={StaticResource Visible}}" />
+                </WrapPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Log -->
+        <Border Margin="0,20,0,0" Style="{StaticResource Card}" DataContext="{Binding Ue4ssLogPanel}">
+            <StackPanel>
+                <DockPanel>
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                        <Button Content="Refresh" ui:Icon.Glyph="&#xE72C;" Command="{Binding RefreshCommand}" />
+                        <Button Margin="8,0,0,0" Content="Copy" ui:Icon.Glyph="&#xE8C8;" Command="{Binding CopyCommand}"
+                                IsEnabled="{Binding HasLog}" ToolTip="Copy the log, to paste it into Discord" />
+                        <Button Margin="8,0,0,0" Content="Open log file" ui:Icon.Glyph="&#xE8A5;" Command="{Binding OpenLogCommand}"
+                                IsEnabled="{Binding HasLog}" />
+                        <Button Margin="8,0,0,0" Content="Report a problem…" ui:Icon.Glyph="&#xE897;"
+                                Command="{Binding DataContext.ShowHelpDialogCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
+                    </StackPanel>
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource Text.Title}" Text="Log" />
+                        <TextBlock Margin="0,6,0,0" Style="{StaticResource Text.Body}"
+                                   Text="What UE4SS wrote during the last game start. Red lines speak of an error, orange lines of a warning." />
+                    </StackPanel>
+                </DockPanel>
+                <StackPanel Margin="0,16,0,0" Orientation="Horizontal">
+                    <Ellipse Width="7" Height="7" VerticalAlignment="Center" Fill="{Binding SummaryTone, Converter={StaticResource Tone}}" />
+                    <TextBlock Margin="9,0,0,0" VerticalAlignment="Center" Style="{StaticResource Text.Small}"
+                               Foreground="{StaticResource Brush.Text}" Text="{Binding SummaryText}" />
+                </StackPanel>
+                <TextBlock Margin="16,6,0,0" Style="{StaticResource Text.Small}" Foreground="{StaticResource Brush.Danger}"
+                           TextWrapping="Wrap" Text="{Binding ErrorModsText}"
+                           Visibility="{Binding HasErrorMods, Converter={StaticResource Visible}}" />
+                <CheckBox Margin="0,14,0,10" Content="Only errors and warnings" IsChecked="{Binding OnlyProblems}"
+                          Visibility="{Binding HasLog, Converter={StaticResource Visible}}" />
+                <ItemsControl x:Name="LogLines" Height="380" ItemsSource="{Binding ShownLines}" Focusable="False"
+                              VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.ScrollUnit="Pixel"
+                              Visibility="{Binding HasLog, Converter={StaticResource Visible}}">
+                    <ItemsControl.Template>
+                        <ControlTemplate TargetType="ItemsControl">
+                            <Border Background="{StaticResource Brush.Field}" BorderBrush="{StaticResource Brush.Line}"
+                                    BorderThickness="1" CornerRadius="2">
+                                <ScrollViewer x:Name="LogScroll" Padding="12,8" CanContentScroll="True" Focusable="False"
+                                              HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+                                    <ItemsPresenter />
+                                </ScrollViewer>
+                            </Border>
+                        </ControlTemplate>
+                    </ItemsControl.Template>
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <VirtualizingStackPanel />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate DataType="{x:Type vm:Ue4ssLogLineItem}">
+                            <TextBlock FontFamily="Cascadia Mono, Consolas" FontSize="12" LineHeight="18"
+                                       Foreground="{Binding Tone, Converter={StaticResource Tone}}" Text="{Binding Text}" />
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </Border>
+    </StackPanel>
+</UserControl>

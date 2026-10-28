@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openmods.nexus/openmods.schema.json",
+  "openmods": 1,
+  "name": "UE MM",
+  "summary": "A mod manager for Unreal Engine games: installs pak, Blueprint and UE4SS mods safely, installs UE4SS itself, and lists the game's openmods mods.",
+  "games": ["phantom-blade-zero"],
+  "tags": ["tools"],
+  "cover": "docs/cover.png",
+  "requires": ["Windows 10 or 11, 64-bit", ".NET 8 Desktop Runtime (x64)"],
+  "links": {
+    "discord": "https://discord.gg/8vtph8SCFe",
+    "support": "https://github.com/KintaroModding/uemodmanager/issues"
+  }
+}

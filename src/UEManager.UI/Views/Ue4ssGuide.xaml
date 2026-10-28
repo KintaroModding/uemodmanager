@@ -1,0 +1,110 @@
+<UserControl x:Class="UEManager.UI.Views.Ue4ssGuide"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="clr-namespace:UEManager.UI"
+             xmlns:vm="clr-namespace:UEManager.UI.ViewModels"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:Ue4ssGuideViewModel}">
+    <UserControl.Resources>
+        <!-- A numbered step: red ring with the number, then its text and action. -->
+        <Style x:Key="StepNumber" TargetType="Border">
+            <Setter Property="Width" Value="26" />
+            <Setter Property="Height" Value="26" />
+            <Setter Property="CornerRadius" Value="13" />
+            <Setter Property="BorderBrush" Value="{StaticResource Brush.Accent}" />
+            <Setter Property="BorderThickness" Value="1.5" />
+            <Setter Property="VerticalAlignment" Value="Top" />
+            <Setter Property="HorizontalAlignment" Value="Left" />
+        </Style>
+        <Style x:Key="StepNumberText" TargetType="TextBlock">
+            <Setter Property="FontFamily" Value="{StaticResource Font.Label}" />
+            <Setter Property="FontSize" Value="12" />
+            <Setter Property="FontWeight" Value="SemiBold" />
+            <Setter Property="Foreground" Value="{StaticResource Brush.Accent}" />
+            <Setter Property="HorizontalAlignment" Value="Center" />
+            <Setter Property="VerticalAlignment" Value="Center" />
+        </Style>
+    </UserControl.Resources>
+
+    <Border Style="{StaticResource Dialog}" Width="600">
+        <StackPanel>
+            <TextBlock Style="{StaticResource Text.Overline}" Text="{ui:Tracked 'UE4SS'}" />
+            <TextBlock Margin="0,8,0,0" Style="{StaticResource Text.Title}" Text="Install UE4SS" />
+            <TextBlock Margin="0,8,0,0" Style="{StaticResource Text.Body}"
+                       Text="UE4SS loads Lua, DLL and Blueprint mods. Packaged mods (.pak, .utoc, .ucas) work without it." />
+
+            <Border Margin="0,16,0,0" Padding="14,10" CornerRadius="2" BorderThickness="1"
+                    Background="{StaticResource Brush.AccentWash}" BorderBrush="{StaticResource Brush.AccentDeep}"
+                    Visibility="{Binding Note, Converter={StaticResource VisibleIfSet}}">
+                <TextBlock TextWrapping="Wrap" LineHeight="19" Text="{Binding Note}" />
+            </Border>
+
+            <!-- One click, when the game profile names the exact release file. -->
+            <Border Margin="0,20,0,0" Padding="18,16" CornerRadius="2" BorderThickness="1"
+                    Background="{StaticResource Brush.Field}" BorderBrush="{StaticResource Brush.LineStrong}"
+                    Visibility="{Binding CanDownload, Converter={StaticResource Visible}}">
+                <DockPanel>
+                    <Button DockPanel.Dock="Right" Margin="16,0,0,0" VerticalAlignment="Center" Style="{StaticResource Button.Primary}"
+                            Content="Download and install" ui:Icon.Glyph="&#xE896;" Command="{Binding DownloadAndInstallCommand}" />
+                    <StackPanel>
+                        <TextBlock FontWeight="SemiBold" Text="Automatic" />
+                        <TextBlock Margin="0,4,0,0" Style="{StaticResource Text.Small}" TextWrapping="Wrap" TextTrimming="None"
+                                   Text="{Binding DownloadAndInstallText}" />
+                    </StackPanel>
+                </DockPanel>
+            </Border>
+            <TextBlock Margin="0,18,0,0" Style="{StaticResource Text.Caption}" Text="{ui:Tracked 'Or by hand'}"
+                       Visibility="{Binding CanDownload, Converter={StaticResource Visible}}" />
+
+            <!-- Step 1 -->
+            <Grid Margin="0,18,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="42" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border Style="{StaticResource StepNumber}">
+                    <TextBlock Style="{StaticResource StepNumberText}" Text="1" />
+                </Border>
+                <StackPanel Grid.Column="1">
+                    <TextBlock Margin="0,3,0,0" TextWrapping="Wrap" LineHeight="19" Text="{Binding DownloadText}" />
+                    <TextBlock Margin="0,4,0,10" Style="{StaticResource Text.Small}" Text="{Binding DownloadUrl}" />
+                    <Button HorizontalAlignment="Left" Content="Open download page" ui:Icon.Glyph="&#xE8A7;"
+                            Command="{Binding OpenDownloadCommand}" />
+                </StackPanel>
+            </Grid>
+
+            <!-- Step 2 -->
+            <Grid Margin="0,20,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="42" />
+                    <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Border Style="{StaticResource StepNumber}">
+                    <TextBlock Style="{StaticResource StepNumberText}" Text="2" />
+                </Border>
+                <StackPanel Grid.Column="1">
+                    <TextBlock Margin="0,3,0,0" TextWrapping="Wrap" LineHeight="19"
+                               Text="Pick the downloaded zip. The manager unpacks it into the game's Win64 folder and keeps any UE4SS settings you already have." />
+                    <TextBlock Margin="0,4,0,10" Style="{StaticResource Text.Path}" Text="{Binding Win64Path}" />
+                    <StackPanel Orientation="Horizontal">
+                        <Button Style="{StaticResource Button.Primary}" Content="Install from file…" ui:Icon.Glyph="&#xE8E5;"
+                                Command="{Binding InstallFromFileCommand}"
+                                Visibility="{Binding CannotDownload, Converter={StaticResource Visible}}" />
+                        <Button Content="Install from file…" ui:Icon.Glyph="&#xE8E5;"
+                                Command="{Binding InstallFromFileCommand}"
+                                Visibility="{Binding CanDownload, Converter={StaticResource Visible}}" />
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
+
+            <DockPanel Margin="0,26,0,0" LastChildFill="False">
+                <Button DockPanel.Dock="Right" Content="Close" Command="{Binding CloseCommand}" IsCancel="True" />
+                <Button DockPanel.Dock="Left" Content="Open Win64 folder" ui:Icon.Glyph="&#xE838;" Command="{Binding OpenWin64Command}" />
+                <Button DockPanel.Dock="Left" Margin="8,0,0,0" Content="Check again" ui:Icon.Glyph="&#xE72C;"
+                        Command="{Binding CheckAgainCommand}" ToolTip="Look for UE4SS again after installing it by hand" />
+            </DockPanel>
+        </StackPanel>
+    </Border>
+</UserControl>

@@ -1,0 +1,42 @@
+<Project>
+  <!-- Shared by every project under src/. Built with the .NET 10 SDK, targeting .NET 8. -->
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>12</LangVersion>
+    <Version>1.0.0</Version>
+    <!-- A pre-release shows a yellow "Pre-release" box below About that explains what it means.
+         Set it to false for the first full release. -->
+    <PreRelease>true</PreRelease>
+    <Authors>KintaroModding</Authors>
+    <Product>UE MM</Product>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <!-- Symbols live inside the assemblies, so a release is the exe and nothing else. -->
+    <DebugType>embedded</DebugType>
+
+    <!-- The optional catalog: the openmods page, which lists the game's mods from openmods.nexus.
+         On by default; -p:Catalog=false builds the app without the Catalog folders of Core and UI, so
+         that exe holds no catalog code, text or address (each publish checks that). -->
+    <Catalog Condition="'$(Catalog)' == ''">true</Catalog>
+    <DefineConstants Condition="'$(Catalog)' == 'true'">$(DefineConstants);CATALOG</DefineConstants>
+
+    <!-- Builds with and without the catalog keep their own build state, obj\catalog or obj\base, so one
+         never starts from the other's generated XAML files. Nothing in obj is ever compiled as a source
+         file. A publish still checks its exe (UEManager.UI.csproj, CheckPublishedExe). -->
+    <BaseIntermediateOutputPath Condition="'$(Catalog)' == 'true'">obj\catalog\</BaseIntermediateOutputPath>
+    <BaseIntermediateOutputPath Condition="'$(Catalog)' != 'true'">obj\base\</BaseIntermediateOutputPath>
+    <DefaultItemExcludes>$(DefaultItemExcludes);obj\**</DefaultItemExcludes>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Changes the generated assembly info when the switch changes, so an incremental build never
+         keeps the other build's code. -->
+    <AssemblyMetadata Include="Catalog" Value="$(Catalog)" />
+    <AssemblyMetadata Include="PreRelease" Value="$(PreRelease)" />
+  </ItemGroup>
+
+  <Target Name="CheckCatalogSwitch" BeforeTargets="BeforeBuild">
+    <Error Condition="'$(Catalog)' != 'true' And '$(Catalog)' != 'false'"
+           Text="Catalog '$(Catalog)' is unknown. Use true or false." />
+  </Target>
+</Project>

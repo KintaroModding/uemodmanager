@@ -1,0 +1,34 @@
+// Game profile for Phantom Blade Zero. Built into the exe: change it here and rebuild.
+//
+// The folder layout below is a guess based on the usual Unreal Engine layout,
+// made before the game was released. Correct it once the real layout is known.
+//
+// Paths are relative to the game's install folder. {Project} stands for the
+// Unreal project folder. If that folder does not exist, the manager uses any
+// folder in the install that holds Content/Paks.
+{
+  "id": "phantom-blade-zero",
+  "displayName": "Phantom Blade Zero",
+  "developer": "S-GAME",
+  "tagline": "Install, enable and remove packaged mods safely. Every file placed in the game is tracked, and files the manager did not place are never touched.",
+
+  "steamAppId": "4115450",
+  "epicDisplayName": "Phantom Blade Zero",
+
+  "projectFolder": "PhantomBladeZero",
+  "paksPath": "{Project}/Content/Paks",
+  "modsPath": "{Project}/Content/Paks/~mods",
+
+  // Where "How to install UE4SS" sends the user: a UE4SS release that can read this game.
+  "ue4ssDownloadUrl": "https://github.com/KintaroModding/ue4ss/releases",
+  "ue4ssNote": "Use the UE4SS release made for Phantom Blade Zero. It adds the files UE4SS needs to read this game's structures.",
+  // The current UE4SS release per game, read at every start: one-click install and update offers.
+  "ue4ssManifestUrl": "https://raw.githubusercontent.com/KintaroModding/metadata/main/uemodmanager/manifest.json",
+  // Optional fallback when the manifest cannot be reached: a fixed release file and its SHA-256
+  // (Get-FileHash <file>). Without either, the user picks the downloaded file.
+  // "ue4ssPackageUrl": "https://github.com/KintaroModding/ue4ss/releases/download/<tag>/<file>.zip",
+  // "ue4ssPackageSha256": "<sha-256 of that file>",
+
+  // Started by "Launch game" only when the game was not found through Steam or Epic.
+  "executable": "PhantomBladeZero.exe"
+}

@@ -1,0 +1,136 @@
+<UserControl x:Class="UEManager.UI.Views.InstallDialog"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:ui="clr-namespace:UEManager.UI"
+             xmlns:vm="clr-namespace:UEManager.UI.ViewModels"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:InstallDialogViewModel}">
+    <Border Style="{StaticResource Dialog}" Width="660">
+        <DockPanel>
+
+            <!-- Header -->
+            <StackPanel DockPanel.Dock="Top">
+                <TextBlock Style="{StaticResource Text.Overline}" Text="{ui:Tracked 'Install mod'}" />
+                <TextBlock Margin="0,8,0,0" Style="{StaticResource Text.Title}" TextWrapping="NoWrap"
+                           TextTrimming="CharacterEllipsis" Text="{Binding SourceFileName}" ToolTip="{Binding SourceFileName}" />
+                <TextBlock Margin="0,4,0,0" Style="{StaticResource Text.Small}" Text="{Binding Summary}" />
+            </StackPanel>
+
+            <!-- Buttons -->
+            <DockPanel DockPanel.Dock="Bottom" Margin="0,22,0,0" LastChildFill="False">
+                <Button DockPanel.Dock="Right" Margin="8,0,0,0" Style="{StaticResource Button.Primary}"
+                        Content="{Binding ConfirmText}" ui:Icon.Glyph="&#xE896;" Command="{Binding InstallCommand}" IsDefault="True" />
+                <Button DockPanel.Dock="Right" Content="Cancel" Command="{Binding CancelCommand}" IsCancel="True" />
+            </DockPanel>
+
+            <ScrollViewer Margin="0,20,0,0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                <StackPanel>
+
+                    <!-- Name and version -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="16" />
+                            <ColumnDefinition Width="160" />
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource Text.Caption}" Text="{ui:Tracked 'Name'}" />
+                            <TextBox Margin="0,6,0,0" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
+                        </StackPanel>
+                        <StackPanel Grid.Column="2">
+                            <TextBlock Style="{StaticResource Text.Caption}" Text="{ui:Tracked 'Version'}" />
+                            <TextBox Margin="0,6,0,0" Text="{Binding Version, UpdateSourceTrigger=PropertyChanged}" Tag="Optional" />
+                        </StackPanel>
+                    </Grid>
+
+                    <!-- Packages -->
+                    <TextBlock Margin="0,22,0,8" Style="{StaticResource Text.Caption}" Text="{ui:Tracked 'Contents'}"
+                               Visibility="{Binding HasPackages, Converter={StaticResource Visible}}" />
+                    <ItemsControl ItemsSource="{Binding Packages}" Focusable="False">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate DataType="{x:Type vm:PackageOptionViewModel}">
+                                <Border Margin="0,0,0,6" Padding="14,10" CornerRadius="2"
+                                        Background="{StaticResource Brush.Field}" BorderBrush="{StaticResource Brush.Line}" BorderThickness="1">
+                                    <DockPanel>
+                                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                                            <TextBlock Margin="0,0,10,0" VerticalAlignment="Center" Style="{StaticResource Text.Small}" Text="{Binding SizeText}" />
+                                            <Border Style="{StaticResource Badge}">
+                                                <TextBlock FontFamily="{StaticResource Font.Label}" FontSize="11" Text="{Binding KindText}" />
+                                            </Border>
+                                        </StackPanel>
+                                        <StackPanel>
+                                            <!-- Variants are one choice; other parts can be picked freely. -->
+                                            <Grid>
+                                                <CheckBox IsChecked="{Binding IsSelected}" Visibility="{Binding IsVariant, Converter={StaticResource Hidden}}">
+                                                    <TextBlock FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Text="{Binding Label}" />
+                                                </CheckBox>
+                                                <RadioButton IsChecked="{Binding IsSelected}" Visibility="{Binding IsVariant, Converter={StaticResource Visible}}">
+                                                    <TextBlock FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Text="{Binding Label}" />
+                                                </RadioButton>
+                                            </Grid>
+                                            <TextBlock Margin="26,4,0,0" FontSize="11.5" Foreground="{StaticResource Brush.TextDim}"
+                                                       TextTrimming="CharacterEllipsis" Text="{Binding FilesText}" />
+                                        </StackPanel>
+                                    </DockPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+
+                    <!-- Update notice -->
+                    <Border Margin="0,10,0,0" Padding="14,10" CornerRadius="2" BorderThickness="1"
+                            Background="{StaticResource Brush.AccentWash}" BorderBrush="{StaticResource Brush.AccentDeep}"
+                            Visibility="{Binding ReplaceText, Converter={StaticResource VisibleIfSet}}">
+                        <DockPanel>
+                            <TextBlock DockPanel.Dock="Left" Margin="0,1,10,0" VerticalAlignment="Top" Style="{StaticResource Text.Icon}"
+                                       Foreground="{StaticResource Brush.Text}" Text="&#xE895;" />
+                            <TextBlock TextWrapping="Wrap" LineHeight="19" Text="{Binding ReplaceText}" />
+                        </DockPanel>
+                    </Border>
+
+                    <!-- Settings the player changed: kept unless the box is cleared. -->
+                    <Border Margin="0,6,0,0" Padding="14,10" CornerRadius="2" BorderThickness="1"
+                            Background="{StaticResource Brush.Field}" BorderBrush="{StaticResource Brush.LineStrong}"
+                            Visibility="{Binding EditedSettingsText, Converter={StaticResource VisibleIfSet}}">
+                        <StackPanel>
+                            <CheckBox IsChecked="{Binding KeepSettings}">
+                                <TextBlock FontWeight="SemiBold" Text="Keep my settings" />
+                            </CheckBox>
+                            <TextBlock Margin="26,4,0,0" TextWrapping="Wrap" LineHeight="18" Style="{StaticResource Text.Small}"
+                                       TextTrimming="None" Text="{Binding EditedSettingsText}" />
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Problems stop the install; warnings do not. -->
+                    <ItemsControl Margin="0,10,0,0" ItemsSource="{Binding Problems}" Focusable="False">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <DockPanel Margin="0,4">
+                                    <TextBlock DockPanel.Dock="Left" Margin="0,2,10,0" VerticalAlignment="Top" Style="{StaticResource Text.Icon}"
+                                               FontSize="12" Foreground="{StaticResource Brush.Danger}" Text="&#xEA39;" />
+                                    <TextBlock TextWrapping="Wrap" LineHeight="19" Foreground="{StaticResource Brush.Danger}" Text="{Binding}" />
+                                </DockPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <ItemsControl ItemsSource="{Binding Warnings}" Focusable="False">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <DockPanel Margin="0,4">
+                                    <TextBlock DockPanel.Dock="Left" Margin="0,2,10,0" VerticalAlignment="Top" Style="{StaticResource Text.Icon}"
+                                               FontSize="12" Foreground="{StaticResource Brush.Warning}" Text="&#xE7BA;" />
+                                    <TextBlock TextWrapping="Wrap" LineHeight="19" Foreground="{StaticResource Brush.Warning}" Text="{Binding}" />
+                                </DockPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Button Margin="22,8,0,0" HorizontalAlignment="Left" Content="Install UE4SS…" ui:Icon.Glyph="&#xE946;"
+                            Command="{Binding ShowUe4ssGuideCommand}"
+                            Visibility="{Binding NeedsUe4ss, Converter={StaticResource Visible}}" />
+                </StackPanel>
+            </ScrollViewer>
+        </DockPanel>
+    </Border>
+</UserControl>

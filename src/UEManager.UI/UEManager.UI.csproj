@@ -1,0 +1,88 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWPF>true</UseWPF>
+    <RootNamespace>UEManager.UI</RootNamespace>
+    <AssemblyName>UEModManager</AssemblyName>
+    <ApplicationIcon>app.ico</ApplicationIcon>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+
+    <!-- Release shape: one framework-dependent exe (needs the .NET 8 Desktop Runtime)
+         and nothing else. Game profiles and theme art are built in. -->
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <SelfContained>false</SelfContained>
+    <PublishSingleFile>true</PublishSingleFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\UEManager.Core\UEManager.Core.csproj" />
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- License texts of the bundled open-source libraries, shown on the About page. -->
+    <None Remove="Licenses\*.txt" />
+    <EmbeddedResource Include="Licenses\*.txt" LogicalName="UEManager.UI.Licenses.%(Filename)%(Extension)" />
+    <!-- The app's own license, additional terms and contributors, shown on the About page. -->
+    <EmbeddedResource Include="..\..\LICENSE;..\..\NOTICE.md;..\..\CONTRIBUTORS.md" LogicalName="UEManager.UI.Legal.%(Filename)%(Extension)" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(Catalog)' != 'true'">
+    <!-- Built without the optional catalog: the Catalog folder is left out (see Directory.Build.props). -->
+    <Compile Remove="Catalog\**" />
+    <Page Remove="Catalog\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Optional theme artwork and fonts, compiled into the exe. See Theme\README.md. -->
+    <Resource Include="Theme\Art\**\*.png;Theme\Art\**\*.jpg;Theme\Art\**\*.jpeg;Theme\Fonts\**\*.ttf;Theme\Fonts\**\*.otf" />
+  </ItemGroup>
+
+  <!-- After every publish, the exe is checked: it must hold its main window; with the catalog, the openmods
+       page; without it, no word "openmods". A build can, rarely, go wrong without an error (a build with the
+       catalog once came out without its openmods page); such an exe is deleted and the publish fails, so it
+       never reaches anyone. -->
+  <UsingTask TaskName="CheckPublishedExe" TaskFactory="RoslynCodeTaskFactory"
+             AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <ExePath ParameterType="System.String" Required="true" />
+      <Catalog ParameterType="System.Boolean" Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.Linq" />
+      <Using Namespace="System.Text.RegularExpressions" />
+      <Code Type="Fragment" Language="cs"><![CDATA[
+        // Resource names and texts are stored as UTF-8 or UTF-16, so a zero byte may follow each letter.
+        var text = System.Text.Encoding.GetEncoding(28591).GetString(System.IO.File.ReadAllBytes(ExePath));
+        bool Has(string word) => Regex.IsMatch(text,
+            string.Join("\\x00?", word.Select(c => Regex.Escape(c.ToString()))), RegexOptions.IgnoreCase);
+
+        var build = Catalog ? "build with the catalog" : "build without the catalog";
+        var problems = new System.Collections.Generic.List<string>();
+        if (!Has("mainwindow.baml"))
+            problems.Add("the main window (mainwindow.baml) is missing");
+        if (Catalog && !Has("catalog/catalogresources.baml"))
+            problems.Add("the openmods page (catalog/catalogresources.baml) is missing");
+        if (!Catalog && Has("openmods"))
+            problems.Add("it contains the word 'openmods'");
+        if (problems.Count > 0)
+        {
+            System.IO.File.Delete(ExePath);
+            Log.LogError($"The {build} came out broken, so it was deleted: {string.Join("; ", problems)}. "
+                + $"Publish it again. ({ExePath})");
+        }
+        else
+        {
+            Log.LogMessage(Microsoft.Build.Framework.MessageImportance.High, $"Checked the {build}: {ExePath}");
+        }
+      ]]></Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="CheckPublishedExe" AfterTargets="Publish" Condition="Exists('$(PublishDir)$(AssemblyName).exe')">
+    <CheckPublishedExe ExePath="$(PublishDir)$(AssemblyName).exe" Catalog="$(Catalog)" />
+  </Target>
+
+</Project>

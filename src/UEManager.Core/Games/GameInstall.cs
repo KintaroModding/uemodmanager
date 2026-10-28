@@ -1,0 +1,69 @@
+using System.Diagnostics;
+
+namespace UEManager.Core.Games;
+
+public enum GameStore
+{
+    Manual,
+    Steam,
+    Epic,
+}
+
+/// <summary>A located installation of a game, with every profile path resolved.</summary>
+public sealed record GameInstall(
+    GameProfile Profile,
+    string RootPath,
+    string? ProjectFolder,
+    string PaksPath,
+    string ModsPath,
+    GameStore Store,
+    string? BuildId = null,
+    string? LaunchUri = null)
+{
+    /// <summary>Helper programs Unreal games ship next to the real executable.</summary>
+    private static readonly string[] HelperExecutables = ["UnrealCEFSubProcess", "CrashReportClient", "UEPrereqSetup"];
+
+    /// <summary>Folder for Blueprint mods, which UE4SS's BPModLoaderMod loads.</summary>
+    public string LogicModsPath => GameProfile.ResolvePath(RootPath, Profile.LogicModsPath, ProjectFolder);
+
+    /// <summary>Folder of the shipping executable, where UE4SS is installed.</summary>
+    public string BinariesPath => GameProfile.ResolvePath(RootPath, Profile.BinariesPath, ProjectFolder);
+
+    /// <summary>The game's real executable in <see cref="BinariesPath"/>, such as Game-Win64-Shipping.exe.</summary>
+    public string? FindShippingExecutable()
+    {
+        if (!Directory.Exists(BinariesPath))
+            return null;
+        return Directory.EnumerateFiles(BinariesPath, "*-Win64-Shipping.exe").FirstOrDefault()
+            ?? Directory.EnumerateFiles(BinariesPath, "*.exe").FirstOrDefault();
+    }
+
+    /// <summary>
+    /// The executable "Launch game" starts when no store launcher is known: the
+    /// profile's choice, else the first executable in the install folder.
+    /// </summary>
+    public string? FindExecutable()
+    {
+        if (!string.IsNullOrWhiteSpace(Profile.Executable))
+        {
+            var configured = GameProfile.ResolvePath(RootPath, Profile.Executable, ProjectFolder);
+            if (File.Exists(configured))
+                return configured;
+        }
+        return Directory.EnumerateFiles(RootPath, "*.exe")
+            .FirstOrDefault(path => !HelperExecutables.Any(helper =>
+                Path.GetFileNameWithoutExtension(path).StartsWith(helper, StringComparison.OrdinalIgnoreCase)));
+    }
+
+    /// <summary>Starts the game through its store when known, so DRM and overlays work as usual.</summary>
+    public void Launch()
+    {
+        var target = LaunchUri ?? FindExecutable()
+            ?? throw new InvalidOperationException("No game executable was found in the install folder.");
+        Process.Start(new ProcessStartInfo(target)
+        {
+            UseShellExecute = true,
+            WorkingDirectory = LaunchUri is null ? Path.GetDirectoryName(target) : null,
+        });
+    }
+}

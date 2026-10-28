@@ -1,0 +1,15 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:ui="clr-namespace:UEManager.UI"
+                    xmlns:catalog="clr-namespace:UEManager.UI.Catalog">
+
+    <!-- The openmods entry in the navigation and the page itself. MainWindow shows both through
+         DynamicResource, so a build without the catalog, which leaves this folder out, simply has neither. -->
+    <ui:PageConverter x:Key="CatalogPageConverter" />
+
+    <RadioButton x:Key="CatalogNavItem" x:Shared="False" Style="{DynamicResource NavItem}" Content="openmods" ui:Icon.Glyph="&#xE774;"
+                 IsChecked="{Binding SelectedPage, Converter={StaticResource CatalogPageConverter}, ConverterParameter=Catalog}" />
+
+    <catalog:CatalogView x:Key="CatalogPage" x:Shared="False" DataContext="{Binding Catalog}" />
+
+</ResourceDictionary>

@@ -1,0 +1,40 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>UEManager.Core</RootNamespace>
+
+    <!-- The one game this build is for: the file name of a profile in Games\Profiles.
+         A test build for another game: dotnet publish ... -p:GameProfile=mortal-shell-2 -->
+    <GameProfile Condition="'$(GameProfile)' == ''">phantom-blade-zero</GameProfile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- ZIP, 7z and RAR extraction in managed code. MIT licensed. -->
+    <PackageReference Include="SharpCompress" Version="0.50.7" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Only the selected game profile is built into the assembly; GameProfile.BuiltIn() reads it.
+         The metadata entry changes the generated assembly info when the game changes, so an
+         incremental build never keeps the profile of the previous game. -->
+    <None Remove="Games\Profiles\*.json" />
+    <EmbeddedResource Include="Games\Profiles\$(GameProfile).json" LogicalName="UEManager.Core.Games.Profiles.%(Filename)%(Extension)" />
+    <AssemblyMetadata Include="GameProfile" Value="$(GameProfile)" />
+  </ItemGroup>
+
+  <Target Name="CheckGameProfile" BeforeTargets="BeforeBuild">
+    <Error Condition="!Exists('Games\Profiles\$(GameProfile).json')"
+           Text="Game profile '$(GameProfile)' does not exist: Games\Profiles\$(GameProfile).json" />
+  </Target>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="UEManager.Core.Tests" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(Catalog)' != 'true'">
+    <!-- Built without the optional catalog: its code is left out (see Directory.Build.props). -->
+    <Compile Remove="Catalog\**" />
+  </ItemGroup>
+
+</Project>
