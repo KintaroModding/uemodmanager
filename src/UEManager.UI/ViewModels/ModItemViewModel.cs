@@ -47,7 +47,8 @@ public sealed partial class ModItemViewModel
         record.Files.Where(f => f.IsSettingsFile && f.DeployedPath is not null).Select(f => f.DeployedPath!);
 
     public string EditSettingsHint => Enabled
-        ? "Edit this mod's settings: Scripts/config.lua. Most mods read it when the game starts."
+        ? $"Edit this mod's settings: {string.Join(", ", record.Files.Where(f => f.IsSettingsFile).Select(f => SettingsFiles.Name(f.FileName)))}. "
+          + "Most mods read them when the game starts."
         : "Enable the mod to edit its settings";
 
     public string KindText => record.TypeLabel;

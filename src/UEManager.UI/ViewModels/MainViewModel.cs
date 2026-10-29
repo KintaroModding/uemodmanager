@@ -405,7 +405,7 @@ public sealed partial class MainViewModel : ObservableObject
         RefreshMods();
     }
 
-    /// <summary>Opens the mod's settings files in the game with the app set for .lua files, or Notepad.</summary>
+    /// <summary>Opens the mod's settings files in the game with the app set for their type, or Notepad.</summary>
     internal void EditSettings(ModItemViewModel item)
     {
         foreach (var file in item.DeployedSettingsFiles)

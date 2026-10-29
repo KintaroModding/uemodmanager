@@ -53,9 +53,12 @@ variant is recorded with the mod.
   hold the list: the manager tries three times, and if it still cannot save,
   it undoes the change, so the game and the list always agree.
 - A deployed file that was changed outside the manager stops its removal,
-  except a **settings file**: a UE4SS mod's `Scripts/config.lua`, which the
-  player is meant to edit. Disabling keeps the player's version for the next
-  enable. An update asks whether to keep it (the default) or take the new
+  except a **settings file**, which the player is meant to edit: a UE4SS mod's
+  `Scripts/config.lua`, or a `.json`, `.ini`, `.cfg`, `.toml` or `.yaml` file
+  that a download keeps next to its pak in a `~mods` or `LogicMods` folder
+  (such as a mod that reads its color from `~mods`). Other files beside the
+  packages, such as readmes, are not installed. Disabling keeps the player's
+  version for the next enable. An update asks whether to keep it (the default) or take the new
   defaults. Before an update or an uninstall replaces it, a copy goes to
   `Data/games/<id>/backups/`. On the Mods page, **Edit settings** opens it, and
   **Reset settings** puts back the file the mod shipped with (kept in the

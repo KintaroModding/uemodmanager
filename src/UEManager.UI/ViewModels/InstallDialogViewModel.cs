@@ -160,15 +160,12 @@ public sealed partial class InstallDialogViewModel : ObservableObject
               + "Its files are replaced, and put back if the update fails.";
         EditedSettingsText = old is null || !check.HasEditedSettings
             ? null
-            : $"You changed {string.Join(", ", check.EditedSettings!.Select(SettingsName))} of this mod. "
+            : $"You changed {string.Join(", ", check.EditedSettings!.Select(SettingsFiles.Name))} of this mod. "
               + "Keep your settings, or clear the box to use the new version's defaults. A copy of yours is saved in the backup folder either way.";
         ConfirmText = old is null ? "Install" : "Update";
         CanInstall = check.CanInstall;
         NeedsUe4ss = check.NeedsUe4ss;
     }
-
-    /// <summary>"Scripts/config.lua" for "ModName/Scripts/config.lua".</summary>
-    private static string SettingsName(string path) => path.IndexOf('/') is var slash and >= 0 ? path[(slash + 1)..] : path;
 }
 
 public sealed partial class PackageOptionViewModel(PackageGroup package, Action<PackageOptionViewModel> changed) : ObservableObject

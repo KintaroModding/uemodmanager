@@ -17,6 +17,14 @@ public static partial class ModNaming
             stem = nexus.Groups["name"].Value;
             version = nexus.Groups["version"].Value.Replace('-', '.');
         }
+        else if (NexusDatedFileName().Match(stem) is { Success: true } dated)
+        {
+            // The name often repeats a version of its own, such as "PhantomTweaks 1.0.0"; the download's version counts.
+            stem = dated.Groups["name"].Value;
+            if (TrailingVersion().Match(stem) is { Success: true } inName)
+                stem = inName.Groups["name"].Value;
+            version = dated.Groups["version"].Value;
+        }
         else if (TrailingVersion().Match(stem) is { Success: true } trailing)
         {
             stem = trailing.Groups["name"].Value;
@@ -33,6 +41,13 @@ public static partial class ModNaming
     /// <summary>Nexus Mods names downloads "Name-ModId-Version-Timestamp", such as "Sharp Blades-12-1-2-1730000000".</summary>
     [GeneratedRegex(@"^(?<name>.+?)-(?<id>\d+)-(?<version>\d+(?:-\d+)*)-(?<stamp>\d{9,})$")]
     private static partial Regex NexusFileName();
+
+    /// <summary>
+    /// Newer Nexus Mods downloads: "Name ModId Version Time Key", with spaces or underscores, such as
+    /// "Travel Anywhere 61 1.0.1 2026-10-29T13-42Z LbtEo64mS".
+    /// </summary>
+    [GeneratedRegex(@"^(?<name>.+?)[ _]+(?<id>\d+)[ _]+(?<version>[^ _]+)[ _]+\d{4}-\d{2}-\d{2}T\d{2}-\d{2}Z[ _]+[A-Za-z0-9]+$")]
+    private static partial Regex NexusDatedFileName();
 
     /// <summary>A dotted version at the end of a name, such as "DashTest_0.2" or "Sharp Blades v1.3.0".</summary>
     [GeneratedRegex(@"^(?<name>.+?)[ _-]+[vV]?(?<version>\d+(?:\.\d+)+)$")]

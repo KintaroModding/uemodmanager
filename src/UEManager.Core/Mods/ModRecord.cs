@@ -89,15 +89,20 @@ public sealed class ModFileRecord
 }
 
 /// <summary>
-/// Mod files the player is meant to edit: a UE4SS mod's Scripts/config.lua. A change to one
-/// never blocks a removal. Disabling keeps the player's version, an update asks whether to keep
-/// it, and uninstalling backs it up.
+/// Mod files the player is meant to edit: a UE4SS mod's Scripts/config.lua, and the settings a pak
+/// mod keeps next to its pak, such as a .json in ~mods. A change to one never blocks a removal.
+/// Disabling keeps the player's version, an update asks whether to keep it, and uninstalling backs it up.
 /// </summary>
 public static class SettingsFiles
 {
+    /// <summary>Settings a pak mod may keep next to its pak. Not .txt: that is mostly a readme.</summary>
+    public static readonly string[] PakSettingsExtensions = [".json", ".ini", ".cfg", ".toml", ".yaml", ".yml"];
+
     /// <param name="relativePath">The path below the target folder, such as "ModName/Scripts/config.lua".</param>
     public static bool Is(DeployTarget target, string relativePath)
     {
+        if (target is DeployTarget.Mods or DeployTarget.LogicMods)
+            return FileSystem.HasExtension(relativePath, PakSettingsExtensions);
         if (target != DeployTarget.Ue4ssMods)
             return false;
         var parts = relativePath.Split('/', '\\');
@@ -105,6 +110,10 @@ public static class SettingsFiles
             && parts[1].Equals("Scripts", StringComparison.OrdinalIgnoreCase)
             && parts[2].Equals("config.lua", StringComparison.OrdinalIgnoreCase);
     }
+
+    /// <summary>How the player knows the file: "Scripts/config.lua" for "ModName/Scripts/config.lua", else its name.</summary>
+    public static string Name(string relativePath) =>
+        relativePath.IndexOf('/') is var slash and >= 0 ? relativePath[(slash + 1)..] : relativePath;
 }
 
 public sealed class ModState

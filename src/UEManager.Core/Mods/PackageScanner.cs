@@ -86,8 +86,11 @@ public sealed class PackageGroup
 
     internal static PackageGroup Packaged(string name, string folder, IReadOnlyList<string> files, DeployTarget target)
     {
+        // The package files first, then a settings file that goes with them.
         var ordered = files
-            .OrderBy(f => Array.IndexOf(FileSystem.PackageExtensions, Path.GetExtension(f).ToLowerInvariant()))
+            .OrderBy(f => Array.IndexOf(FileSystem.PackageExtensions, Path.GetExtension(f).ToLowerInvariant()) is var index and >= 0
+                ? index
+                : int.MaxValue)
             .ToList();
         var kind = ordered.Any(f => FileSystem.HasExtension(f, FileSystem.IoStoreExtensions)) ? PackageKind.IoStore : PackageKind.Pak;
         return new PackageGroup(name, folder, ordered, ordered.Select(f => Path.GetFileName(f)).ToList(), kind, target);
@@ -107,7 +110,10 @@ public sealed record ScanResult(
     int NestedArchiveCount,
     bool ContainsUe4ssRuntime);
 
-/// <summary>Finds the installable parts of a staged download. Readmes, images and the like are ignored.</summary>
+/// <summary>
+/// Finds the installable parts of a staged download. Readmes, images and the like are ignored, and so
+/// are settings files, unless they sit next to a package in a folder named like a mods folder.
+/// </summary>
 public static class PackageScanner
 {
     /// <param name="stagingDir">The unpacked download.</param>
@@ -135,6 +141,21 @@ public static class PackageScanner
         {
             var first = group.First();
             drafts.Add(new Draft(Path.GetFileNameWithoutExtension(first), RelativeFolder(root, Path.GetDirectoryName(first)!), group.ToList(), null));
+        }
+
+        // A settings file in one of the game's mods folders, such as SpeakerHighlight.json next to its pak in
+        // ~mods, goes with a package there: the mod reads it at that place. Readmes outside such a folder stay out.
+        var packaged = drafts.Where(d => d.Ue4ssRoot is null).ToList();
+        foreach (var file in files.Where(f => FileSystem.HasExtension(f, SettingsFiles.PakSettingsExtensions)
+                     && IsModsFolder(Path.GetDirectoryName(f)!) && !ue4ssRoots.Any(r => IsInside(f, r))))
+        {
+            var name = Path.GetFileNameWithoutExtension(file);
+            var owner = packaged
+                .Where(d => string.Equals(Path.GetDirectoryName(d.Files[0]), Path.GetDirectoryName(file), StringComparison.OrdinalIgnoreCase))
+                .OrderBy(d => d.Name.Contains(name, StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+                .ThenBy(d => d.Name, StringComparer.OrdinalIgnoreCase)
+                .FirstOrDefault();
+            owner?.Files.Add(file);
         }
 
         // A folder every part sits in, such as the download's own top folder, says nothing.
@@ -202,6 +223,11 @@ public static class PackageScanner
 
     private static bool IsInside(string path, string folder) =>
         path.StartsWith(folder + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>A folder named like one of the game's mods folders, where a mod's files are meant to land as they are.</summary>
+    private static bool IsModsFolder(string folder) =>
+        Path.GetFileName(folder) is var name
+        && (name.Equals("~mods", StringComparison.OrdinalIgnoreCase) || name.Equals("LogicMods", StringComparison.OrdinalIgnoreCase));
 
     private static bool IsLogicMod(string folder) =>
         folder.Split('/').Any(part => part.Equals("LogicMods", StringComparison.OrdinalIgnoreCase));

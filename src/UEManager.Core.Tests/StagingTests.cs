@@ -133,6 +133,10 @@ public class StagingTests
     [InlineData(@"C:\Downloads\KintaroCdoDashTest_0.2.zip", "KintaroCdoDashTest", "0.2")]
     [InlineData(@"C:\Downloads\Sharp Blades v1.3.0.zip", "Sharp Blades", "1.3.0")]
     [InlineData(@"C:\Downloads\Mod 2.zip", "Mod 2", null)]
+    [InlineData(@"C:\Downloads\Travel Anywhere 61 1.0.1 2026-10-29T13-42Z LbtEo64mS.zip", "Travel Anywhere", "1.0.1")]
+    [InlineData(@"C:\Downloads\PhantomTweaks 1.0.0 44 1.0.0 2026-10-29T09-10Z iFHyWBRqE.zip", "PhantomTweaks", "1.0.0")]
+    [InlineData(@"C:\Downloads\PBZ SpeakerHighlight PVLW 0.1.0 27 1 2026-10-29T06-37Z 5qSwPXtlu.zip", "PBZ SpeakerHighlight PVLW", "1")]
+    [InlineData(@"C:\Downloads\PBZTuner_V1.0.2_21_3_2026-10-29T12-51Z_HOPKBToED.zip", "PBZTuner", "3")]
     public void Names_come_from_the_download(string source, string name, string? version)
     {
         Assert.Equal((name, version), ModNaming.FromSource(source));
