@@ -4,10 +4,9 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>12</LangVersion>
-    <Version>1.0.1</Version>
-    <!-- A pre-release shows a yellow "Pre-release" box below About that explains what it means.
-         Set it to false for the first full release. -->
-    <PreRelease>true</PreRelease>
+    <Version>1.1.0</Version>
+    <!-- A pre-release shows a yellow "Pre-release" box below About that explains what it means. -->
+    <PreRelease>false</PreRelease>
     <Authors>KintaroModding</Authors>
     <Product>UE MM</Product>
     <SatelliteResourceLanguages>en</SatelliteResourceLanguages>

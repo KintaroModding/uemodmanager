@@ -1,9 +1,11 @@
 namespace UEManager.Core.Mods;
 
 /// <param name="TargetFolder">The game's Win64 folder UE4SS went into.</param>
-/// <param name="KeptFiles">Files left as they were: the user's settings and files of managed mods.</param>
+/// <param name="KeptFiles">Files left as they were: files of managed mods, and UE4SS files the user changed.</param>
 /// <param name="Updated">UE4SS was already installed and has been updated.</param>
-public sealed record Ue4ssInstallResult(string TargetFolder, int FilesWritten, IReadOnlyList<string> KeptFiles, bool Updated);
+/// <param name="RemovedFiles">Files of the previous release that this one no longer has.</param>
+public sealed record Ue4ssInstallResult(string TargetFolder, int FilesWritten, IReadOnlyList<string> KeptFiles, bool Updated,
+    IReadOnlyList<string> RemovedFiles);
 
 /// <param name="DisabledMods">Managed mods that lived in UE4SS's folder and are now disabled; their library copies stay.</param>
 public sealed record Ue4ssRemoveResult(int DisabledMods);
@@ -26,6 +28,12 @@ public sealed class Ue4ssInstallRecord
     public string? Source { get; set; }
 
     public DateTimeOffset InstalledAt { get; set; }
+
+    /// <summary>
+    /// Each file of the release, by its path below the game's exe folder ("ue4ss/UE4SS.dll"), with its SHA-256.
+    /// The next update replaces or removes a file only while it still matches. Null in older records.
+    /// </summary>
+    public Dictionary<string, string>? Files { get; set; }
 }
 
 /// <summary>Downloads the UE4SS release file named by the manifest or the game profile.</summary>

@@ -75,6 +75,66 @@ public class Ue4ssInstallTests : IDisposable
     }
 
     [Fact]
+    public void An_update_replaces_settings_the_user_did_not_change()
+    {
+        manager.InstallUe4ss(Release("Old", "old"));
+
+        var result = manager.InstallUe4ss(Release("New", "new"));
+
+        Assert.Equal("settings new", File.ReadAllText(Path.Combine(Win64, "ue4ss", "UE4SS-settings.ini")));
+        Assert.Empty(result.KeptFiles);
+    }
+
+    [Fact]
+    public void An_update_removes_the_files_the_new_release_no_longer_has()
+    {
+        folder.File(@"Old\ue4ss\UE4SS_Signatures\GNatives.lua", "old signature");
+        folder.File(@"Old\ue4ss\Mods\OldMod\Scripts\main.lua", "old mod");
+        manager.InstallUe4ss(Release("Old", "old"));
+        File.WriteAllText(Path.Combine(Win64, "ue4ss", "Mods", "OldMod", "Scripts", "main.lua"), "my change");
+
+        var result = manager.InstallUe4ss(Release("New", "new"));
+
+        Assert.Equal(["ue4ss/UE4SS_Signatures/GNatives.lua"], result.RemovedFiles);
+        Assert.False(Directory.Exists(Path.Combine(Win64, "ue4ss", "UE4SS_Signatures")));
+        Assert.Equal("my change", File.ReadAllText(Path.Combine(Win64, "ue4ss", "Mods", "OldMod", "Scripts", "main.lua")));
+        Assert.Equal(["ue4ss/Mods/OldMod/Scripts/main.lua"], result.KeptFiles);
+    }
+
+    [Fact]
+    public void Without_a_list_of_files_an_update_keeps_the_settings_and_the_old_files()
+    {
+        folder.File(@"Old\ue4ss\UE4SS_Signatures\GNatives.lua", "old signature");
+        manager.InstallUe4ss(Release("Old", "old"));
+        // As older versions of the manager recorded it.
+        var record = new AppPaths(folder.Combine("Data")).Ue4ssRecordFile(game.Profile.Id);
+        JsonFile.Write(record, new Ue4ssInstallRecord { Version = "v3.0.1" });
+
+        var result = manager.InstallUe4ss(Release("New", "new"));
+
+        Assert.Equal("settings old", File.ReadAllText(Path.Combine(Win64, "ue4ss", "UE4SS-settings.ini")));
+        Assert.True(File.Exists(Path.Combine(Win64, "ue4ss", "UE4SS_Signatures", "GNatives.lua")));
+        Assert.Empty(result.RemovedFiles);
+        Assert.Contains("ue4ss/UE4SS.dll", JsonFile.Read<Ue4ssInstallRecord>(record)!.Files!.Keys);
+    }
+
+    [Fact]
+    public void A_file_in_use_stops_the_update_and_every_file_is_put_back()
+    {
+        folder.File(@"Old\ue4ss\UE4SS_Signatures\GNatives.lua", "old signature");
+        folder.File(@"Old\ue4ss\UE4SS_Signatures\GUObjectArray.lua", "old signature");
+        manager.InstallUe4ss(Release("Old", "old"));
+        var signatures = Path.Combine(Win64, "ue4ss", "UE4SS_Signatures");
+
+        // GNatives.lua is removed first, then the one in use stops the update.
+        using (File.Open(Path.Combine(signatures, "GUObjectArray.lua"), FileMode.Open, FileAccess.Read, FileShare.Read))
+            Assert.ThrowsAny<IOException>(() => manager.InstallUe4ss(Release("New", "new")));
+
+        Assert.Equal("old signature", File.ReadAllText(Path.Combine(signatures, "GNatives.lua")));
+        Assert.Equal("runtime old", File.ReadAllText(Path.Combine(Win64, "ue4ss", "UE4SS.dll")));
+    }
+
+    [Fact]
     public void A_proxy_dll_from_another_tool_stops_the_install()
     {
         File.WriteAllText(Path.Combine(Win64, "dwmapi.dll"), "someone else's");

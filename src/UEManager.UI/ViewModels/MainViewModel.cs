@@ -606,9 +606,10 @@ public sealed partial class MainViewModel : ObservableObject
     {
         Ue4ssGuide = null;
         RefreshMods();
+        var removed = result.RemovedFiles.Count == 0 ? "" : $" {Format.Count(result.RemovedFiles.Count, "old file was", "old files were")} removed.";
         var kept = result.KeptFiles.Count == 0 ? "" : $" {Format.Count(result.KeptFiles.Count, "existing file was", "existing files were")} kept.";
         var hint = installedUe4ssVersion is null ? " Start the game once to show its version." : "";
-        ShowToast((result.Updated ? "UE4SS updated." : "UE4SS installed.") + kept + hint);
+        ShowToast((result.Updated ? "UE4SS updated." : "UE4SS installed.") + removed + kept + hint);
     }
 
     private static HttpClient CreateHttpClient()

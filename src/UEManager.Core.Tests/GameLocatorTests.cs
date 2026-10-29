@@ -274,6 +274,34 @@ public class GameLocatorTests
     }
 
     [Fact]
+    public void Without_its_named_exe_the_largest_exe_is_the_games()
+    {
+        using var folder = new TestFolder();
+        var root = folder.Game();
+        folder.File(@"Game\platform\egs\CrashReporter.exe", "");
+        var game = folder.File(@"Game\platform\egs\Game-EGS.exe", "");
+        using (var stream = File.OpenWrite(game))
+            stream.SetLength(GameInstall.MinimumGameExecutableSize);
+
+        var install = GameLocator.FromFolder(StoreFolderProfile(), root, folder.Combine("Manifests"));
+
+        Assert.NotNull(install);
+        Assert.Equal(Path.Combine(root, "platform", "egs"), install.BinariesPath);
+        Assert.Equal(game, install.FindShippingExecutable());
+    }
+
+    [Fact]
+    public void Small_helper_exes_are_never_the_games()
+    {
+        using var folder = new TestFolder();
+        var root = folder.Game();
+        folder.File(@"Game\platform\egs\CrashReporter.exe", "a helper of a few bytes");
+
+        Assert.Null(GameLocator.Resolve(StoreFolderProfile(), root, GameStore.Epic)!.FindShippingExecutable());
+        Assert.Null(GameLocator.FromFolder(StoreFolderProfile(), root, folder.Combine("Manifests")));
+    }
+
+    [Fact]
     public void Without_its_exe_a_store_folder_game_still_has_its_paks()
     {
         using var folder = new TestFolder();

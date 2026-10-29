@@ -84,10 +84,20 @@ exe, it installs nothing:
   `ue4ssDownloadUrl`. It always works, also offline. Dropping that zip on the
   window does the same after a confirmation.
 
-An update keeps `UE4SS-settings.ini`, `mods.txt`, `mods.json`, every
-`load_order.txt` and the files of managed mods. A `dwmapi.dll` that is already
-there while UE4SS is not stops the install, and a failed copy puts every file
-back. The installed version is recorded in `Data/games/<id>/ue4ss.json`.
+The installed version, and each file of the release with its SHA-256, is
+recorded in `Data/games/<id>/ue4ss.json`. An update compares the game's files
+with that record:
+
+- `UE4SS-settings.ini`, `mods.txt`, `mods.json` and every `load_order.txt` are
+  replaced only when the user has not changed them; changed ones are kept.
+- Files of the previous release that the new one no longer has, such as an old
+  signature file, are removed, unless the user changed them.
+- Files of managed mods are never touched.
+
+Without a file list (UE4SS installed by hand, or by version 1.0.x of the app),
+the update keeps those four settings files and removes nothing. A `dwmapi.dll`
+that is already there while UE4SS is not stops the install, and a failed step
+puts every file back.
 
 ### UE4SS manifest
 
@@ -287,8 +297,8 @@ update check reads that release.
 
 `PreRelease` in `src/Directory.Build.props` marks a pre-release: while it is
 `true`, a yellow **Pre-release** box below About opens a short note that the
-app is early in its development and changes often. Set it to `false` for the
-first full release.
+app is early in its development and changes often. Releases set it to
+`false`.
 
 ## Updates
 
@@ -339,9 +349,11 @@ but in a folder per store: `platform/steam/PBZ.exe`, started by
 `steam/PBZ.exe`. `binariesPath` names the folder of the real exe, where UE4SS
 goes (default `{Project}/Binaries/Win64`); a `*` in it matches any folder, and
 the one that holds `shippingExecutable` wins, the one named after the store
-first. Without `shippingExecutable`, the exe is the usual
-`<Project>-Win64-Shipping.exe`. To correct the profile, edit the file and
-rebuild. `ProfileTests` checks that every built-in profile parses, and
+first. When no folder has a file of that name, as may be the case in another
+store's build, the largest exe of at least 50 MB counts as the game's exe: the
+game's own is hundreds of MB, its helpers a few. Without `shippingExecutable`,
+the exe is the usual `<Project>-Win64-Shipping.exe`. To correct the profile,
+edit the file and rebuild. `ProfileTests` checks that every built-in profile parses, and
 `GameLocatorTests` reads a copy of the Steam layout with it.
 
 The game is found through Steam (`steamAppId`, all library folders) or the Epic

@@ -468,8 +468,9 @@ public sealed class ModManager
     /// <summary>
     /// Installs or updates UE4SS from its release package (a zip, 7z or folder holding
     /// dwmapi.dll and the ue4ss folder) next to the game's shipping executable, in Binaries\Win64
-    /// in most games. Existing user settings and files of managed mods are kept. If a copy fails,
-    /// every file is put back.
+    /// in most games. Files of managed mods are kept, and so are settings the user changed. Files of
+    /// the previous release that this one no longer has are removed, unless the user changed them.
+    /// If a step fails, every file is put back.
     /// </summary>
     /// <param name="package">The release zip, 7z or folder.</param>
     /// <param name="version">The release version when known, as from the manifest; otherwise read from the file name.</param>
@@ -504,15 +505,26 @@ public sealed class ModManager
                     .Where(f => f.DeployedPath is not null)
                     .Select(f => Path.GetFullPath(f.DeployedPath!))
                     .ToHashSet(StringComparer.OrdinalIgnoreCase);
+                // What the previous release put into the game; null for UE4SS installed by hand or by an
+                // older version of the manager, which recorded no files.
+                var previous = ReadUe4ssRecord()?.Files is { } recorded
+                    ? new Dictionary<string, string>(recorded, StringComparer.OrdinalIgnoreCase)
+                    : null;
+                var files = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
                 var kept = new List<string>();
+                var removed = new List<string>();
                 var written = 0;
-                foreach (var file in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories))
+                // Listed first: the backups below go into the staging folder, which may be the package root.
+                foreach (var file in Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories).ToList())
                 {
                     var relative = Path.GetRelativePath(root, file);
+                    var name = relative.Replace('\\', '/');
+                    files[name] = FileSystem.Sha256(file);
                     var destination = Path.GetFullPath(Path.Combine(win64, relative));
-                    if (owned.Contains(destination) || (IsUe4ssUserFile(file) && File.Exists(destination)))
+                    if (owned.Contains(destination)
+                        || (IsUe4ssUserFile(file) && File.Exists(destination) && !IsAsInstalled(destination, name, previous)))
                     {
-                        kept.Add(relative.Replace('\\', '/'));
+                        kept.Add(name);
                         continue;
                     }
                     Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
@@ -529,14 +541,40 @@ public sealed class ModManager
                     File.Move(temp, destination, overwrite: true);
                     written++;
                 }
+
+                // A file the previous release had and this one has not would still be read by UE4SS,
+                // such as an old signature file.
+                var top = Path.TrimEndingDirectorySeparator(Path.GetFullPath(win64)) + Path.DirectorySeparatorChar;
+                foreach (var name in (previous?.Keys ?? Enumerable.Empty<string>()).Where(n => !files.ContainsKey(n)).Order(StringComparer.OrdinalIgnoreCase))
+                {
+                    var destination = Path.GetFullPath(Path.Combine(win64, name));
+                    if (!destination.StartsWith(top, StringComparison.OrdinalIgnoreCase) || owned.Contains(destination) || !File.Exists(destination))
+                        continue;
+                    if (!IsAsInstalled(destination, name, previous))
+                    {
+                        kept.Add(name);
+                        continue;
+                    }
+                    var backup = Path.Combine(staging, ".replaced", name);
+                    Directory.CreateDirectory(Path.GetDirectoryName(backup)!);
+                    File.Copy(destination, backup);
+                    journal.Add((destination, backup));
+                    File.Delete(destination);
+                    removed.Add(name);
+                }
+
                 JsonFile.Write(paths.Ue4ssRecordFile(Game.Profile.Id), new Ue4ssInstallRecord
                 {
                     Version = version ?? Ue4ssManifest.VersionFromFileName(package),
                     Source = Path.GetFileName(Path.TrimEndingDirectorySeparator(package)),
                     InstalledAt = DateTimeOffset.Now,
+                    Files = files,
                 });
-                Log.Info($"{(updating ? "Updated" : "Installed")} UE4SS from '{package}': {written} file(s) written, {kept.Count} kept.");
-                return new Ue4ssInstallResult(win64, written, kept, updating);
+                foreach (var name in removed)
+                    RemoveEmptyFolders(name, Path.Combine(win64, name));
+                Log.Info($"{(updating ? "Updated" : "Installed")} UE4SS from '{package}': {written} file(s) written, "
+                    + $"{kept.Count} kept, {removed.Count} old file(s) removed.");
+                return new Ue4ssInstallResult(win64, written, kept, updating, removed);
             }
             catch
             {
@@ -551,20 +589,26 @@ public sealed class ModManager
     }
 
     /// <summary>The UE4SS version the manager installed, or null when it did not install UE4SS or could not tell.</summary>
-    public string? InstalledUe4ssVersion
+    public string? InstalledUe4ssVersion => ReadUe4ssRecord()?.Version;
+
+    /// <summary>The record of the UE4SS release the manager installed; null when there is none or it cannot be read.</summary>
+    private Ue4ssInstallRecord? ReadUe4ssRecord()
     {
-        get
+        try
         {
-            try
-            {
-                return JsonFile.Read<Ue4ssInstallRecord>(paths.Ue4ssRecordFile(Game.Profile.Id))?.Version;
-            }
-            catch (Exception ex) when (ex is IOException or System.Text.Json.JsonException)
-            {
-                return null;
-            }
+            return JsonFile.Read<Ue4ssInstallRecord>(paths.Ue4ssRecordFile(Game.Profile.Id));
+        }
+        catch (Exception ex) when (ex is IOException or System.Text.Json.JsonException)
+        {
+            return null;
         }
     }
+
+    /// <summary>Whether a UE4SS file is still as the previous release put it there, so the user did not change it.</summary>
+    private static bool IsAsInstalled(string path, string name, Dictionary<string, string>? previous) =>
+        previous is not null
+        && previous.TryGetValue(name, out var sha256)
+        && string.Equals(FileSystem.Sha256(path), sha256, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
     /// Removes UE4SS completely, whoever installed it: the proxy DLL and the whole ue4ss
@@ -1174,14 +1218,17 @@ public sealed class ModManager
         mod.Enabled = false;
     }
 
+    private static void RemoveEmptyFolders(ModFileRecord file, string deployedPath) => RemoveEmptyFolders(file.FileName, deployedPath);
+
     /// <summary>
     /// Removes the folders a file brought along, such as "Mod\Scripts" and "Mod" for
     /// "Mod/Scripts/main.lua", once they are empty. The target folder itself stays.
     /// </summary>
+    /// <param name="name">The file's path below the target folder, with '/'.</param>
     /// <param name="deployedPath">Where the file was deployed.</param>
-    private static void RemoveEmptyFolders(ModFileRecord file, string deployedPath)
+    private static void RemoveEmptyFolders(string name, string deployedPath)
     {
-        var depth = file.FileName.Count(c => c == '/');
+        var depth = name.Count(c => c == '/');
         var folder = Path.GetDirectoryName(deployedPath);
         for (var i = 0; i < depth && folder is not null; i++, folder = Path.GetDirectoryName(folder))
         {

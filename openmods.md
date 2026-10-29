@@ -2,9 +2,6 @@
 
 A mod manager for Unreal Engine games. The first supported game is **Phantom Blade Zero**.
 
-> **Pre-release.** UE MM is at the beginning of its development. It most likely works; if something does not, an
-> update with a fix follows quickly. Expect frequent changes.
-
 ## What it does
 
 - Installs mods from a `.zip`, `.7z` or `.rar` download, a `.pak` file or a mod folder: drop it on the window. Every
@@ -57,8 +54,7 @@ folder.
 
 ## Known issues
 
-- Pre-release: the game's folder layout is checked on the Steam version. The Epic Games Store version is not checked
-  yet.
+- The game's folder layout is checked on the Steam version. The Epic Games Store version is not checked yet.
 - No load order yet: neither pak priority nor UE4SS's `mods.txt` order.
 
 ## How to build

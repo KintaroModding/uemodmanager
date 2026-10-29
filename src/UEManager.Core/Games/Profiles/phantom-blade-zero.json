@@ -21,7 +21,8 @@
   "modsPath": "{Project}/Content/Paks/~mods",
 
   // The game's real exe is not in ProjectPBZ/Binaries/Win64, but in a folder per store:
-  // platform/steam/PBZ.exe on Steam. UE4SS goes next to it.
+  // platform/steam/PBZ.exe on Steam. UE4SS goes next to it. If another store's build names
+  // it differently, the largest exe of at least 50 MB in that folder counts as the game's.
   "binariesPath": "platform/*",
   "shippingExecutable": "PBZ.exe",
 

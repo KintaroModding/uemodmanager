@@ -53,7 +53,8 @@ public sealed class GameProfile
 
     /// <summary>
     /// File name of the game's real executable in <see cref="BinariesPath"/>, the one UE4SS is loaded into.
-    /// Null for Unreal's usual <c>&lt;Project&gt;-Win64-Shipping.exe</c>.
+    /// Null for Unreal's usual <c>&lt;Project&gt;-Win64-Shipping.exe</c>. When the named file is missing,
+    /// as in another store's build, the largest executable of at least 50 MB there is taken.
     /// </summary>
     public string? ShippingExecutable { get; init; }
 

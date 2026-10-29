@@ -31,7 +31,17 @@ public sealed record GameInstall(
     /// <summary>The game's real executable in <see cref="BinariesPath"/>, such as Game-Win64-Shipping.exe.</summary>
     public string? FindShippingExecutable() => FindShippingExecutable(Profile, BinariesPath);
 
-    /// <summary>The profile's shipping executable in a folder; without a name in the profile, the usual Unreal one, else any.</summary>
+    /// <summary>
+    /// A game's real executable is hundreds of MB, its helpers such as a crash reporter a few MB.
+    /// Only a minimum: the size changes with every game update.
+    /// </summary>
+    internal const long MinimumGameExecutableSize = 50L * 1024 * 1024;
+
+    /// <summary>
+    /// The profile's shipping executable in a folder, else the largest executable of at least
+    /// <see cref="MinimumGameExecutableSize"/>: another store's build may name it differently. Without a name
+    /// in the profile, the usual Unreal one, else any.
+    /// </summary>
     internal static string? FindShippingExecutable(GameProfile profile, string folder)
     {
         try
@@ -41,7 +51,11 @@ public sealed record GameInstall(
             if (!string.IsNullOrWhiteSpace(profile.ShippingExecutable))
             {
                 var named = Path.Combine(folder, profile.ShippingExecutable);
-                return File.Exists(named) ? named : null;
+                if (File.Exists(named))
+                    return named;
+                return new DirectoryInfo(folder).EnumerateFiles("*.exe")
+                    .Where(file => file.Length >= MinimumGameExecutableSize)
+                    .MaxBy(file => file.Length)?.FullName;
             }
             return Directory.EnumerateFiles(folder, "*-Win64-Shipping.exe").FirstOrDefault()
                 ?? Directory.EnumerateFiles(folder, "*.exe").FirstOrDefault();
