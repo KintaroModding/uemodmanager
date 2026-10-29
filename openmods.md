@@ -15,6 +15,7 @@ A mod manager for Unreal Engine games. The first supported game is **Phantom Bla
 - Installs and updates UE4SS for the game, and shows the UE4SS log with its errors and warnings.
 - The **openmods** page lists the game's mods from openmods: install or update one with a click.
 - Changes nothing while the game runs, and keeps the settings you changed in a mod's `config.lua` across updates.
+- Can back up your saves each time it starts the game.
 - **Reset modding** takes the game back to its original files in one step, so you can start clean.
 
 ## Screenshots
@@ -56,8 +57,8 @@ folder.
 
 ## Known issues
 
-- Pre-release: the game's folder layout is assumed from the usual Unreal Engine layout and is being checked.
-- Save backups come in a later update, once the game's save folder is known for sure.
+- Pre-release: the game's folder layout is checked on the Steam version. The Epic Games Store version is not checked
+  yet.
 - No load order yet: neither pak priority nor UE4SS's `mods.txt` order.
 
 ## How to build

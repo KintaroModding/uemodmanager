@@ -1,11 +1,12 @@
 // Game profile for Phantom Blade Zero. Built into the exe: change it here and rebuild.
 //
-// The folder layout below is a guess based on the usual Unreal Engine layout,
-// made before the game was released. Correct it once the real layout is known.
+// The folder layout below is the one of the released game, read from the Steam
+// install on 2026-10-29. The Epic Games Store install is not checked yet.
 //
 // Paths are relative to the game's install folder. {Project} stands for the
-// Unreal project folder. If that folder does not exist, the manager uses any
-// folder in the install that holds Content/Paks.
+// Unreal project folder. If that folder does not exist in an install found through
+// Steam or Epic, the manager uses any folder in the install that holds Content/Paks.
+// A folder chosen by hand must hold Engine, the project folder and the game's exe.
 {
   "id": "phantom-blade-zero",
   "displayName": "Phantom Blade Zero",
@@ -15,9 +16,17 @@
   "steamAppId": "4115450",
   "epicDisplayName": "Phantom Blade Zero",
 
-  "projectFolder": "PhantomBladeZero",
+  "projectFolder": "ProjectPBZ",
   "paksPath": "{Project}/Content/Paks",
   "modsPath": "{Project}/Content/Paks/~mods",
+
+  // The game's real exe is not in ProjectPBZ/Binaries/Win64, but in a folder per store:
+  // platform/steam/PBZ.exe on Steam. UE4SS goes next to it.
+  "binariesPath": "platform/*",
+  "shippingExecutable": "PBZ.exe",
+
+  // In the install folder, with a folder per store and player inside, such as Steam/<id>.
+  "saveFolder": "{Project}/Saved/SaveGames",
 
   // Where "How to install UE4SS" sends the user: a UE4SS release that can read this game.
   "ue4ssDownloadUrl": "https://github.com/KintaroModding/ue4ss/releases",
@@ -30,5 +39,6 @@
   // "ue4ssPackageSha256": "<sha-256 of that file>",
 
   // Started by "Launch game" only when the game was not found through Steam or Epic.
-  "executable": "PhantomBladeZero.exe"
+  // Steam starts this small exe, and it starts platform/steam/PBZ.exe.
+  "executable": "steam/PBZ.exe"
 }

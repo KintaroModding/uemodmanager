@@ -20,12 +20,20 @@ public static class SaveBackups
 
     /// <summary>
     /// The save folder of a game: the player's choice, else the profile's, with %LOCALAPPDATA% and the like
-    /// expanded. Null when save backups are not available for the game.
+    /// expanded. Null when save backups are not available for the game, or when the profile's folder is
+    /// inside the install folder and the game was not found.
     /// </summary>
-    public static string? Folder(GameProfile profile, string? chosen) =>
-        !IsAvailable(profile) ? null
-        : !string.IsNullOrWhiteSpace(chosen) ? chosen
-        : Path.GetFullPath(Environment.ExpandEnvironmentVariables(profile.SaveFolder!));
+    public static string? Folder(GameProfile profile, GameInstall? game, string? chosen)
+    {
+        if (!IsAvailable(profile))
+            return null;
+        if (!string.IsNullOrWhiteSpace(chosen))
+            return chosen;
+        var folder = Environment.ExpandEnvironmentVariables(profile.SaveFolder!);
+        if (Path.IsPathFullyQualified(folder))
+            return Path.GetFullPath(folder);
+        return game is null ? null : GameProfile.ResolvePath(game.RootPath, folder, game.ProjectFolder);
+    }
 
     /// <summary>Whether the save folder holds any file. A new player has none: the game makes the folder at its first save.</summary>
     public static bool HasSaves(string saveFolder) =>

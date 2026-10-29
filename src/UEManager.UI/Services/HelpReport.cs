@@ -41,7 +41,10 @@ internal static partial class HelpReport
             ? $"Game: {facts.Profile.DisplayName}, not found"
             : $"Game: {facts.Profile.DisplayName}, {StoreText(game)}");
         if (game is not null)
+        {
             text.AppendLine($"Install folder: {game.RootPath}");
+            text.AppendLine($"Game exe: {game.FindShippingExecutable() ?? $"not found in {game.BinariesPath}"}");
+        }
         text.AppendLine(facts.Ue4ss switch
         {
             null => "UE4SS: -",

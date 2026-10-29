@@ -28,8 +28,10 @@ How to install and use it, for players: [openmods.md](openmods.md).
 | Blueprint | package files below a `LogicMods` folder | `<Project>/Content/Paks/LogicMods` |
 | UE4SS Lua / DLL | a folder with `Scripts/main.lua` or `dlls/*.dll` | UE4SS's `Mods` folder |
 
-UE4SS's `Mods` folder is `Binaries/Win64/ue4ss/Mods` for UE4SS 3.x and
-`Binaries/Win64/Mods` for 2.x, detected from where `UE4SS.dll` is. A UE4SS mod
+UE4SS sits next to the game's exe, which most Unreal games keep in
+`<Project>/Binaries/Win64` and Phantom Blade Zero in `platform/<store>` (see
+[Game profiles](#game-profiles)). Its `Mods` folder there is `ue4ss/Mods` for
+UE4SS 3.x and `Mods` for 2.x, detected from where `UE4SS.dll` is. A UE4SS mod
 is deployed as its whole folder; when it has no `enabled.txt`, the manager adds
 one, so UE4SS starts it without `mods.txt` being edited. Disabling removes the
 folder again. Lua, DLL and Blueprint mods can be installed before UE4SS is,
@@ -72,7 +74,8 @@ variant is recorded with the mod.
 
 When UE4SS is missing, Home, the UE4SS page and the install review offer
 **Install UE4SS…**. The popup installs a UE4SS 3.x release package
-(`dwmapi.dll` plus the `ue4ss` folder) into `Binaries/Win64`:
+(`dwmapi.dll` plus the `ue4ss` folder) next to the game's exe. Without that
+exe, it installs nothing:
 
 - **Download and install** fetches the release named by the online manifest
   (below), or else the fixed `ue4ssPackageUrl` of the game profile, and refuses
@@ -155,10 +158,12 @@ stops the removal without leaving UE4SS or a mod half removed.
 
 Save backups are offered only when the game profile names the save folder
 (`saveFolder`). Games keep their saves in different places, such as
-`%LOCALAPPDATA%`, `Documents\My Games` or a folder with a name of their own,
-so the folder is never guessed. Until then, **Settings → Save backups** is
-greyed out, and its tooltip says that it comes in the next update. The backup
-at launch is off by default, also once the folder is known.
+`%LOCALAPPDATA%`, `Documents\My Games`, a folder with a name of their own or
+the install folder, so the folder is never guessed. Without it, **Settings →
+Save backups** is greyed out, and its tooltip says that it comes in the next
+update. Phantom Blade Zero keeps its saves in the install folder, in
+`ProjectPBZ/Saved/SaveGames`, with a folder per store and player inside. The
+backup at launch is off by default.
 
 A broken mod can break a save. When the player turns it on, **Launch game**
 first zips the save folder into `Data/games/<id>/save-backups/` and keeps the
@@ -169,8 +174,9 @@ game anyway. Starting the game from Steam, Epic or a shortcut makes no backup.
 at launch on or off, and offers **Back up now**. The app never restores a backup
 itself: the player unzips one over the save folder, with the game closed.
 
-The save folder is the profile's `saveFolder` (environment variables such as
-`%LOCALAPPDATA%` are expanded), or the folder the player chose, which wins.
+The save folder is the profile's `saveFolder` (relative to the install folder,
+or a full path in which environment variables such as `%LOCALAPPDATA%` are
+expanded), or the folder the player chose, which wins.
 
 ## Game updates
 
@@ -318,26 +324,41 @@ the game keeps its files. Paths are relative to the install folder, and
 `{Project}` stands for the Unreal project folder:
 
 ```json
-"projectFolder": "PhantomBladeZero",
+"projectFolder": "ProjectPBZ",
 "paksPath": "{Project}/Content/Paks",
-"modsPath": "{Project}/Content/Paks/~mods"
+"modsPath": "{Project}/Content/Paks/~mods",
+"binariesPath": "platform/*",
+"shippingExecutable": "PBZ.exe",
+"saveFolder": "{Project}/Saved/SaveGames",
+"executable": "steam/PBZ.exe"
 ```
 
-The Phantom Blade Zero layout is a guess based on the usual Unreal layout, made
-before the game was released. If the project folder named in the profile does
-not exist, any folder in the install (except `Engine`) that holds `Content/Paks`
-and a game executable in `Binaries/Win64` is used instead.
-To correct the profile, edit the file and rebuild. `ProfileTests` checks that
-every built-in profile parses.
+The Phantom Blade Zero layout is the one of the released game's Steam install.
+Its real exe is not in `ProjectPBZ/Binaries/Win64`, as in most Unreal games,
+but in a folder per store: `platform/steam/PBZ.exe`, started by
+`steam/PBZ.exe`. `binariesPath` names the folder of the real exe, where UE4SS
+goes (default `{Project}/Binaries/Win64`); a `*` in it matches any folder, and
+the one that holds `shippingExecutable` wins, the one named after the store
+first. Without `shippingExecutable`, the exe is the usual
+`<Project>-Win64-Shipping.exe`. To correct the profile, edit the file and
+rebuild. `ProfileTests` checks that every built-in profile parses, and
+`GameLocatorTests` reads a copy of the Steam layout with it.
 
 The game is found through Steam (`steamAppId`, all library folders) or the Epic
-Games Launcher (`epicDisplayName`), or chosen by hand. A folder chosen by hand
-inside a Steam library or an Epic install still starts through that store;
-otherwise **Launch game** starts the profile's `executable` directly. An Epic
-install is matched by its folder here, so it works even when `epicDisplayName`
-is wrong; the log then names the store's real name for the profile.
-`saveFolder` names the save folder for save backups. Set it only when the
-folder is known for sure: without it, the app offers no save backups.
+Games Launcher (`epicDisplayName`), or chosen by hand. In an install a store
+names, a project folder other than the profile's is accepted too: any folder
+(except `Engine`) that holds `Content/Paks` and an exe in `Binaries/Win64`. A
+folder chosen by hand must be the game's main folder: it must hold `Engine`, the
+profile's own project folder and the real exe, so the folder of another Unreal
+game is refused. A pick inside the main folder, such as `Binaries/Win64`, is
+walked up from.
+
+A folder chosen by hand inside a Steam library or an Epic install still starts
+through that store; otherwise **Launch game** starts the profile's `executable`
+directly. An Epic install is matched by its folder here, so it works even when
+`epicDisplayName` is wrong; the log then names the store's real name for the
+profile. `saveFolder` names the save folder for save backups. Set it only when
+the folder is known for sure: without it, the app offers no save backups.
 
 Each build contains exactly one profile, chosen with the `GameProfile` build
 property (default `phantom-blade-zero`). `mortal-shell-2` exists to test the
@@ -366,8 +387,8 @@ Data/
 ```
 
 Outside it, the app writes only into the game folder: the files of enabled
-mods (`~mods`, `LogicMods`, UE4SS's `Mods`) and UE4SS itself in
-`Binaries/Win64`. If the app folder is not writable (for example under
+mods (`~mods`, `LogicMods`, UE4SS's `Mods`) and UE4SS itself next to the
+game's exe. If the app folder is not writable (for example under
 `C:\Program Files`), the app shows an error and asks to move the folder.
 `publish.ps1` keeps an existing `Data` folder in `dist/uemm-openmods` and
 `dist/uemm`.
@@ -391,7 +412,7 @@ handing over to it.
 
 - Installing a UE4SS 2.x package (removing one works)
 - Moving managed mods along when UE4SS 3.x is installed over a 2.x that was
-  put in by hand: they stay in the old `Win64/Mods` folder, where 3.x does not
+  put in by hand: they stay in the old 2.x `Mods` folder, where 3.x does not
   load them, and still show as enabled. Remove UE4SS first, install 3.x, then
   enable the mods again.
 - Load order: neither pak priority nor UE4SS's `mods.txt` order

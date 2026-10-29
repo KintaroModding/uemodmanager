@@ -86,6 +86,15 @@ public class Ue4ssInstallTests : IDisposable
     }
 
     [Fact]
+    public void Without_the_games_exe_ue4ss_is_not_installed()
+    {
+        File.Delete(game.FindShippingExecutable()!);
+
+        Assert.Throws<ModException>(() => manager.InstallUe4ss(Release()));
+        Assert.False(File.Exists(Path.Combine(Win64, "dwmapi.dll")));
+    }
+
+    [Fact]
     public void A_package_without_ue4ss_is_refused()
     {
         folder.File(@"NotUe4ss\dwmapi.dll");

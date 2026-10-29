@@ -1,4 +1,5 @@
 using UEManager.Core.Games;
+using UEManager.Core.Mods;
 using UEManager.Core.Stores;
 
 namespace UEManager.Core.Tests;
@@ -197,5 +198,122 @@ public class GameLocatorTests
         Assert.NotNull(install);
         Assert.Equal(GameStore.Manual, install.Store);
         Assert.Null(install.LaunchUri);
+    }
+
+    [Fact]
+    public void Another_unreal_game_chosen_by_hand_is_refused()
+    {
+        using var folder = new TestFolder();
+        var root = folder.Game("b1");
+
+        // A store's install may have its project folder detected; a folder chosen by hand may not.
+        Assert.Equal("b1", GameLocator.Resolve(TestFolder.Profile(), root, GameStore.Manual)?.ProjectFolder);
+        Assert.Null(GameLocator.FromFolder(TestFolder.Profile(), root, folder.Combine("Manifests")));
+    }
+
+    [Fact]
+    public void A_folder_chosen_by_hand_needs_the_engine_folder()
+    {
+        using var folder = new TestFolder();
+        var root = folder.Game();
+        Directory.Delete(Path.Combine(root, "Engine"), recursive: true);
+
+        Assert.Null(GameLocator.FromFolder(TestFolder.Profile(), root, folder.Combine("Manifests")));
+    }
+
+    [Fact]
+    public void A_folder_chosen_by_hand_needs_the_games_exe()
+    {
+        using var folder = new TestFolder();
+        var root = folder.Game();
+        File.Delete(Path.Combine(root, "TestGame", "Binaries", "Win64", "TestGame-Win64-Shipping.exe"));
+
+        Assert.Null(GameLocator.FromFolder(TestFolder.Profile(), root, folder.Combine("Manifests")));
+    }
+
+    /// <summary>A game whose exe is in a folder per store, as platform\steam, started by steam\Game.exe.</summary>
+    private static GameProfile StoreFolderProfile() => new()
+    {
+        Id = "test-game",
+        DisplayName = "Test Game",
+        ProjectFolder = "TestGame",
+        BinariesPath = "platform/*",
+        ShippingExecutable = "Game.exe",
+        Executable = "steam/Game.exe",
+    };
+
+    [Fact]
+    public void Finds_the_exe_in_a_folder_per_store()
+    {
+        using var folder = new TestFolder();
+        var root = folder.Game();
+        folder.File(@"Game\TestGame\Binaries\Win64\CheckEnv.exe", "");
+        folder.File(@"Game\platform\steam\Game.exe", "");
+        folder.File(@"Game\steam\Game.exe", "");
+
+        var install = GameLocator.FromFolder(StoreFolderProfile(), root, folder.Combine("Manifests"));
+
+        Assert.NotNull(install);
+        Assert.Equal(Path.Combine(root, "platform", "steam"), install.BinariesPath);
+        Assert.Equal(Path.Combine(root, "platform", "steam", "Game.exe"), install.FindShippingExecutable());
+        Assert.Equal(Path.Combine(root, "steam", "Game.exe"), install.FindExecutable());
+    }
+
+    [Fact]
+    public void The_stores_own_folder_comes_first()
+    {
+        using var folder = new TestFolder();
+        var root = folder.Game();
+        folder.File(@"Game\platform\epic\Game.exe", "");
+        folder.File(@"Game\platform\steam\Game.exe", "");
+        folder.File(@"Game\platform\tools\readme.txt", "");
+
+        Assert.Equal(Path.Combine(root, "platform", "steam"), GameLocator.Resolve(StoreFolderProfile(), root, GameStore.Steam)?.BinariesPath);
+        Assert.Equal(Path.Combine(root, "platform", "epic"), GameLocator.Resolve(StoreFolderProfile(), root, GameStore.Epic)?.BinariesPath);
+        Assert.Equal(Path.Combine(root, "platform", "epic"), GameLocator.Resolve(StoreFolderProfile(), root, GameStore.Manual)?.BinariesPath);
+    }
+
+    [Fact]
+    public void Without_its_exe_a_store_folder_game_still_has_its_paks()
+    {
+        using var folder = new TestFolder();
+        var root = folder.Game();
+
+        var install = GameLocator.Resolve(StoreFolderProfile(), root, GameStore.Epic);
+
+        Assert.NotNull(install);
+        Assert.Equal(Path.Combine(root, "platform"), install.BinariesPath);
+        Assert.Null(install.FindShippingExecutable());
+        Assert.Null(GameLocator.FromFolder(StoreFolderProfile(), root, folder.Combine("Manifests")));
+    }
+
+    [Fact]
+    public void Reads_the_phantom_blade_zero_steam_install()
+    {
+        using var folder = new TestFolder();
+        // The parts of the Steam install that matter, as the game shipped it.
+        folder.File(@"PBZ\Engine\Binaries\Win64\EpicWebHelper.exe", "");
+        folder.File(@"PBZ\platform\steam\PBZ.exe", "");
+        folder.File(@"PBZ\platform\steam\D3D12\x64\D3D12Core.dll", "");
+        folder.File(@"PBZ\ProjectPBZ\Binaries\Win64\CheckEnv.exe", "");
+        folder.File(@"PBZ\ProjectPBZ\Binaries\Win64\crashpad_handler.exe", "");
+        folder.File(@"PBZ\ProjectPBZ\Content\Paks\pakchunk0-Windows.pak", "");
+        folder.File(@"PBZ\ProjectPBZ\Saved\SaveGames\Steam\76561190000000000\1RealTime\save.sav", "");
+        folder.File(@"PBZ\steam\PBZ.exe", "");
+        folder.File(@"PBZ\steam_api64.dll", "");
+        var root = folder.Combine("PBZ");
+        var profile = Assert.Single(GameProfile.BuiltIn(), p => p.Id == "phantom-blade-zero");
+
+        var install = GameLocator.FromFolder(profile, Path.Combine(root, "ProjectPBZ", "Binaries", "Win64"), folder.Combine("Manifests"));
+
+        Assert.NotNull(install);
+        Assert.Equal(root, install.RootPath);
+        Assert.Equal("ProjectPBZ", install.ProjectFolder);
+        Assert.Equal(Path.Combine(root, "ProjectPBZ", "Content", "Paks", "~mods"), install.ModsPath);
+        Assert.Equal(Path.Combine(root, "ProjectPBZ", "Content", "Paks", "LogicMods"), install.LogicModsPath);
+        Assert.Equal(Path.Combine(root, "platform", "steam"), install.BinariesPath);
+        Assert.Equal(Path.Combine(root, "platform", "steam", "ue4ss", "Mods"), Ue4ssRuntime.Detect(install).ModsPath);
+        Assert.Equal(Path.Combine(root, "steam", "PBZ.exe"), install.FindExecutable());
+        Assert.Equal(Path.Combine(root, "ProjectPBZ", "Saved", "SaveGames"), SaveBackups.Folder(profile, install, null));
     }
 }

@@ -4,7 +4,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>12</LangVersion>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <!-- A pre-release shows a yellow "Pre-release" box below About that explains what it means.
          Set it to false for the first full release. -->
     <PreRelease>true</PreRelease>

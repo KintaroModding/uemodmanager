@@ -190,12 +190,13 @@ public sealed partial class MainViewModel : ObservableObject
         : $"Coming in the next update. Save backups need the exact save folder of {Profile.DisplayName}, which is not known for sure yet.";
 
     /// <summary>Where the saves are: the player's choice, else the game profile's; null while save backups are not available.</summary>
-    private string? SaveFolder => SaveBackups.Folder(Profile, settings.SaveFolders.GetValueOrDefault(Profile.Id));
+    private string? SaveFolder => SaveBackups.Folder(Profile, Game, settings.SaveFolders.GetValueOrDefault(Profile.Id));
 
-    public string SaveFolderText => SaveFolder ?? "Not known yet";
+    public string SaveFolderText => SaveFolder ?? (SaveBackupsAvailable ? "Not found yet" : "Not known yet");
 
     public string SaveFolderDetail => SaveFolder switch
     {
+        null when SaveBackupsAvailable => $"It is in the game folder. Locate {Profile.DisplayName} first.",
         null => "Save backups come in the next update, once this folder is known for sure.",
         var folder when !Directory.Exists(folder) => "This folder does not exist yet. The game makes it at its first save.",
         _ when settings.SaveFolders.ContainsKey(Profile.Id) => "Chosen by hand",
@@ -247,6 +248,9 @@ public sealed partial class MainViewModel : ObservableObject
     public string PaksPath => Game?.PaksPath ?? "—";
 
     public string LogicModsPath => Game?.LogicModsPath ?? "—";
+
+    /// <summary>The game's real exe, which UE4SS is installed next to.</summary>
+    public string GameExeText => Game is null ? "—" : Game.FindShippingExecutable() ?? $"Not found in {Game.BinariesPath}";
 
     /// <summary>The version the manager installed is exact; otherwise the one UE4SS wrote into its log.</summary>
     public string Ue4ssText => ue4ss switch
@@ -707,7 +711,9 @@ public sealed partial class MainViewModel : ObservableObject
         var install = GameLocator.FromFolder(Profile, dialog.FolderName);
         if (install is null)
         {
-            ShowToast($"No Unreal Engine paks folder was found there. Choose the folder {Profile.DisplayName} is installed in.", isError: true);
+            var folders = Profile.ProjectFolder is { Length: > 0 } project ? $"the Engine and {project} folders" : "the Engine folder";
+            ShowToast($"This does not look like the {Profile.DisplayName} install folder. Choose the game's main folder, the one that holds {folders}.",
+                isError: true);
             return;
         }
         if (!await SetGameAsync(install, $"Using {install.RootPath}."))

@@ -467,8 +467,9 @@ public sealed class ModManager
 
     /// <summary>
     /// Installs or updates UE4SS from its release package (a zip, 7z or folder holding
-    /// dwmapi.dll and the ue4ss folder) into Binaries\Win64. Existing user settings and
-    /// files of managed mods are kept. If a copy fails, every file is put back.
+    /// dwmapi.dll and the ue4ss folder) next to the game's shipping executable, in Binaries\Win64
+    /// in most games. Existing user settings and files of managed mods are kept. If a copy fails,
+    /// every file is put back.
     /// </summary>
     /// <param name="package">The release zip, 7z or folder.</param>
     /// <param name="version">The release version when known, as from the manifest; otherwise read from the file name.</param>
@@ -485,8 +486,9 @@ public sealed class ModManager
                 var root = Ue4ssPackageRoot(staging)
                     ?? throw new ModException("This is not a UE4SS release: ue4ss\\UE4SS.dll was not found in it.");
                 var win64 = Game.BinariesPath;
-                if (!Directory.Exists(win64))
-                    throw new ModException($"The game's Win64 folder was not found: {win64}");
+                if (Game.FindShippingExecutable() is null)
+                    throw new ModException($"The game's exe was not found in {win64}, so UE4SS cannot be installed. "
+                        + "Use Report a problem, so the game profile can be corrected.");
 
                 // Proxy DLLs such as dwmapi.dll stand in for a Windows library the game loads.
                 // One that is already there while UE4SS is not belongs to another tool.

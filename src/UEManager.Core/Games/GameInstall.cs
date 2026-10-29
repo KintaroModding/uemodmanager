@@ -10,12 +10,14 @@ public enum GameStore
 }
 
 /// <summary>A located installation of a game, with every profile path resolved.</summary>
+/// <param name="BinariesPath">Folder of the shipping executable, where UE4SS is installed.</param>
 public sealed record GameInstall(
     GameProfile Profile,
     string RootPath,
     string? ProjectFolder,
     string PaksPath,
     string ModsPath,
+    string BinariesPath,
     GameStore Store,
     string? BuildId = null,
     string? LaunchUri = null)
@@ -26,21 +28,33 @@ public sealed record GameInstall(
     /// <summary>Folder for Blueprint mods, which UE4SS's BPModLoaderMod loads.</summary>
     public string LogicModsPath => GameProfile.ResolvePath(RootPath, Profile.LogicModsPath, ProjectFolder);
 
-    /// <summary>Folder of the shipping executable, where UE4SS is installed.</summary>
-    public string BinariesPath => GameProfile.ResolvePath(RootPath, Profile.BinariesPath, ProjectFolder);
-
     /// <summary>The game's real executable in <see cref="BinariesPath"/>, such as Game-Win64-Shipping.exe.</summary>
-    public string? FindShippingExecutable()
+    public string? FindShippingExecutable() => FindShippingExecutable(Profile, BinariesPath);
+
+    /// <summary>The profile's shipping executable in a folder; without a name in the profile, the usual Unreal one, else any.</summary>
+    internal static string? FindShippingExecutable(GameProfile profile, string folder)
     {
-        if (!Directory.Exists(BinariesPath))
+        try
+        {
+            if (!Directory.Exists(folder))
+                return null;
+            if (!string.IsNullOrWhiteSpace(profile.ShippingExecutable))
+            {
+                var named = Path.Combine(folder, profile.ShippingExecutable);
+                return File.Exists(named) ? named : null;
+            }
+            return Directory.EnumerateFiles(folder, "*-Win64-Shipping.exe").FirstOrDefault()
+                ?? Directory.EnumerateFiles(folder, "*.exe").FirstOrDefault();
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
             return null;
-        return Directory.EnumerateFiles(BinariesPath, "*-Win64-Shipping.exe").FirstOrDefault()
-            ?? Directory.EnumerateFiles(BinariesPath, "*.exe").FirstOrDefault();
+        }
     }
 
     /// <summary>
-    /// The executable "Launch game" starts when no store launcher is known: the
-    /// profile's choice, else the first executable in the install folder.
+    /// The executable "Launch game" starts when no store launcher is known: the profile's
+    /// choice, else the first executable in the install folder, else the shipping executable.
     /// </summary>
     public string? FindExecutable()
     {
@@ -52,7 +66,8 @@ public sealed record GameInstall(
         }
         return Directory.EnumerateFiles(RootPath, "*.exe")
             .FirstOrDefault(path => !HelperExecutables.Any(helper =>
-                Path.GetFileNameWithoutExtension(path).StartsWith(helper, StringComparison.OrdinalIgnoreCase)));
+                Path.GetFileNameWithoutExtension(path).StartsWith(helper, StringComparison.OrdinalIgnoreCase)))
+            ?? FindShippingExecutable();
     }
 
     /// <summary>Starts the game through its store when known, so DRM and overlays work as usual.</summary>

@@ -104,6 +104,10 @@
                     <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Tracked 'Blueprint mods'}" />
                     <TextBlock Style="{StaticResource Text.Path}" Text="{Binding LogicModsPath}" />
                 </DockPanel>
+                <DockPanel Style="{StaticResource Field}">
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Tracked 'Game exe'}" />
+                    <TextBlock Style="{StaticResource Text.Path}" Text="{Binding GameExeText}" />
+                </DockPanel>
             </StackPanel>
         </Border>
 

@@ -44,8 +44,18 @@ public sealed class GameProfile
     /// <summary>Folder Blueprint mods are deployed into; UE4SS's BPModLoaderMod loads them from here.</summary>
     public string LogicModsPath { get; init; } = "{Project}/Content/Paks/LogicMods";
 
-    /// <summary>Folder of the game's shipping executable, where UE4SS is installed.</summary>
+    /// <summary>
+    /// Folder of the game's shipping executable, where UE4SS is installed. A <c>*</c> in one part stands
+    /// for any folder, as in <c>platform/*</c> for a game with a folder per store: the one that holds the
+    /// shipping executable wins, the store's own first.
+    /// </summary>
     public string BinariesPath { get; init; } = "{Project}/Binaries/Win64";
+
+    /// <summary>
+    /// File name of the game's real executable in <see cref="BinariesPath"/>, the one UE4SS is loaded into.
+    /// Null for Unreal's usual <c>&lt;Project&gt;-Win64-Shipping.exe</c>.
+    /// </summary>
+    public string? ShippingExecutable { get; init; }
 
     /// <summary>Where "How to install UE4SS" sends the user; null for the official RE-UE4SS releases.</summary>
     public string? Ue4ssDownloadUrl { get; init; }
@@ -72,9 +82,9 @@ public sealed class GameProfile
     public string? Executable { get; init; }
 
     /// <summary>
-    /// The folder holding the game's save files, for save backups. Environment variables such as
-    /// %LOCALAPPDATA% are expanded. Set it only when the folder is known for sure: without it, save
-    /// backups are not offered for the game.
+    /// The folder holding the game's save files, for save backups: relative to the install folder, or a
+    /// full path in which environment variables such as %LOCALAPPDATA% are expanded. Set it only when the
+    /// folder is known for sure: without it, save backups are not offered for the game.
     /// </summary>
     public string? SaveFolder { get; init; }
 

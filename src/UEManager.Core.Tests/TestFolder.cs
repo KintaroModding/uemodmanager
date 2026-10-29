@@ -32,13 +32,14 @@ internal sealed class TestFolder : IDisposable
     };
 
     /// <summary>
-    /// Creates a fake Unreal install: Root/Project/Content/Paks, the shipping executable in
-    /// Root/Project/Binaries/Win64, and a launcher executable.
+    /// Creates a fake Unreal install: Root/Engine, Root/Project/Content/Paks, the shipping
+    /// executable in Root/Project/Binaries/Win64, and a launcher executable.
     /// </summary>
     /// <param name="name">The install folder below the test folder; a second name makes a second install.</param>
     public string Game(string project = "TestGame", string name = "Game")
     {
         var root = Combine(name);
+        Directory.CreateDirectory(System.IO.Path.Combine(root, "Engine", "Binaries", "Win64"));
         Directory.CreateDirectory(System.IO.Path.Combine(root, project, "Content", "Paks"));
         Directory.CreateDirectory(System.IO.Path.Combine(root, project, "Binaries", "Win64"));
         System.IO.File.WriteAllText(System.IO.Path.Combine(root, project, "Binaries", "Win64", project + "-Win64-Shipping.exe"), "");

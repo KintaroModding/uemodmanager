@@ -86,7 +86,7 @@
                 </Border>
                 <StackPanel Grid.Column="1">
                     <TextBlock Margin="0,3,0,0" TextWrapping="Wrap" LineHeight="19"
-                               Text="Pick the downloaded zip. The manager unpacks it into the game's Win64 folder and keeps any UE4SS settings you already have." />
+                               Text="Pick the downloaded zip. The manager unpacks it next to the game's exe and keeps any UE4SS settings you already have." />
                     <TextBlock Margin="0,4,0,10" Style="{StaticResource Text.Path}" Text="{Binding Win64Path}" />
                     <StackPanel Orientation="Horizontal">
                         <Button Style="{StaticResource Button.Primary}" Content="Install from file…" ui:Icon.Glyph="&#xE8E5;"
@@ -101,7 +101,7 @@
 
             <DockPanel Margin="0,26,0,0" LastChildFill="False">
                 <Button DockPanel.Dock="Right" Content="Close" Command="{Binding CloseCommand}" IsCancel="True" />
-                <Button DockPanel.Dock="Left" Content="Open Win64 folder" ui:Icon.Glyph="&#xE838;" Command="{Binding OpenWin64Command}" />
+                <Button DockPanel.Dock="Left" Content="Open exe folder" ui:Icon.Glyph="&#xE838;" Command="{Binding OpenWin64Command}" />
                 <Button DockPanel.Dock="Left" Margin="8,0,0,0" Content="Check again" ui:Icon.Glyph="&#xE72C;"
                         Command="{Binding CheckAgainCommand}" ToolTip="Look for UE4SS again after installing it by hand" />
             </DockPanel>

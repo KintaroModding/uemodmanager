@@ -80,9 +80,21 @@ public class SaveBackupTests : IDisposable
     {
         var profile = new GameProfile { Id = "g", DisplayName = "G", SaveFolder = @"%LOCALAPPDATA%\Game\Saved\SaveGames" };
 
-        Assert.Equal(@"D:\Saves", SaveBackups.Folder(profile, @"D:\Saves"));
+        Assert.Equal(@"D:\Saves", SaveBackups.Folder(profile, null, @"D:\Saves"));
         Assert.Equal(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Game", "Saved", "SaveGames"),
-            SaveBackups.Folder(profile, null));
+            SaveBackups.Folder(profile, null, null));
+    }
+
+    [Fact]
+    public void A_save_folder_in_the_install_folder_is_found_once_the_game_is()
+    {
+        var profile = new GameProfile { Id = "g", DisplayName = "G", ProjectFolder = "TestGame", SaveFolder = "{Project}/Saved/SaveGames" };
+        var game = GameLocator.Resolve(profile, folder.Game(), GameStore.Manual)!;
+
+        Assert.True(SaveBackups.IsAvailable(profile));
+        Assert.Null(SaveBackups.Folder(profile, null, null));
+        Assert.Equal(Path.Combine(game.RootPath, "TestGame", "Saved", "SaveGames"), SaveBackups.Folder(profile, game, null));
+        Assert.Equal(@"D:\Saves", SaveBackups.Folder(profile, game, @"D:\Saves"));
     }
 
     [Fact]
@@ -91,8 +103,8 @@ public class SaveBackupTests : IDisposable
         var profile = new GameProfile { Id = "g", DisplayName = "G" };
 
         Assert.False(SaveBackups.IsAvailable(profile));
-        Assert.Null(SaveBackups.Folder(profile, null));
-        Assert.Null(SaveBackups.Folder(profile, @"D:\Saves"));
+        Assert.Null(SaveBackups.Folder(profile, null, null));
+        Assert.Null(SaveBackups.Folder(profile, null, @"D:\Saves"));
         Assert.False(new AppSettings().BackUpSavesOnLaunch);
     }
 
