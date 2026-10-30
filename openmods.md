@@ -14,6 +14,7 @@ A mod manager for Unreal Engine games. The first supported game is **Phantom Bla
 - Changes nothing while the game runs, and keeps the settings you changed in a mod's `config.lua` across updates.
 - Can back up your saves each time it starts the game.
 - **Reset modding** takes the game back to its original files in one step, so you can start clean.
+- Speaks English and Simplified Chinese (简体中文): choose in **Settings ▸ Language**.
 
 ## Screenshots
 

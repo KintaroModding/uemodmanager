@@ -3,7 +3,7 @@ namespace UEManager.Core.Storage;
 /// <summary>User choices that survive a restart.</summary>
 public sealed class AppSettings
 {
-    /// <summary>UI language, "en" or "zh-CN"; null follows the OS on the first launch.</summary>
+    /// <summary>The chosen language's code, such as "zh-CN"; null follows the Windows display language.</summary>
     public string? Language { get; set; }
 
     /// <summary>Install folder per game profile id, set when the user locates the game by hand.</summary>

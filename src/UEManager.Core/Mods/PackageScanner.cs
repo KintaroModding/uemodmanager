@@ -29,17 +29,17 @@ public sealed class PackageGroup
         Target = target;
         Size = files.Sum(f => new FileInfo(f).Length);
 
-        var problems = new List<string>();
-        var warnings = new List<string>();
+        var problems = new List<FormattableString>();
+        var warnings = new List<FormattableString>();
         if (kind == PackageKind.IoStore)
         {
             bool Has(string extension) => files.Any(f => Path.GetExtension(f).Equals(extension, StringComparison.OrdinalIgnoreCase));
             if (Has(".utoc") && !Has(".ucas"))
-                problems.Add(L.F($"{name}.utoc has no matching .ucas file."));
+                problems.Add($"{name}.utoc has no matching .ucas file.");
             if (Has(".ucas") && !Has(".utoc"))
-                problems.Add(L.F($"{name}.ucas has no matching .utoc file."));
+                problems.Add($"{name}.ucas has no matching .utoc file.");
             if (!Has(".pak"))
-                warnings.Add(L.F($"{name} has no .pak file. Unreal Engine 5 games usually need it next to the .utoc and .ucas files."));
+                warnings.Add($"{name} has no .pak file. Unreal Engine 5 games usually need it next to the .utoc and .ucas files.");
         }
         Problems = problems;
         Warnings = warnings;
@@ -67,9 +67,9 @@ public sealed class PackageGroup
     public long Size { get; }
 
     /// <summary>Problems that stop this package from being installed.</summary>
-    public IReadOnlyList<string> Problems { get; }
+    public IReadOnlyList<FormattableString> Problems { get; }
 
-    public IReadOnlyList<string> Warnings { get; }
+    public IReadOnlyList<FormattableString> Warnings { get; }
 
     public string Label => Folder.Length == 0 ? Name : $"{Folder}/{Name}";
 

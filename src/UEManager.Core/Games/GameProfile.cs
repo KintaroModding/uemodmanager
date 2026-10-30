@@ -115,10 +115,10 @@ public sealed class GameProfile
         }
         catch (JsonException ex)
         {
-            throw new InvalidDataException(L.F($"Game profile '{source}' is not valid JSON: {ex.Message}"), ex);
+            throw new InvalidDataException($"Game profile '{source}' is not valid JSON: {ex.Message}", ex);
         }
         if (profile is null || string.IsNullOrWhiteSpace(profile.Id) || string.IsNullOrWhiteSpace(profile.DisplayName))
-            throw new InvalidDataException(L.F($"Game profile '{source}' needs an id and a displayName."));
+            throw new InvalidDataException($"Game profile '{source}' needs an id and a displayName.");
         return profile;
     }
 

@@ -140,7 +140,7 @@ public class Ue4ssTests : IDisposable
             var check = manager.Check(preview, preview.Packages.ToList());
             Assert.True(check.CanInstall);
             Assert.True(check.NeedsUe4ss);
-            Assert.Contains(check.Warnings, w => w.Contains("UE4SS is not installed"));
+            Assert.Contains(check.Warnings, w => w.ToString().Contains("UE4SS is not installed"));
         }
 
         Install(LuaDownload("DashTest"));
@@ -198,7 +198,7 @@ public class Ue4ssTests : IDisposable
         var check = manager.Check(preview, preview.Packages.ToList());
 
         Assert.False(check.CanInstall);
-        Assert.Contains(check.Problems, p => p.Contains("UE4SS runtime"));
+        Assert.Contains(check.Problems, p => p.ToString().Contains("UE4SS runtime"));
     }
 
     [Fact]

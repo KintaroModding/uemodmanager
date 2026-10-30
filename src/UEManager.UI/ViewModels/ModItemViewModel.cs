@@ -32,7 +32,7 @@ public sealed partial class ModItemViewModel : LocalizedObservableObject
     {
         record.Version is null ? null : L.F($"Version {record.Version}"),
         record.Variant is null ? null : L.F($"Variant {record.Variant}"),
-        Format.Count(record.Files.Count, "file", "files"),
+        L.Plural(record.Files.Count, "{0} file", "{0} files"),
         Format.Size(record.TotalSize),
     }.Where(part => part is not null));
 
@@ -47,11 +47,11 @@ public sealed partial class ModItemViewModel : LocalizedObservableObject
         record.Files.Where(f => f.IsSettingsFile && f.DeployedPath is not null).Select(f => f.DeployedPath!);
 
     public string EditSettingsHint => Enabled
-        ? L.F($"Edit this mod's settings: {string.Join(", ", record.Files.Where(f => f.IsSettingsFile).Select(f => SettingsFiles.Name(f.FileName)))}. ")
-          + L.T("Most mods read them when the game starts.")
+        ? L.Join(L.F($"Edit this mod's settings: {string.Join(", ", record.Files.Where(f => f.IsSettingsFile).Select(f => SettingsFiles.Name(f.FileName)))}."),
+            L.T("Most mods read them when the game starts."))
         : L.T("Enable the mod to edit its settings");
 
-    public string KindText => L.T(record.TypeLabel);
+    public string KindText => Format.Kind(record.TypeLabel);
 
     public DateTimeOffset InstalledAt => record.InstalledAt;
 

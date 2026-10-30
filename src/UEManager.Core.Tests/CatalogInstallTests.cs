@@ -97,7 +97,7 @@ public class CatalogInstallTests : IDisposable
         var check = manager.Check(preview, preview.Packages.ToList(), "kintaromodding/variants");
         Assert.False(check.CanInstall);
         Assert.Null(check.Replaces);
-        Assert.Contains(check.Problems, p => p.Contains("\"Dash\""));
+        Assert.Contains(check.Problems, p => p.ToString().Contains("\"Dash\""));
 
         manager.SetEnabled(dash.Id, false);
         Assert.True(manager.Check(preview, preview.Packages.ToList(), "kintaromodding/variants").CanInstall);

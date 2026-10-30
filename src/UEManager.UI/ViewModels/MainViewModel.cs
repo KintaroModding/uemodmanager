@@ -76,15 +76,14 @@ public sealed partial class MainViewModel : LocalizedObservableObject
 
     public string GameTagline => L.T(Profile.Tagline ?? "");
 
-    public IReadOnlyList<LanguageOption> Languages { get; } =
-        [new("zh-CN", "简体中文"), new("en", "English")];
+    public IReadOnlyList<LanguageOption> Languages => L.Current.Languages;
 
     public string SelectedLanguage
     {
         get => L.Current.Language;
         set
         {
-            if (value is not ("en" or "zh-CN") || value == L.Current.Language)
+            if (value == L.Current.Language || Languages.All(language => language.Code != value))
                 return;
             settings.Language = value;
             L.Current.SetLanguage(value);
@@ -257,10 +256,11 @@ public sealed partial class MainViewModel : LocalizedObservableObject
 
     public bool IsGameUpdated => previousBuild is not null;
 
-    public string GameUpdatedText =>
-        L.F($"{GameDisplayName} was updated from {(Game?.Store == GameStore.Epic ? L.T("version") : L.T("build"))} {previousBuild} to {Game?.BuildId}. ")
-        + L.T("A game update can break mods until their authors update them. If the game crashes or acts strangely, ")
-        + L.T("disable mods one by one to find the one that needs an update.");
+    public string GameUpdatedText => L.Join(
+        Game?.Store == GameStore.Epic
+            ? L.F($"{GameDisplayName} was updated from version {previousBuild} to {Game?.BuildId}.")
+            : L.F($"{GameDisplayName} was updated from build {previousBuild} to {Game?.BuildId}."),
+        L.T("A game update can break mods until their authors update them. If the game crashes or acts strangely, disable mods one by one to find the one that needs an update."));
 
     public string BuildDetail => Game?.Store switch
     {
@@ -320,7 +320,7 @@ public sealed partial class MainViewModel : LocalizedObservableObject
             var enabled = Mods.Count(m => m.NeedsUe4ss && m.Enabled);
             return needing == 0
                 ? L.T("None of your installed mods needs UE4SS.")
-                : L.F($"{Format.Count(needing, "installed mod needs", "installed mods need")} UE4SS; {enabled} enabled.");
+                : L.Plural(needing, "{0} installed mod needs UE4SS; {1} enabled.", "{0} installed mods need UE4SS; {1} enabled.", enabled);
         }
     }
 
@@ -353,8 +353,8 @@ public sealed partial class MainViewModel : LocalizedObservableObject
     /// <summary>The game is known but UE4SS is not in it, so the install guide is offered.</summary>
     public bool IsUe4ssMissing => ue4ss is { Installed: false };
 
-    public string UnmanagedText =>
-        L.F($"{Format.Count(UnmanagedCount, "file", "files")} in the mods folder {(UnmanagedCount == 1 ? L.T("was") : L.T("were"))} not installed by the manager");
+    public string UnmanagedText => L.Plural(UnmanagedCount,
+        "{0} file in the mods folder was not installed by the manager", "{0} files in the mods folder were not installed by the manager");
 
     public async Task InitializeAsync(IReadOnlyList<string> downloads)
     {
@@ -397,8 +397,7 @@ public sealed partial class MainViewModel : LocalizedObservableObject
             {
                 preview.Dispose();
                 if (await AskAsync(L.T("Install UE4SS"),
-                        L.F($"\"{Path.GetFileName(source)}\" is UE4SS itself, not a mod. Install it into {GameDisplayName}? ")
-                        + L.T("Your existing UE4SS settings are kept."), L.T("Install UE4SS")))
+                        L.F($"\"{Path.GetFileName(source)}\" is UE4SS itself, not a mod. Install it into {GameDisplayName}? Your existing UE4SS settings are kept."), L.T("Install UE4SS")))
                     await InstallUe4ssAsync(source);
                 continue;
             }
@@ -420,9 +419,9 @@ public sealed partial class MainViewModel : LocalizedObservableObject
 
     internal async Task UninstallAsync(ModItemViewModel item)
     {
-        var note = item.HasSettings ? L.T(" Settings you changed are backed up first.") : "";
         if (!await AskAsync(L.T("Uninstall mod"),
-                L.F($"Remove \"{item.Name}\" from the game and from the manager's library? The original download is not touched.{note}"),
+                L.Join(L.F($"Remove \"{item.Name}\" from the game and from the manager's library? The original download is not touched."),
+                    item.HasSettings ? L.T("Settings you changed are backed up first.") : null),
                 L.T("Uninstall")))
             return;
         string? backup = null;
@@ -551,10 +550,7 @@ public sealed partial class MainViewModel : LocalizedObservableObject
     private async Task RemoveUe4ss()
     {
         if (!EnsureGame() || !await AskAsync(L.T("Remove UE4SS"),
-                L.F($"This removes UE4SS from {GameDisplayName} completely: dwmapi.dll and the whole ue4ss folder, ")
-                + L.T("with UE4SS's settings and every mod inside it, also mods installed by hand.\n\n")
-                + L.T("Mods in your list that need UE4SS are disabled. Their copies stay in the library, ")
-                + L.T("so you can enable them again after installing UE4SS.\n\nClose the game first."),
+                L.F($"This removes UE4SS from {GameDisplayName} completely: dwmapi.dll and the whole ue4ss folder, with UE4SS's settings and every mod inside it, also mods installed by hand.\n\nMods in your list that need UE4SS are disabled. Their copies stay in the library, so you can enable them again after installing UE4SS.\n\nClose the game first."),
                 L.T("Remove UE4SS")))
             return;
         Ue4ssRemoveResult? result = null;
@@ -600,13 +596,13 @@ public sealed partial class MainViewModel : LocalizedObservableObject
         }
         var parts = new List<string>();
         if (result!.ModsTurnedOff > 0)
-            parts.Add(L.F($"{Format.Count(result.ModsTurnedOff, "mod", "mods")} turned off"));
+            parts.Add(L.Plural(result.ModsTurnedOff, "{0} mod turned off", "{0} mods turned off"));
         if (result.Ue4ssRemoved)
             parts.Add(L.T("UE4SS removed"));
         if (result.FilesMovedAside > 0)
-            parts.Add(L.F($"{Format.Count(result.FilesMovedAside, "other file", "other files")} moved to a backup folder"));
+            parts.Add(L.Plural(result.FilesMovedAside, "{0} other file moved to a backup folder", "{0} other files moved to a backup folder"));
         if (result.ModsDeleted > 0)
-            parts.Add(L.F($"{Format.Count(result.ModsDeleted, "mod", "mods")} deleted from the manager"));
+            parts.Add(L.Plural(result.ModsDeleted, "{0} mod deleted from the manager", "{0} mods deleted from the manager"));
         ShowToast(parts.Count == 0
             ? L.F($"{GameDisplayName} had no mods to remove.")
             : L.F($"Modding reset: {string.Join(", ", parts)}. {GameDisplayName} is back to its original files."));
@@ -634,10 +630,11 @@ public sealed partial class MainViewModel : LocalizedObservableObject
     {
         Ue4ssGuide = null;
         RefreshMods();
-        var removed = result.RemovedFiles.Count == 0 ? "" : L.F($" {Format.Count(result.RemovedFiles.Count, "old file was", "old files were")} removed.");
-        var kept = result.KeptFiles.Count == 0 ? "" : L.F($" {Format.Count(result.KeptFiles.Count, "existing file was", "existing files were")} kept.");
-        var hint = installedUe4ssVersion is null ? L.T(" Start the game once to show its version.") : "";
-        ShowToast((result.Updated ? L.T("UE4SS updated.") : L.T("UE4SS installed.")) + removed + kept + hint);
+        ShowToast(L.Join(
+            result.Updated ? L.T("UE4SS updated.") : L.T("UE4SS installed."),
+            result.RemovedFiles.Count == 0 ? null : L.Plural(result.RemovedFiles.Count, "{0} old file was removed.", "{0} old files were removed."),
+            result.KeptFiles.Count == 0 ? null : L.Plural(result.KeptFiles.Count, "{0} existing file was kept.", "{0} existing files were kept."),
+            installedUe4ssVersion is null ? L.T("Start the game once to show its version.") : null));
     }
 
     private static HttpClient CreateHttpClient()
@@ -777,7 +774,7 @@ public sealed partial class MainViewModel : LocalizedObservableObject
     {
         if (!EnsureGame())
             return;
-        var note = "";
+        string? note = null;
         if (settings.BackUpSavesOnLaunch && SaveFolder is { } saves)
         {
             string? backupError = null;
@@ -789,7 +786,7 @@ public sealed partial class MainViewModel : LocalizedObservableObject
                     ? SaveBackups.Create(saves, paths.SaveBackupDir(Profile.Id), DateTime.Now)
                     : null);
                 if (backup is null)
-                    note = L.T(" There are no saves to back up yet.");
+                    note = L.T("There are no saves to back up yet.");
             }
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
             {
@@ -808,7 +805,7 @@ public sealed partial class MainViewModel : LocalizedObservableObject
         try
         {
             Game!.Launch();
-            ShowToast(L.F($"Starting {GameDisplayName}…{note}"));
+            ShowToast(L.Join(L.F($"Starting {GameDisplayName}…"), note));
         }
         catch (Exception ex) when (ex is InvalidOperationException or System.ComponentModel.Win32Exception)
         {
@@ -1024,18 +1021,19 @@ public sealed partial class MainViewModel : LocalizedObservableObject
     {
         var count = next.ModsInOtherInstall.Count;
         if (!await AskAsync(L.T("Move your mods"),
-                L.F($"{Format.Count(count, "enabled mod is", "enabled mods are")} still installed in another folder of {GameDisplayName}:\n\n")
-                + L.F($"{other}\n\nMove {(count == 1 ? L.T("it") : L.T("them"))} to {next.Game.RootPath}? The mod files are removed from the other ")
-                + L.T("folder and installed in this one. Close the game first.\n\nKeep the other folder to go on using it."),
+                L.Plural(count,
+                    "{0} enabled mod is still installed in another folder of {1}:\n\n{2}\n\nMove it to {3}? The mod files are removed from the other folder and installed in this one. Close the game first.\n\nKeep the other folder to go on using it.",
+                    "{0} enabled mods are still installed in another folder of {1}:\n\n{2}\n\nMove them to {3}? The mod files are removed from the other folder and installed in this one. Close the game first.\n\nKeep the other folder to go on using it.",
+                    GameDisplayName, other, next.Game.RootPath),
                 L.T("Move mods"), L.T("Keep the other folder")))
             return false;
         IReadOnlyList<ModRecord> stayed = [];
         if (!await RunAsync(L.T("Moving mods…"), async () => stayed = await Task.Run(next.MoveHere)))
             return false;
+        var moved = L.Plural(count, "Moved {0} mod to {1}.", "Moved {0} mods to {1}.", next.Game.RootPath);
         ShowToast(stayed.Count == 0
-                ? L.F($"Moved {Format.Count(count, "mod", "mods")} to {next.Game.RootPath}.")
-                : L.F($"Moved {Format.Count(count, "mod", "mods")} to {next.Game.RootPath}. ")
-                  + L.F($"{string.Join(", ", stayed.Select(m => $"\"{m.Name}\""))} stayed disabled, because another file of the same name is in the way."),
+                ? moved
+                : L.Join(moved, L.F($"{string.Join(", ", stayed.Select(m => $"\"{m.Name}\""))} stayed disabled, because another file of the same name is in the way.")),
             isError: stayed.Count > 0);
         return true;
     }
@@ -1130,7 +1128,7 @@ public sealed partial class MainViewModel : LocalizedObservableObject
         catch (ModException ex)
         {
             Log.Warn(ex.Message);
-            ShowToast(ex.Message, isError: true);
+            ShowToast(L.Message(ex), isError: true);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
         {
@@ -1144,9 +1142,9 @@ public sealed partial class MainViewModel : LocalizedObservableObject
         return false;
     }
 
-    private async Task<bool> AskAsync(string title, string message, string confirmText, string cancelText = "Cancel")
+    private async Task<bool> AskAsync(string title, string message, string confirmText, string? cancelText = null)
     {
-        Confirm = new ConfirmViewModel(title, message, confirmText, cancelText);
+        Confirm = new ConfirmViewModel(title, message, confirmText, cancelText ?? L.T("Cancel"));
         var accepted = await Confirm.Result;
         Confirm = null;
         return accepted;

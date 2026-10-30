@@ -25,9 +25,9 @@ public sealed partial class Ue4ssGuideViewModel(MainViewModel owner, GameInstall
 
     public string DownloadAndInstallText => release is null
         ? ""
-        : L.F($"The manager downloads {release.FileName}, ")
-          + (string.IsNullOrWhiteSpace(release.Sha256) ? "" : L.T("checks that it is the expected file, "))
-          + L.T("and installs it into the game.");
+        : string.IsNullOrWhiteSpace(release.Sha256)
+            ? L.F($"The manager downloads {release.FileName} and installs it into the game.")
+            : L.F($"The manager downloads {release.FileName}, checks that it is the expected file, and installs it into the game.");
 
     public string Win64Path => game.BinariesPath;
 

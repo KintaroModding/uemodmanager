@@ -150,7 +150,7 @@ public static class OpenMods
         }
         catch (JsonException ex)
         {
-            throw ModException.Localized($"The openmods list could not be read: {ex.Message}");
+            throw new ModException($"The openmods list could not be read: {ex.Message}");
         }
     }
 
@@ -177,12 +177,12 @@ public static class OpenMods
             timeout.CancelAfter(TimeSpan.FromSeconds(30));
             using var response = await http.GetAsync(url, timeout.Token);
             if (!response.IsSuccessStatusCode)
-                throw ModException.Localized($"The openmods list could not be loaded: {url} answered {(int)response.StatusCode} {response.ReasonPhrase}.");
+                throw new ModException($"The openmods list could not be loaded: {url} answered {(int)response.StatusCode} {response.ReasonPhrase}.");
             return await response.Content.ReadAsStringAsync(timeout.Token);
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or InvalidOperationException)
         {
-            throw ModException.Localized($"The openmods list could not be loaded: {ex.Message}");
+            throw new ModException($"The openmods list could not be loaded: {ex.Message}");
         }
     }
 
@@ -199,8 +199,8 @@ public static class OpenMods
             return document;
         document.Dispose();
         throw format > Format
-            ? ModException.Localized($"openmods uses a newer list format ({format}). Update the app to read it.")
-            : new ModException("This is not an openmods list.");
+            ? new ModException($"openmods uses a newer list format ({format}). Update the app to read it.")
+            : new ModException($"This is not an openmods list.");
     }
 
     private static CatalogRelease? ReadRelease(JsonElement mod)

@@ -63,9 +63,9 @@ public sealed partial class InstallDialogViewModel : LocalizedObservableObject
     {
         get
         {
-            var parts = new List<string> { Format.Count(Packages.Count, "part", "parts") + L.T(" found") };
+            var parts = new List<string> { L.Plural(Packages.Count, "{0} part found", "{0} parts found") };
             if (preview.IgnoredFileCount > 0)
-                parts.Add(Format.Count(preview.IgnoredFileCount, "other file", "other files") + L.T(" ignored"));
+                parts.Add(L.Plural(preview.IgnoredFileCount, "{0} other file ignored", "{0} other files ignored"));
             if (Packages.Count > 1)
                 parts.Add(Packages.All(p => p.IsVariant) ? L.T("choose one variant") : L.T("choose what to install"));
             return string.Join("  ·  ", parts);
@@ -148,20 +148,21 @@ public sealed partial class InstallDialogViewModel : LocalizedObservableObject
         check = manager.Check(preview, Packages.Where(p => p.IsSelected).Select(p => p.Package).ToList(), catalog?.Id);
         Problems.Clear();
         foreach (var problem in check.Problems)
-            Problems.Add(problem);
+            Problems.Add(L.F(problem));
         Warnings.Clear();
-        foreach (var warning in check.Warnings.Distinct())
+        foreach (var warning in check.Warnings.Select(L.F).Distinct())
             Warnings.Add(warning);
 
         var old = check.Replaces;
-        ReplaceText = old is null
-            ? null
-            : L.F($"This updates the installed mod \"{old.Name}\"{(old.Version is null ? "" : L.F($" (version {old.Version})"))}. ")
-              + L.T("Its files are replaced, and put back if the update fails.");
+        ReplaceText = old switch
+        {
+            null => null,
+            { Version: null } => L.F($"This updates the installed mod \"{old.Name}\". Its files are replaced, and put back if the update fails."),
+            _ => L.F($"This updates the installed mod \"{old.Name}\" (version {old.Version}). Its files are replaced, and put back if the update fails."),
+        };
         EditedSettingsText = old is null || !check.HasEditedSettings
             ? null
-            : L.F($"You changed {string.Join(", ", check.EditedSettings!.Select(SettingsFiles.Name))} of this mod. ")
-              + L.T("Keep your settings, or clear the box to use the new version's defaults. A copy of yours is saved in the backup folder either way.");
+            : L.F($"You changed {string.Join(", ", check.EditedSettings!.Select(SettingsFiles.Name))} of this mod. Keep your settings, or clear the box to use the new version's defaults. A copy of yours is saved in the backup folder either way.");
         ConfirmText = old is null ? L.T("Install") : L.T("Update");
         CanInstall = check.CanInstall;
         NeedsUe4ss = check.NeedsUe4ss;
@@ -178,7 +179,7 @@ public sealed partial class PackageOptionViewModel(PackageGroup package, Action<
     /// <summary>One of several variants: shown as a single choice.</summary>
     public bool IsVariant => package.VariantOf is not null;
 
-    public string KindText => L.T(package.TypeLabel);
+    public string KindText => Format.Kind(package.TypeLabel);
 
     /// <summary>The files as they will be placed; a UE4SS mod's are shown inside its own folder.</summary>
     public string FilesText => string.Join("   ", package.Kind == PackageKind.Ue4ss

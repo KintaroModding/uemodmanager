@@ -26,8 +26,8 @@ public sealed partial class ResetModdingViewModel(string gameName, ResetPreview 
     public bool HasMods => preview.InstalledMods > 0;
 
     public string DeleteModsText => HasMods
-        ? L.F($"Also delete the {Format.Count(preview.InstalledMods, "mod", "mods")} from the manager. ")
-            + L.T("Without this, they stay in the Mods list, turned off, ready to turn on again.")
+        ? L.Join(L.Plural(preview.InstalledMods, "Also delete the {0} mod from the manager.", "Also delete the {0} mods from the manager."),
+            L.T("Without this, they stay in the Mods list, turned off, ready to turn on again."))
         : L.T("Also delete the mods from the manager. There are none.");
 
     public Task<bool> Result => result.Task;
@@ -42,12 +42,13 @@ public sealed partial class ResetModdingViewModel(string gameName, ResetPreview 
     {
         var changes = new List<string>();
         if (preview.EnabledMods > 0)
-            changes.Add(L.F($"{Format.Count(preview.EnabledMods, "enabled mod is", "enabled mods are")} removed from the game."));
+            changes.Add(L.Plural(preview.EnabledMods, "{0} enabled mod is removed from the game.", "{0} enabled mods are removed from the game."));
         if (preview.Ue4ssInstalled)
             changes.Add(L.T("UE4SS is removed, with its settings and every mod in its folder, also mods put there by hand."));
         if (preview.OtherFiles > 0)
-            changes.Add(L.F($"{Format.Count(preview.OtherFiles, "file", "files")} in the mods folders that the manager did not install ")
-                + L.F($"{(preview.OtherFiles == 1 ? L.T("moves") : L.T("move"))} to a backup folder."));
+            changes.Add(L.Plural(preview.OtherFiles,
+                "{0} file in the mods folders that the manager did not install moves to a backup folder.",
+                "{0} files in the mods folders that the manager did not install move to a backup folder."));
         if (changes.Count == 0)
             changes.Add(L.T("The game has no mods and no UE4SS to remove."));
         return changes;

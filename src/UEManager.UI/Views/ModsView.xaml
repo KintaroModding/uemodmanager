@@ -21,16 +21,16 @@
         <!-- Header -->
         <Grid Margin="0,6,0,0">
             <StackPanel>
-                <TextBlock Style="{StaticResource Text.Overline}" Text="{ui:Loc Text.7b790708ff1b, Tracked=True}" />
-                <TextBlock Margin="0,10,0,0" Style="{StaticResource Text.Display}" Text="{ui:Loc Text.6e58b577a084}" />
+                <TextBlock Style="{StaticResource Text.Overline}" Text="{ui:Loc 'Collection', Tracked=True}" />
+                <TextBlock Margin="0,10,0,0" Style="{StaticResource Text.Display}" Text="{ui:Loc 'Mods'}" />
                 <Rectangle Width="200" Height="2" Margin="0,14,0,14" HorizontalAlignment="Left" Fill="{StaticResource Brush.Stroke}" />
                 <TextBlock MaxWidth="640" HorizontalAlignment="Left" Style="{StaticResource Text.Body}"
-                           Text="{ui:Loc Text.e7e259aef4cf}" />
+                           Text="{ui:Loc 'A checksum is recorded for each file the manager places in the game. Disabling a mod removes only its own files, and only while they are unchanged.'}" />
             </StackPanel>
             <StackPanel HorizontalAlignment="Right" VerticalAlignment="Top" Orientation="Horizontal">
-                <Button Style="{StaticResource Button.Primary}" Content="{ui:Loc Text.da5686723e32}"
+                <Button Style="{StaticResource Button.Primary}" Content="{ui:Loc 'Install from 7z/zip/rar…'}"
                         ui:Icon.Glyph="&#xE896;" Command="{Binding InstallFromArchiveCommand}" />
-                <Button Margin="8,0,0,0" Content="{ui:Loc Text.15e3c65eafdb}" ui:Icon.Glyph="&#xE8B7;" Command="{Binding InstallFromFolderCommand}" />
+                <Button Margin="8,0,0,0" Content="{ui:Loc 'Install from folder…'}" ui:Icon.Glyph="&#xE8B7;" Command="{Binding InstallFromFolderCommand}" />
             </StackPanel>
         </Grid>
 
@@ -39,7 +39,7 @@
             <Border DockPanel.Dock="Right" Margin="10,0,0,0" Style="{StaticResource FieldBox}">
                 <TextBlock VerticalAlignment="Center" Style="{StaticResource Text.Small}" Text="{Binding ModsCountText}" />
             </Border>
-            <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Tag="{ui:Loc Text.50da262d09f8}" />
+            <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Tag="{ui:Loc 'Filter: mod name, version, PAK / IoStore, or file name'}" />
         </DockPanel>
 
         <!-- Table -->
@@ -54,14 +54,14 @@
                         <ColumnDefinition Width="{StaticResource Col.Date}" />
                         <ColumnDefinition Width="{StaticResource Col.Actions}" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Style="{StaticResource Text.Caption}" Text="{ui:Loc Text.920e413c7d41, Tracked=True}" />
-                    <Button Grid.Column="1" Style="{StaticResource Button.SortHeader}" Content="{ui:Loc Text.2fe83d132e3d, Tracked=True}"
-                            Tag="{Binding NameSortGlyph}" ToolTip="{ui:Loc Text.588a08236c7e}"
+                    <TextBlock Style="{StaticResource Text.Caption}" Text="{ui:Loc 'Status', Tracked=True}" />
+                    <Button Grid.Column="1" Style="{StaticResource Button.SortHeader}" Content="{ui:Loc 'Mod', Tracked=True}"
+                            Tag="{Binding NameSortGlyph}" ToolTip="{ui:Loc 'Sort by name'}"
                             Command="{Binding SortByCommand}" CommandParameter="{x:Static vm:ModSortField.Name}" />
-                    <TextBlock Grid.Column="2" Style="{StaticResource Text.Caption}" Text="{ui:Loc Text.baaddf70fb5d, Tracked=True}" />
-                    <TextBlock Grid.Column="3" Style="{StaticResource Text.Caption}" Text="{ui:Loc Text.ad5ea6aae7ca, Tracked=True}" />
-                    <Button Grid.Column="4" Style="{StaticResource Button.SortHeader}" Content="{ui:Loc Text.f8b32f4e92bd, Tracked=True}"
-                            Tag="{Binding InstalledSortGlyph}" ToolTip="{ui:Loc Text.50ce1033d6b4}"
+                    <TextBlock Grid.Column="2" Style="{StaticResource Text.Caption}" Text="{ui:Loc 'Type', Tracked=True}" />
+                    <TextBlock Grid.Column="3" Style="{StaticResource Text.Caption}" Text="{ui:Loc 'Integrity', Tracked=True}" />
+                    <Button Grid.Column="4" Style="{StaticResource Button.SortHeader}" Content="{ui:Loc 'Installed', Tracked=True}"
+                            Tag="{Binding InstalledSortGlyph}" ToolTip="{ui:Loc 'Sort by installation date'}"
                             Command="{Binding SortByCommand}" CommandParameter="{x:Static vm:ModSortField.Installed}" />
                 </Grid>
                 <Border Style="{StaticResource Divider}" />
@@ -83,7 +83,7 @@
 
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <CheckBox Style="{StaticResource Toggle}" IsChecked="{Binding Enabled, Mode=OneWay}"
-                                                  Command="{Binding ToggleCommand}" ToolTip="{ui:Loc Text.e4aaa9197142}" />
+                                                  Command="{Binding ToggleCommand}" ToolTip="{ui:Loc 'Enable or disable'}" />
                                         <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" Style="{StaticResource Text.Small}"
                                                    Text="{Binding EnabledText}" />
                                     </StackPanel>
@@ -115,12 +115,12 @@
                                                 ToolTipService.ShowOnDisabled="True"
                                                 Visibility="{Binding HasSettings, Converter={StaticResource Visible}}" />
                                         <Button Margin="0,0,4,0" Style="{StaticResource Button.Icon}" ui:Icon.Glyph="&#xE7A7;"
-                                                Command="{Binding ResetSettingsCommand}" ToolTip="{ui:Loc Text.e59dcddb99fa}"
+                                                Command="{Binding ResetSettingsCommand}" ToolTip="{ui:Loc 'Reset the settings to the ones the mod came with'}"
                                                 Visibility="{Binding HasSettings, Converter={StaticResource Visible}}" />
                                         <Button Style="{StaticResource Button.Icon}" ui:Icon.Glyph="&#xE838;"
-                                                Command="{Binding OpenFolderCommand}" ToolTip="{ui:Loc Text.8c748652881c}" />
+                                                Command="{Binding OpenFolderCommand}" ToolTip="{ui:Loc 'Open the manager\'s copy of this mod'}" />
                                         <Button Margin="4,0,0,0" Style="{StaticResource Button.IconDanger}" ui:Icon.Glyph="&#xE74D;"
-                                                Command="{Binding UninstallCommand}" ToolTip="{ui:Loc Text.fe199528850a}" />
+                                                Command="{Binding UninstallCommand}" ToolTip="{ui:Loc 'Uninstall'}" />
                                     </StackPanel>
                                 </Grid>
                             </Border>
@@ -146,14 +146,14 @@
         <Border Margin="0,16,0,0" Style="{StaticResource Card}" Padding="22,16"
                 Visibility="{Binding HasUnmanaged, Converter={StaticResource Visible}}">
             <DockPanel>
-                <Button DockPanel.Dock="Right" VerticalAlignment="Center" Content="{ui:Loc Text.00e989018b91}"
+                <Button DockPanel.Dock="Right" VerticalAlignment="Center" Content="{ui:Loc 'Open mods folder'}"
                         ui:Icon.Glyph="&#xE838;" Command="{Binding OpenModFolderCommand}" />
                 <TextBlock DockPanel.Dock="Left" Margin="0,0,16,0" Style="{StaticResource Text.Icon}" FontSize="18"
                            Foreground="{StaticResource Brush.Warning}" Text="&#xE7BA;" />
                 <StackPanel VerticalAlignment="Center">
                     <TextBlock FontWeight="SemiBold" Text="{Binding UnmanagedText}" />
                     <TextBlock Margin="0,3,0,0" Style="{StaticResource Text.Small}"
-                               Text="{ui:Loc Text.2cc79061d7c5}" />
+                               Text="{ui:Loc 'The manager never changes or removes them.'}" />
                 </StackPanel>
             </DockPanel>
         </Border>

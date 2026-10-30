@@ -67,13 +67,7 @@ public partial class App : Application
         {
             // Nothing can be logged yet: the log lives in the folder that failed.
             MessageBox.Show(
-                L.F($"{AppInfo.Name} cannot write to its data folder:\n\n{paths.Root}\n\n")
-                + L.T("The app keeps everything in a Data folder next to UEModManager.exe, so it needs ")
-                + L.T("write access to the folder it runs from. Windows protects folders such as ")
-                + L.T("C:\\Program Files.\n\n")
-                + L.T("Move the whole app folder to a place you can write to, for example ")
-                + L.T("C:\\Games\\UEModManager or a folder on another drive, and start it again.\n\n")
-                + L.F($"Details: {ex.Message}"),
+                L.F($"{AppInfo.Name} cannot write to its data folder:\n\n{paths.Root}\n\nThe app keeps everything in a Data folder next to UEModManager.exe, so it needs write access to the folder it runs from. Windows protects folders such as C:\\Program Files.\n\nMove the whole app folder to a place you can write to, for example C:\\Games\\UEModManager or a folder on another drive, and start it again.\n\nDetails: {ex.Message}"),
                 AppInfo.Name, MessageBoxButton.OK, MessageBoxImage.Error);
             Shutdown(1);
             return;
@@ -94,7 +88,7 @@ public partial class App : Application
         try
         {
             profile = GameProfile.BuiltIn().FirstOrDefault()
-                ?? throw new InvalidDataException(L.T("This build contains no game profile."));
+                ?? throw new InvalidDataException("This build contains no game profile.");
         }
         catch (InvalidDataException ex)
         {
@@ -135,8 +129,7 @@ public partial class App : Application
             return;
         }
         MessageBox.Show(
-            L.F($"{AppInfo.Name} is already running with the data folder\n\n{paths.Root}\n\nbut it does not answer. ")
-            + L.T("Close it, or end UEModManager.exe in the Task Manager, then start the app again."),
+            L.F($"{AppInfo.Name} is already running with the data folder\n\n{paths.Root}\n\nbut it does not answer. Close it, or end UEModManager.exe in the Task Manager, then start the app again."),
             AppInfo.Name, MessageBoxButton.OK, MessageBoxImage.Warning);
     }
 
@@ -208,7 +201,7 @@ public partial class App : Application
     private static void OnUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
         Log.Error("Unhandled error.", e.Exception);
-        MessageBox.Show(L.F($"Something went wrong: {e.Exception.Message}\n\nThe details are in the log."),
+        MessageBox.Show(L.F($"Something went wrong: {L.Message(e.Exception)}\n\nThe details are in the log."),
             AppInfo.Name, MessageBoxButton.OK, MessageBoxImage.Error);
         e.Handled = true;
     }

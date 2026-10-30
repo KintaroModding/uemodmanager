@@ -30,7 +30,7 @@ public static class AppReleases
     {
         using var document = JsonDocument.Parse(json);
         var root = document.RootElement;
-        var tag = Text(root, "tag_name") ?? throw new ModException("The newest release names no version.");
+        var tag = Text(root, "tag_name") ?? throw new ModException($"The newest release names no version.");
 
         AppReleaseFile? file = null;
         if (root.TryGetProperty("assets", out var assets) && assets.ValueKind == JsonValueKind.Array)
@@ -74,9 +74,9 @@ public static class AppReleases
             request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/vnd.github+json"));
             using var response = await http.SendAsync(request, timeout.Token);
             if (response.StatusCode == HttpStatusCode.NotFound)
-                throw new ModException("No release is published yet.");
+                throw new ModException($"No release is published yet.");
             if (!response.IsSuccessStatusCode)
-                throw ModException.Localized($"GitHub answered {(int)response.StatusCode} {response.ReasonPhrase}. Try again later.");
+                throw new ModException($"GitHub answered {(int)response.StatusCode} {response.ReasonPhrase}. Try again later.");
             var release = Parse(await response.Content.ReadAsStringAsync(timeout.Token), filePrefix,
                 allowHttp: new Uri(url).Scheme == Uri.UriSchemeHttp);
             Log.Info($"Newest release: {release.Version}; file for this build: {release.File?.Name ?? "none"}.");
@@ -84,7 +84,7 @@ public static class AppReleases
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException or UriFormatException)
         {
-            throw ModException.Localized($"The newest release could not be read: {ex.Message}");
+            throw new ModException($"The newest release could not be read: {ex.Message}");
         }
     }
 

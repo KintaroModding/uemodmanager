@@ -83,7 +83,7 @@ public sealed partial class AppUpdateViewModel(MainViewModel owner, HttpClient h
     {
         UpdateState.UpToDate => L.F($"Version {AppInfo.Version} is the newest release."),
         UpdateState.Available => L.T("Show the update"),
-        UpdateState.Failed => failure?.Message,
+        UpdateState.Failed => failure is null ? null : L.Message(failure),
         _ => null,
     };
 
@@ -179,7 +179,7 @@ public sealed partial class AppUpdateViewModel(MainViewModel owner, HttpClient h
         var replaced = await owner.RunAsync(title, async () =>
         {
             var progress = new Progress<double>(share => owner.BusyText = $"{title}  {share:P0}");
-            var zip = await FileDownloader.DownloadAsync(http, file.Url, file.Name, file.Size, file.Sha256, folder, L.F($"Version {release.Version}"), progress);
+            var zip = await FileDownloader.DownloadAsync(http, file.Url, file.Name, file.Size, file.Sha256, folder, $"{AppInfo.Name} {release.Version}", progress);
             owner.BusyText = L.T("Installing the update…");
             await Task.Run(() =>
             {

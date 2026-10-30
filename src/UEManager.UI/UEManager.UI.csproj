@@ -27,6 +27,10 @@
     <EmbeddedResource Include="Licenses\*.txt" LogicalName="UEManager.UI.Licenses.%(Filename)%(Extension)" />
     <!-- The app's own license, additional terms and contributors, shown on the About page. -->
     <EmbeddedResource Include="..\..\LICENSE;..\..\NOTICE.md;..\..\CONTRIBUTORS.md" LogicalName="UEManager.UI.Legal.%(Filename)%(Extension)" />
+    <!-- One file per language besides English, such as zh-CN.json. The catalog's texts have their own files. -->
+    <EmbeddedResource Include="Localization\*.json" LogicalName="UEManager.UI.Localization.%(Filename).json" />
+    <EmbeddedResource Include="Catalog\Localization\*.json" LogicalName="UEManager.UI.Localization.Catalog.%(Filename).json"
+                      Condition="'$(Catalog)' == 'true'" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(Catalog)' != 'true'">

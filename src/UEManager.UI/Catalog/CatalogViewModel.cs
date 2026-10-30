@@ -65,7 +65,7 @@ public sealed partial class CatalogViewModel : LocalizedObservableObject
     [NotifyPropertyChangedFor(nameof(ShowEmpty))]
     private bool isLoading;
 
-    public string? Error => failure?.Message;
+    public string? Error => failure is null ? null : L.Message(failure);
 
     [ObservableProperty]
     private string searchText = "";
@@ -230,7 +230,7 @@ public sealed partial class CatalogItemViewModel(MainViewModel owner, CatalogMod
     public string MetaText => string.Join("  ·  ", new[]
     {
         mod.Release is null ? L.T("No release yet") : L.F($"Version {mod.Release.Version}"),
-        mod.Updated is { } updated ? L.T("Updated ") + updated.LocalDateTime.ToString(L.T("d MMM yyyy"), CultureInfo.CurrentCulture) : null,
+        mod.Updated is { } updated ? L.F($"Updated {updated.LocalDateTime.ToString(L.T("d MMM yyyy"), CultureInfo.CurrentCulture)}") : null,
         mod.License,
     }.Where(part => part is not null));
 

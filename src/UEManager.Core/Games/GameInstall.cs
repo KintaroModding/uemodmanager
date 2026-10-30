@@ -88,7 +88,7 @@ public sealed record GameInstall(
     public void Launch()
     {
         var target = LaunchUri ?? FindExecutable()
-            ?? throw new InvalidOperationException(L.T("No game executable was found in the install folder."));
+            ?? throw new InvalidOperationException("No game executable was found in the install folder.");
         Process.Start(new ProcessStartInfo(target)
         {
             UseShellExecute = true,

@@ -22,19 +22,39 @@ How to install and use it, for players: [openmods.md](openmods.md).
 
 ## Interface language
 
-In **Settings → Language**, choose **简体中文** or **English**. The interface
-updates immediately, keeping the current page and input. The choice is saved
-in `Data/settings.json` for the next launch. On the first launch, Chinese
-Windows installations use Simplified Chinese; other systems use English.
+In **Settings → Language**, choose **English** or **简体中文**. The interface
+changes at once, on the page you are on, and the choice is saved in
+`Data/settings.json`. Without a choice, the app follows the Windows display
+language when it has that language, else English. Mod names, paths, downloaded
+descriptions and license texts stay as they are. Logs and help reports are
+always English, so that a helper can read them.
 
-Translations live in `src/UEManager.Core/Localization/Strings.json`; catalog-only
-messages live in `src/UEManager.Core/Catalog/Strings.json` and are excluded from
-the build without the catalog. Each entry has an English source and a `zh-CN`
-translation. Keep format placeholders such as `{0}` and `{1:P0}` intact.
-XAML uses `{ui:Loc resource-key}`; code uses `L.T("English text")` or
-`L.F($"English text {value}")`. View models inherit `LocalizedObservableObject`
-so computed labels refresh on a language change. Paths, mod names, downloaded
-descriptions, original logs and license bodies retain their original contents.
+### Translations
+
+The English text in the code is the key. Every other language is one file,
+`src/UEManager.UI/Localization/<code>.json` (such as `zh-CN.json`), that maps
+each English text to its translation; `"$name"` is the language's own name.
+The catalog's texts have a file of their own per language in
+`src/UEManager.UI/Catalog/Localization`, which the build without the catalog
+leaves out. A text without a translation shows in English.
+
+To add a language, copy both `zh-CN.json` files to `<code>.json`, set `$name`,
+and translate every value. Keep the values in braces, such as `{0}` and
+`{1:N0}`; their order may change. The build finds the new files, and the app
+lists the language.
+
+In code, a text the player sees goes through `L.T("English text")`,
+`L.F($"English text {value}")` or `L.Plural(count, "{0} mod", "{0} mods")`;
+`L.Join` puts sentences one after another. Core writes its messages in English,
+as `new ModException($"…")` and `problems.Add($"…")`: the UI translates them
+when it shows them (`L.Message`), and the log keeps the English. XAML uses
+`{ui:Loc 'English text'}`. View models that compute texts inherit
+`LocalizedObservableObject`, so their texts follow a change of language.
+
+`TranslationTests` reads these texts from the source, and the names, taglines
+and UE4SS notes from the game profiles. It fails when a language file lacks a
+text, holds one the app no longer uses, or loses a value in a translation. So
+after a change to an English text, update every language file too.
 
 ## Supported mod types
 
@@ -257,7 +277,8 @@ src/
     Theme/                Palette, control styles and optional art. Built into the exe
                           (see Theme/README.md).
   UEManager.Core.Tests/   xUnit tests for Core. Covers every operation that touches the game folder.
-  UEManager.UI.Tests/     WPF language switching, binding and state-preservation regression test.
+  UEManager.UI.Tests/     xUnit tests for the UI: the language files against the source, and a
+                          change of language in the open window.
 ```
 
 ## Build

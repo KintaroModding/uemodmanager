@@ -1,1 +1,1 @@
-global using L = UEManager.Core.Localization.Localizer;
+global using L = UEManager.UI.Localizer;

@@ -9,16 +9,16 @@
              d:DataContext="{d:DesignInstance Type=vm:HelpReportViewModel}">
     <Border Style="{StaticResource Dialog}" Width="680">
         <StackPanel>
-            <TextBlock Style="{StaticResource Text.Overline}" Text="{ui:Loc Text.b79cac926e0b, Tracked=True}" />
-            <TextBlock Margin="0,8,0,0" Style="{StaticResource Text.Title}" Text="{ui:Loc Text.53de38dec81e}" />
+            <TextBlock Style="{StaticResource Text.Overline}" Text="{ui:Loc 'Help', Tracked=True}" />
+            <TextBlock Margin="0,8,0,0" Style="{StaticResource Text.Title}" Text="{ui:Loc 'Report a problem'}" />
             <TextBlock Margin="0,8,0,0" Style="{StaticResource Text.Body}"
-                       Text="{ui:Loc Text.49370e64206a}" />
+                       Text="{ui:Loc 'Say in a few words what happened and what you did just before. The manager adds facts about the game, UE4SS and your mods, and leaves out your Windows user name. Nothing is sent: copy the report and paste it into the help channel on Discord.'}" />
 
             <TextBox Margin="0,16,0,0" Height="92" Style="{StaticResource TextBox.Multiline}"
                      Text="{Binding Problem, UpdateSourceTrigger=PropertyChanged}"
-                     Tag="{ui:Loc Text.fb37d9d39248}" />
+                     Tag="{ui:Loc 'What happened? For example: since I installed Witch 1.2, the game crashes when a fight starts.'}" />
 
-            <TextBlock Margin="0,16,0,6" Style="{StaticResource Text.Caption}" Text="{ui:Loc Text.b6ce788d9786, Tracked=True}" />
+            <TextBlock Margin="0,16,0,6" Style="{StaticResource Text.Caption}" Text="{ui:Loc 'Report', Tracked=True}" />
             <Border Height="220" Padding="14,10" CornerRadius="2" BorderThickness="1"
                     Background="{StaticResource Brush.Field}" BorderBrush="{StaticResource Brush.Line}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Auto">
@@ -29,10 +29,10 @@
 
             <DockPanel Margin="0,20,0,0">
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
-                    <Button Content="{ui:Loc Text.7d9eb7acb13e}" Command="{Binding CloseCommand}" IsCancel="True" />
-                    <Button Margin="8,0,0,0" Style="{StaticResource Button.Discord}" Content="{ui:Loc Text.f719136ce60d}"
+                    <Button Content="{ui:Loc 'Close'}" Command="{Binding CloseCommand}" IsCancel="True" />
+                    <Button Margin="8,0,0,0" Style="{StaticResource Button.Discord}" Content="{ui:Loc 'Join our Discord'}"
                             Command="{Binding OpenDiscordCommand}" />
-                    <Button Margin="8,0,0,0" Style="{StaticResource Button.Primary}" Content="{ui:Loc Text.ffedb1c8424a}" ui:Icon.Glyph="&#xE8C8;"
+                    <Button Margin="8,0,0,0" Style="{StaticResource Button.Primary}" Content="{ui:Loc 'Copy report'}" ui:Icon.Glyph="&#xE8C8;"
                             Command="{Binding CopyCommand}" />
                 </StackPanel>
                 <TextBlock VerticalAlignment="Center" Margin="0,0,16,0" Style="{StaticResource Text.Small}" TextWrapping="Wrap"

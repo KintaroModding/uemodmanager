@@ -30,8 +30,6 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="UEManager.Core.Tests" />
-    <EmbeddedResource Include="Localization\Strings.json" LogicalName="UEManager.Core.Localization.Strings.json" />
-    <EmbeddedResource Include="Catalog\Strings.json" LogicalName="UEManager.Core.Catalog.Localization.Strings.json" Condition="'$(Catalog)' == 'true'" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(Catalog)' != 'true'">

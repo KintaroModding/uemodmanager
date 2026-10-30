@@ -9,6 +9,8 @@ name is shown in the app itself, on its About page (from CONTRIBUTORS.md).
 - Report a bug: what you did, what happened, and the log from the app's
   `Data\logs` folder.
 - Add or correct a game profile in `src/UEManager.Core/Games/Profiles`.
+- Translate the app into your language, or correct a translation: one file per
+  language, see "Translations" in README.md.
 - Fix a bug or add a feature. For a larger change, open an issue first, so that
   we agree on the approach before you spend time on it.
 

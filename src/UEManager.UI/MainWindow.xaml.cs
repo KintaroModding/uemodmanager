@@ -1,5 +1,5 @@
+using System.ComponentModel;
 using System.Windows;
-using System.Windows.Data;
 using UEManager.UI.ViewModels;
 
 namespace UEManager.UI;
@@ -11,6 +11,8 @@ public partial class MainWindow : Window
         InitializeComponent();
         OnWindowStateChanged();
         StateChanged += (_, _) => OnWindowStateChanged();
+        // The maximize button's tooltip is set here, so it follows a change of language too.
+        PropertyChangedEventManager.AddHandler(L.Current, (_, _) => OnWindowStateChanged(), nameof(L.Language));
     }
 
     private MainViewModel? ViewModel => DataContext as MainViewModel;
@@ -48,7 +50,7 @@ public partial class MainWindow : Window
         var maximized = WindowState == WindowState.Maximized;
         Root.Margin = maximized ? SystemParameters.WindowResizeBorderThickness : new Thickness(0);
         MaximizeButton.Content = maximized ? "" : "";
-        MaximizeButton.SetBinding(ToolTipProperty, new Binding($"[{(maximized ? "Restore" : "Maximize")}]") { Source = L.Current });
+        MaximizeButton.ToolTip = maximized ? L.T("Restore") : L.T("Maximize");
     }
 
     private void OnMinimize(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;

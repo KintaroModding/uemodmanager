@@ -30,7 +30,7 @@ public static class FileDownloader
             stall.CancelAfter(limit);
             using var response = await http.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, stall.Token);
             if (!response.IsSuccessStatusCode)
-                throw new ModException(L.F($"{what} could not be downloaded: the server answered {(int)response.StatusCode} {response.ReasonPhrase}."));
+                throw new ModException($"{what} could not be downloaded: the server answered {(int)response.StatusCode} {response.ReasonPhrase}.");
             var total = response.Content.Headers.ContentLength ?? expectedSize;
             await using (var input = await response.Content.ReadAsStreamAsync(stall.Token))
             await using (var output = File.Create(target))
@@ -52,27 +52,25 @@ public static class FileDownloader
         catch (OperationCanceledException) when (!cancellation.IsCancellationRequested)
         {
             FileSystem.TryDeleteFile(target);
-            throw new ModException(L.F($"{what} could not be downloaded: no data arrived for {limit.TotalSeconds:0} seconds. ")
-                + L.T("Check the connection, then try again."));
+            throw new ModException($"{what} could not be downloaded: no data arrived for {limit.TotalSeconds:0} seconds. Check the connection, then try again.");
         }
         catch (Exception ex) when (ex is HttpRequestException or IOException or OperationCanceledException)
         {
             FileSystem.TryDeleteFile(target);
-            throw new ModException(L.F($"{what} could not be downloaded: {ex.Message}"));
+            throw new ModException($"{what} could not be downloaded: {ex.Message}");
         }
 
         var size = new FileInfo(target).Length;
         if (expectedSize is > 0 && size != expectedSize)
         {
             FileSystem.TryDeleteFile(target);
-            throw new ModException(L.F($"{what} was downloaded, but the file has {size:N0} bytes instead of {expectedSize:N0}, ")
-                + L.T("so it was not installed. Try again later."));
+            throw new ModException($"{what} was downloaded, but the file has {size:N0} bytes instead of {expectedSize:N0}, so it was not installed. Try again later.");
         }
         if (!string.IsNullOrWhiteSpace(expectedSha256)
             && !string.Equals(FileSystem.Sha256(target), expectedSha256.Trim(), StringComparison.OrdinalIgnoreCase))
         {
             FileSystem.TryDeleteFile(target);
-            throw new ModException(L.F($"{what} was downloaded, but the file is not the expected one (its checksum differs), so it was not installed."));
+            throw new ModException($"{what} was downloaded, but the file is not the expected one (its checksum differs), so it was not installed.");
         }
         Log.Info($"Downloaded '{url}' to '{target}'.");
         return target;

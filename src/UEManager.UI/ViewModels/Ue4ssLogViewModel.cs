@@ -43,9 +43,8 @@ public sealed partial class Ue4ssLogViewModel(MainViewModel owner) : LocalizedOb
         ({ Installed: false } or null, _) => L.T("UE4SS is not installed, so there is no log."),
         _ when readError is not null => L.F($"The log could not be read: {readError}"),
         (_, null) => L.T("No log yet. UE4SS writes it each time the game starts."),
-        _ => L.F($"Game start of {log.WrittenAt:g}:  {Format.Count(log.ErrorCount, "error", "errors")},  ")
-            + $"{Format.Count(log.WarningCount, "warning", "warnings")}."
-            + (log.Truncated ? L.F($"  Showing the last {Ue4ssLog.MaxLines} lines.") : ""),
+        _ => L.F($"Game start of {log.WrittenAt:g}:  {L.Plural(log.ErrorCount, "{0} error", "{0} errors")},  {L.Plural(log.WarningCount, "{0} warning", "{0} warnings")}.")
+            + (log.Truncated ? "  " + L.F($"Showing the last {Ue4ssLog.MaxLines} lines.") : ""),
     };
 
     public string SummaryTone => log is null ? "" : log.ErrorCount > 0 ? "bad" : log.WarningCount > 0 ? "warn" : "good";

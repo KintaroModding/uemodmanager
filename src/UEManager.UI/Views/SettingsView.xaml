@@ -19,23 +19,23 @@
 
     <StackPanel>
         <StackPanel Margin="0,6,0,0">
-            <TextBlock Style="{StaticResource Text.Overline}" Text="{ui:Loc Text.b332c3492d5e, Tracked=True}" />
-            <TextBlock Margin="0,10,0,0" Style="{StaticResource Text.Display}" Text="{ui:Loc Text.74a883a037bc}" />
+            <TextBlock Style="{StaticResource Text.Overline}" Text="{ui:Loc 'Configuration', Tracked=True}" />
+            <TextBlock Margin="0,10,0,0" Style="{StaticResource Text.Display}" Text="{ui:Loc 'Settings'}" />
             <Rectangle Width="200" Height="2" Margin="0,14,0,0" HorizontalAlignment="Left" Fill="{StaticResource Brush.Stroke}" />
         </StackPanel>
 
         <!-- Language switches the existing views immediately and persists with the other settings. -->
         <Border Margin="0,28,0,0" Style="{StaticResource Card}">
             <StackPanel>
-                <TextBlock Style="{StaticResource Text.Title}" Text="{ui:Loc Text.a4fe65264ef7}" />
+                <TextBlock Style="{StaticResource Text.Title}" Text="{ui:Loc 'Language'}" />
                 <TextBlock Margin="0,6,0,18" Style="{StaticResource Text.Body}"
-                           Text="{ui:Loc Text.f52310f5bd04}" />
+                           Text="{ui:Loc 'Changes take effect immediately and are saved for the next launch.'}" />
                 <DockPanel LastChildFill="False">
-                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc Text.8027f432a7fb}" />
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc 'Interface language'}" />
                     <ComboBox Width="240" Style="{StaticResource LanguageSelector}"
                               ItemsSource="{Binding Languages}" DisplayMemberPath="Name" SelectedValuePath="Code"
                               SelectedValue="{Binding SelectedLanguage, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                              AutomationProperties.Name="{ui:Loc Text.8027f432a7fb}" />
+                              AutomationProperties.Name="{ui:Loc 'Interface language'}" />
                 </DockPanel>
             </StackPanel>
         </Border>
@@ -43,26 +43,26 @@
         <!-- Game installation -->
         <Border Margin="0,20,0,0" Style="{StaticResource Card}">
             <StackPanel>
-                <TextBlock Style="{StaticResource Text.Title}" Text="{ui:Loc Text.8aa6b308086c}" />
+                <TextBlock Style="{StaticResource Text.Title}" Text="{ui:Loc 'Game installation'}" />
                 <TextBlock Margin="0,6,0,18" Style="{StaticResource Text.Body}"
-                           Text="{ui:Loc Text.31405bb6198e}" />
+                           Text="{ui:Loc 'Found automatically through Steam or the Epic Games Launcher. Choose the folder yourself when it was not found, or to use another copy of the game.'}" />
                 <DockPanel Style="{StaticResource Field}">
-                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc Text.9c215bf11f75, Tracked=True}" />
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc 'Install folder', Tracked=True}" />
                     <TextBlock Style="{StaticResource Text.Path}" Text="{Binding GamePath}" />
                 </DockPanel>
                 <DockPanel Style="{StaticResource Field}">
-                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc Text.6c1458561521, Tracked=True}" />
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc 'Found through', Tracked=True}" />
                     <TextBlock Style="{StaticResource Text.Small}" Foreground="{StaticResource Brush.Text}" Text="{Binding StoreText}" />
                 </DockPanel>
                 <DockPanel Style="{StaticResource Field}">
-                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc Text.bdd254b65baa, Tracked=True}" />
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc 'Build', Tracked=True}" />
                     <TextBlock Style="{StaticResource Text.Small}" Foreground="{StaticResource Brush.Text}" Text="{Binding BuildText}" />
                 </DockPanel>
                 <WrapPanel Margin="0,10,0,0">
-                    <Button Style="{StaticResource Button.Primary}" Content="{ui:Loc Text.7d11d6748463}" ui:Icon.Glyph="&#xE838;"
+                    <Button Style="{StaticResource Button.Primary}" Content="{ui:Loc 'Locate game folder…'}" ui:Icon.Glyph="&#xE838;"
                             Command="{Binding LocateGameCommand}" />
-                    <Button Margin="8,0,0,0" Content="{ui:Loc Text.998195e4aaa2}" ui:Icon.Glyph="&#xE72C;" Command="{Binding DetectGameCommand}" />
-                    <Button Margin="8,0,0,0" Content="{ui:Loc Text.553221725e47}" Command="{Binding OpenGameFolderCommand}" />
+                    <Button Margin="8,0,0,0" Content="{ui:Loc 'Search again'}" ui:Icon.Glyph="&#xE72C;" Command="{Binding DetectGameCommand}" />
+                    <Button Margin="8,0,0,0" Content="{ui:Loc 'Open game folder'}" Command="{Binding OpenGameFolderCommand}" />
                 </WrapPanel>
             </StackPanel>
         </Border>
@@ -71,11 +71,11 @@
         <Border Margin="0,20,0,0" Style="{StaticResource Card}" IsEnabled="{Binding SaveBackupsAvailable}"
                 ToolTip="{Binding SaveBackupsHint}" ToolTipService.ShowOnDisabled="True">
             <StackPanel>
-                <TextBlock Style="{StaticResource Text.Title}" Text="{ui:Loc Text.58b1306d2f1d}" />
+                <TextBlock Style="{StaticResource Text.Title}" Text="{ui:Loc 'Save backups'}" />
                 <TextBlock Margin="0,6,0,18" Style="{StaticResource Text.Body}"
-                           Text="{ui:Loc Text.ccab6b75784a}" />
+                           Text="{ui:Loc 'A broken mod can break a save. When you turn it on below, Launch game first zips your save folder, and the manager keeps the last 5 backups. To go back to one, close the game, unzip it and copy its files over the save folder.'}" />
                 <DockPanel Style="{StaticResource Field}">
-                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc Text.2d1bffbfb103, Tracked=True}" />
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc 'Save folder', Tracked=True}" />
                     <StackPanel>
                         <TextBlock Style="{StaticResource Text.Path}" Text="{Binding SaveFolderText}" />
                         <TextBlock Margin="0,3,0,0" Style="{StaticResource Text.Small}" TextWrapping="Wrap"
@@ -83,17 +83,17 @@
                     </StackPanel>
                 </DockPanel>
                 <DockPanel Style="{StaticResource Field}">
-                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc Text.3334fee2c77f, Tracked=True}" />
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc 'Backups', Tracked=True}" />
                     <TextBlock Style="{StaticResource Text.Small}" Foreground="{StaticResource Brush.Text}" Text="{Binding SaveBackupsText}" />
                 </DockPanel>
-                <CheckBox Margin="0,6,0,14" Content="{ui:Loc Text.bbfb91c3aa91}"
+                <CheckBox Margin="0,6,0,14" Content="{ui:Loc 'Back up my saves each time I start the game here'}"
                           IsChecked="{Binding BackUpSavesOnLaunch}" />
                 <WrapPanel>
-                    <Button Margin="0,0,8,8" Style="{StaticResource Button.Primary}" Content="{ui:Loc Text.b50188d32de7}" ui:Icon.Glyph="&#xE838;"
+                    <Button Margin="0,0,8,8" Style="{StaticResource Button.Primary}" Content="{ui:Loc 'Choose save folder…'}" ui:Icon.Glyph="&#xE838;"
                             Command="{Binding ChooseSaveFolderCommand}" />
-                    <Button Margin="0,0,8,8" Content="{ui:Loc Text.02a2840b598b}" ui:Icon.Glyph="&#xE896;" Command="{Binding BackUpSavesNowCommand}" />
-                    <Button Margin="0,0,8,8" Content="{ui:Loc Text.ebc2586955c9}" Command="{Binding OpenSaveFolderCommand}" />
-                    <Button Margin="0,0,8,8" Content="{ui:Loc Text.72fe99ae5201}" ui:Icon.Glyph="&#xE81C;" Command="{Binding OpenSaveBackupsCommand}" />
+                    <Button Margin="0,0,8,8" Content="{ui:Loc 'Back up now'}" ui:Icon.Glyph="&#xE896;" Command="{Binding BackUpSavesNowCommand}" />
+                    <Button Margin="0,0,8,8" Content="{ui:Loc 'Open save folder'}" Command="{Binding OpenSaveFolderCommand}" />
+                    <Button Margin="0,0,8,8" Content="{ui:Loc 'Open save backups'}" ui:Icon.Glyph="&#xE81C;" Command="{Binding OpenSaveBackupsCommand}" />
                 </WrapPanel>
             </StackPanel>
         </Border>
@@ -101,27 +101,27 @@
         <!-- Game profile -->
         <Border Margin="0,20,0,0" Style="{StaticResource Card}">
             <StackPanel>
-                <TextBlock Style="{StaticResource Text.Title}" Text="{ui:Loc Text.33611d3d2314}" />
+                <TextBlock Style="{StaticResource Text.Title}" Text="{ui:Loc 'Game folders'}" />
                 <TextBlock Margin="0,6,0,18" Style="{StaticResource Text.Body}"
-                           Text="{ui:Loc Text.0dd4f0daa390}" />
+                           Text="{ui:Loc 'Where the manager expects the game\'s files, as set by the game profile built into this app.'}" />
                 <DockPanel Style="{StaticResource Field}">
-                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc Text.59923a31cb78, Tracked=True}" />
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc 'Project folder', Tracked=True}" />
                     <TextBlock Style="{StaticResource Text.Path}" Text="{Binding ProjectText}" />
                 </DockPanel>
                 <DockPanel Style="{StaticResource Field}">
-                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc Text.e20badb0276b, Tracked=True}" />
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc 'Paks folder', Tracked=True}" />
                     <TextBlock Style="{StaticResource Text.Path}" Text="{Binding PaksPath}" />
                 </DockPanel>
                 <DockPanel Style="{StaticResource Field}">
-                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc Text.840e19f02190, Tracked=True}" />
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc 'Mods folder', Tracked=True}" />
                     <TextBlock Style="{StaticResource Text.Path}" Text="{Binding ModsPath}" />
                 </DockPanel>
                 <DockPanel Style="{StaticResource Field}">
-                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc Text.186fbf156248, Tracked=True}" />
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc 'Blueprint mods', Tracked=True}" />
                     <TextBlock Style="{StaticResource Text.Path}" Text="{Binding LogicModsPath}" />
                 </DockPanel>
                 <DockPanel Style="{StaticResource Field}">
-                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc Text.fbe5b57eb3dd, Tracked=True}" />
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc 'Game exe', Tracked=True}" />
                     <TextBlock Style="{StaticResource Text.Path}" Text="{Binding GameExeText}" />
                 </DockPanel>
             </StackPanel>
@@ -130,18 +130,18 @@
         <!-- Data -->
         <Border Margin="0,20,0,0" Style="{StaticResource Card}">
             <StackPanel>
-                <TextBlock Style="{StaticResource Text.Title}" Text="{ui:Loc Text.83395394d6a8}" />
+                <TextBlock Style="{StaticResource Text.Title}" Text="{ui:Loc 'Manager data'}" />
                 <TextBlock Margin="0,6,0,18" Style="{StaticResource Text.Body}"
-                           Text="{ui:Loc Text.540de3378af8}" />
+                           Text="{ui:Loc 'The list of installed mods, the manager\'s copy of each mod, backups of your saves and of mod settings you changed, and the logs. All kept in the Data folder next to UEModManager.exe, so the app folder can be moved as a whole.'}" />
                 <DockPanel Style="{StaticResource Field}">
-                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc Text.3e55f576865b, Tracked=True}" />
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc 'Data folder', Tracked=True}" />
                     <TextBlock Style="{StaticResource Text.Path}" Text="{Binding DataPath}" />
                 </DockPanel>
                 <WrapPanel Margin="0,10,0,0">
-                    <Button Content="{ui:Loc Text.24bec7410199}" ui:Icon.Glyph="&#xE838;" Command="{Binding OpenDataFolderCommand}" />
-                    <Button Margin="8,0,0,0" Content="{ui:Loc Text.591889ac42e0}" ui:Icon.Glyph="&#xE8A5;" Command="{Binding OpenLogsCommand}" />
-                    <Button Margin="8,0,0,0" Content="{ui:Loc Text.c44c0f2bc813}" ui:Icon.Glyph="&#xE81C;" Command="{Binding OpenBackupsCommand}"
-                            ToolTip="{ui:Loc Text.3a37ea390c0d}" />
+                    <Button Content="{ui:Loc 'Open data folder'}" ui:Icon.Glyph="&#xE838;" Command="{Binding OpenDataFolderCommand}" />
+                    <Button Margin="8,0,0,0" Content="{ui:Loc 'Open logs'}" ui:Icon.Glyph="&#xE8A5;" Command="{Binding OpenLogsCommand}" />
+                    <Button Margin="8,0,0,0" Content="{ui:Loc 'Open settings backups'}" ui:Icon.Glyph="&#xE81C;" Command="{Binding OpenBackupsCommand}"
+                            ToolTip="{ui:Loc 'Mod settings you changed, saved before an update or an uninstall replaced them'}" />
                 </WrapPanel>
             </StackPanel>
         </Border>
@@ -150,12 +150,12 @@
         <Border Margin="0,20,0,0" Style="{StaticResource Card}">
             <DockPanel>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,0,0">
-                    <Button Content="{ui:Loc Text.5b90daeb2765}" ui:Icon.Glyph="&#xE777;" Command="{Binding ResetModdingCommand}" />
+                    <Button Content="{ui:Loc 'Reset modding…'}" ui:Icon.Glyph="&#xE777;" Command="{Binding ResetModdingCommand}" />
                 </StackPanel>
                 <StackPanel>
-                    <TextBlock Style="{StaticResource Text.Title}" Text="{ui:Loc Text.476de5548881}" />
+                    <TextBlock Style="{StaticResource Text.Title}" Text="{ui:Loc 'Reset modding'}" />
                     <TextBlock Margin="0,6,0,0" Style="{StaticResource Text.Body}"
-                               Text="{ui:Loc Text.1cd92fdd7bf2}" />
+                               Text="{ui:Loc 'Start clean: removes every mod and UE4SS from the game, so it is back to its original files. You choose whether the mods also leave the manager.'}" />
                 </StackPanel>
             </DockPanel>
         </Border>
@@ -164,13 +164,13 @@
         <Border Margin="0,20,0,0" Style="{StaticResource Card}">
             <DockPanel>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,0,0">
-                    <Button Style="{StaticResource Button.Primary}" Content="{ui:Loc Text.574106585e48}" ui:Icon.Glyph="&#xE897;"
+                    <Button Style="{StaticResource Button.Primary}" Content="{ui:Loc 'Report a problem…'}" ui:Icon.Glyph="&#xE897;"
                             Command="{Binding ShowHelpDialogCommand}" />
                 </StackPanel>
                 <StackPanel>
-                    <TextBlock Style="{StaticResource Text.Title}" Text="{ui:Loc Text.fd64e81bf74d}" />
+                    <TextBlock Style="{StaticResource Text.Title}" Text="{ui:Loc 'Get help'}" />
                     <TextBlock Margin="0,6,0,0" Style="{StaticResource Text.Body}"
-                               Text="{ui:Loc Text.79fe72d78397}" />
+                               Text="{ui:Loc 'Something does not work? Make a report for the help channel on Discord: you say what happened, the manager adds the facts a helper asks for first.'}" />
                 </StackPanel>
             </DockPanel>
         </Border>

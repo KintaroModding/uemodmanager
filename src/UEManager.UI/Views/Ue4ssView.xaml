@@ -19,45 +19,45 @@
 
     <StackPanel>
         <StackPanel Margin="0,6,0,0">
-            <TextBlock Style="{StaticResource Text.Overline}" Text="{ui:Loc Text.f7647a211199, Tracked=True}" />
+            <TextBlock Style="{StaticResource Text.Overline}" Text="{ui:Loc 'Script loader', Tracked=True}" />
             <TextBlock Margin="0,10,0,0" Style="{StaticResource Text.Display}" Text="UE4SS" />
             <Rectangle Width="200" Height="2" Margin="0,14,0,14" HorizontalAlignment="Left" Fill="{StaticResource Brush.Stroke}" />
             <TextBlock MaxWidth="640" HorizontalAlignment="Left" Style="{StaticResource Text.Body}"
-                       Text="{ui:Loc Text.26a6882f13d7}" />
+                       Text="{ui:Loc 'UE4SS lets the game load Lua, C++ (DLL) and Blueprint mods. Packaged mods (.pak, .utoc, .ucas) work without it.'}" />
         </StackPanel>
 
         <!-- Runtime -->
         <Border Margin="0,28,0,0" Style="{StaticResource Card}">
             <StackPanel>
-                <TextBlock Style="{StaticResource Text.Title}" Text="{ui:Loc Text.109311589787}" />
+                <TextBlock Style="{StaticResource Text.Title}" Text="{ui:Loc 'Runtime'}" />
                 <TextBlock Margin="0,6,0,18" Style="{StaticResource Text.Body}"
-                           Text="{ui:Loc Text.cce7a491b3a7}" />
+                           Text="{ui:Loc 'Install and update keep your UE4SS settings, mods.txt and the files of your mods. Close the game before you change UE4SS.'}" />
                 <DockPanel Style="{StaticResource Field}">
-                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc Text.920e413c7d41, Tracked=True}" />
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc 'Status', Tracked=True}" />
                     <TextBlock Style="{StaticResource Text.Small}" Foreground="{StaticResource Brush.Text}" Text="{Binding Ue4ssText}" />
                 </DockPanel>
                 <DockPanel Style="{StaticResource Field}">
-                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc Text.02d9b63afa35, Tracked=True}" />
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc 'UE4SS folder', Tracked=True}" />
                     <TextBlock Style="{StaticResource Text.Path}" Text="{Binding Ue4ssFolderPath}" />
                 </DockPanel>
                 <DockPanel Style="{StaticResource Field}">
-                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc Text.840e19f02190, Tracked=True}" />
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc 'Mods folder', Tracked=True}" />
                     <TextBlock Style="{StaticResource Text.Path}" Text="{Binding Ue4ssModsPath}" />
                 </DockPanel>
                 <DockPanel Style="{StaticResource Field}">
-                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc Text.5425c8a0e9f5, Tracked=True}" />
+                    <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc 'Your mods', Tracked=True}" />
                     <TextBlock Style="{StaticResource Text.Small}" Foreground="{StaticResource Brush.Text}" Text="{Binding Ue4ssModsText}" />
                 </DockPanel>
                 <WrapPanel Margin="0,10,0,0">
-                    <Button Margin="0,0,8,8" Style="{StaticResource Button.Primary}" Content="{ui:Loc Text.5ffe25975982}" ui:Icon.Glyph="&#xE896;"
+                    <Button Margin="0,0,8,8" Style="{StaticResource Button.Primary}" Content="{ui:Loc 'Install UE4SS…'}" ui:Icon.Glyph="&#xE896;"
                             Command="{Binding ShowUe4ssGuideCommand}"
                             Visibility="{Binding IsUe4ssMissing, Converter={StaticResource Visible}}" />
                     <Button Margin="0,0,8,8" Style="{StaticResource Button.Primary}" Content="{Binding Ue4ssUpdateText}"
                             ui:Icon.Glyph="&#xE896;" Command="{Binding UpdateUe4ssCommand}"
                             Visibility="{Binding IsUe4ssUpdateAvailable, Converter={StaticResource Visible}}" />
-                    <Button Margin="0,0,8,8" Content="{ui:Loc Text.861b7ef29cbf}" ui:Icon.Glyph="&#xE838;" Command="{Binding OpenUe4ssFolderCommand}"
+                    <Button Margin="0,0,8,8" Content="{ui:Loc 'Open UE4SS folder'}" ui:Icon.Glyph="&#xE838;" Command="{Binding OpenUe4ssFolderCommand}"
                             Visibility="{Binding IsUe4ssInstalled, Converter={StaticResource Visible}}" />
-                    <Button Margin="0,0,8,8" Content="{ui:Loc Text.e46579459fdf}" ui:Icon.Glyph="&#xE74D;" Command="{Binding RemoveUe4ssCommand}"
+                    <Button Margin="0,0,8,8" Content="{ui:Loc 'Remove UE4SS…'}" ui:Icon.Glyph="&#xE74D;" Command="{Binding RemoveUe4ssCommand}"
                             Visibility="{Binding IsUe4ssInstalled, Converter={StaticResource Visible}}" />
                 </WrapPanel>
             </StackPanel>
@@ -68,18 +68,18 @@
             <StackPanel>
                 <DockPanel>
                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
-                        <Button Content="{ui:Loc Text.0e9161011702}" ui:Icon.Glyph="&#xE72C;" Command="{Binding RefreshCommand}" />
-                        <Button Margin="8,0,0,0" Content="{ui:Loc Text.e21f935f11d7}" ui:Icon.Glyph="&#xE8C8;" Command="{Binding CopyCommand}"
-                                IsEnabled="{Binding HasLog}" ToolTip="{ui:Loc Text.720d8f45b595}" />
-                        <Button Margin="8,0,0,0" Content="{ui:Loc Text.ec1bc0439a97}" ui:Icon.Glyph="&#xE8A5;" Command="{Binding OpenLogCommand}"
+                        <Button Content="{ui:Loc 'Refresh'}" ui:Icon.Glyph="&#xE72C;" Command="{Binding RefreshCommand}" />
+                        <Button Margin="8,0,0,0" Content="{ui:Loc 'Copy'}" ui:Icon.Glyph="&#xE8C8;" Command="{Binding CopyCommand}"
+                                IsEnabled="{Binding HasLog}" ToolTip="{ui:Loc 'Copy the log, to paste it into Discord'}" />
+                        <Button Margin="8,0,0,0" Content="{ui:Loc 'Open log file'}" ui:Icon.Glyph="&#xE8A5;" Command="{Binding OpenLogCommand}"
                                 IsEnabled="{Binding HasLog}" />
-                        <Button Margin="8,0,0,0" Content="{ui:Loc Text.574106585e48}" ui:Icon.Glyph="&#xE897;"
+                        <Button Margin="8,0,0,0" Content="{ui:Loc 'Report a problem…'}" ui:Icon.Glyph="&#xE897;"
                                 Command="{Binding DataContext.ShowHelpDialogCommand, RelativeSource={RelativeSource AncestorType=UserControl}}" />
                     </StackPanel>
                     <StackPanel>
-                        <TextBlock Style="{StaticResource Text.Title}" Text="{ui:Loc Text.21e49eb2b299}" />
+                        <TextBlock Style="{StaticResource Text.Title}" Text="{ui:Loc 'Log'}" />
                         <TextBlock Margin="0,6,0,0" Style="{StaticResource Text.Body}"
-                                   Text="{ui:Loc Text.ca3909838dd7}" />
+                                   Text="{ui:Loc 'What UE4SS wrote during the last game start. Red lines speak of an error, orange lines of a warning.'}" />
                     </StackPanel>
                 </DockPanel>
                 <StackPanel Margin="0,16,0,0" Orientation="Horizontal">
@@ -90,7 +90,7 @@
                 <TextBlock Margin="16,6,0,0" Style="{StaticResource Text.Small}" Foreground="{StaticResource Brush.Danger}"
                            TextWrapping="Wrap" Text="{Binding ErrorModsText}"
                            Visibility="{Binding HasErrorMods, Converter={StaticResource Visible}}" />
-                <CheckBox Margin="0,14,0,10" Content="{ui:Loc Text.2629da71f3a8}" IsChecked="{Binding OnlyProblems}"
+                <CheckBox Margin="0,14,0,10" Content="{ui:Loc 'Only errors and warnings'}" IsChecked="{Binding OnlyProblems}"
                           Visibility="{Binding HasLog, Converter={StaticResource Visible}}" />
                 <ItemsControl x:Name="LogLines" Height="380" ItemsSource="{Binding ShownLines}" Focusable="False"
                               VirtualizingPanel.IsVirtualizing="True" VirtualizingPanel.ScrollUnit="Pixel"

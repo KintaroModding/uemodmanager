@@ -8,7 +8,6 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Threading;
 using UEManager.Core.Games;
-using UEManager.Core.Localization;
 using UEManager.Core.Mods;
 using UEManager.Core.Storage;
 using UEManager.UI.Services;
@@ -20,6 +19,7 @@ using UEManager.UI.Catalog;
 
 namespace UEManager.UI.Tests;
 
+[Collection("Language")]
 public class LanguageSwitchTests
 {
     [Fact]

@@ -44,7 +44,7 @@ public sealed class InstallPreview : IDisposable
 /// <summary>The result of checking a selection against the game and the library before anything is written.</summary>
 /// <param name="NeedsUe4ss">The selection holds Lua, DLL or Blueprint mods, and UE4SS is not installed.</param>
 /// <param name="EditedSettings">Settings files of <paramref name="Replaces"/> that the player changed, such as "ModName/Scripts/config.lua".</param>
-public sealed record InstallCheck(IReadOnlyList<string> Problems, IReadOnlyList<string> Warnings, ModRecord? Replaces,
+public sealed record InstallCheck(IReadOnlyList<FormattableString> Problems, IReadOnlyList<FormattableString> Warnings, ModRecord? Replaces,
     bool NeedsUe4ss = false, IReadOnlyList<string>? EditedSettings = null)
 {
     public bool CanInstall => Problems.Count == 0;
