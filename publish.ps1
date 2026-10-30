@@ -16,7 +16,7 @@ $project = Join-Path $PSScriptRoot "src\UEManager.UI\UEManager.UI.csproj"
 $version = ([xml](Get-Content (Join-Path $PSScriptRoot "src\Directory.Build.props"))).Project.PropertyGroup.Version |
     Where-Object { $_ } | Select-Object -First 1
 
-dotnet test (Join-Path $PSScriptRoot "src\UEManager.Core.Tests\UEManager.Core.Tests.csproj") -c $Configuration
+dotnet test (Join-Path $PSScriptRoot "src\UEManager.slnx") -c $Configuration
 if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 $release = Join-Path $dist "release"

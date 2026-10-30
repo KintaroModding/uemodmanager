@@ -2,4 +2,5 @@
   <Project Path="UEManager.Core/UEManager.Core.csproj" />
   <Project Path="UEManager.UI/UEManager.UI.csproj" />
   <Project Path="UEManager.Core.Tests/UEManager.Core.Tests.csproj" />
+  <Project Path="UEManager.UI.Tests/UEManager.UI.Tests.csproj" />
 </Solution>

@@ -44,9 +44,9 @@ public static class SaveBackups
     public static string Create(string saveFolder, string backupDir, DateTime now)
     {
         if (!Directory.Exists(saveFolder))
-            throw new DirectoryNotFoundException($"The save folder was not found: {saveFolder}");
+            throw new DirectoryNotFoundException(L.F($"The save folder was not found: {saveFolder}"));
         if (!HasSaves(saveFolder))
-            throw new IOException($"The save folder is empty: {saveFolder}");
+            throw new IOException(L.F($"The save folder is empty: {saveFolder}"));
 
         Directory.CreateDirectory(backupDir);
         var backup = Path.Combine(backupDir, $"saves {now:yyyy-MM-dd HH-mm-ss}{Extension}");

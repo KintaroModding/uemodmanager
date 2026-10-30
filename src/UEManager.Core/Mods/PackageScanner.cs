@@ -35,11 +35,11 @@ public sealed class PackageGroup
         {
             bool Has(string extension) => files.Any(f => Path.GetExtension(f).Equals(extension, StringComparison.OrdinalIgnoreCase));
             if (Has(".utoc") && !Has(".ucas"))
-                problems.Add($"{name}.utoc has no matching .ucas file.");
+                problems.Add(L.F($"{name}.utoc has no matching .ucas file."));
             if (Has(".ucas") && !Has(".utoc"))
-                problems.Add($"{name}.ucas has no matching .utoc file.");
+                problems.Add(L.F($"{name}.ucas has no matching .utoc file."));
             if (!Has(".pak"))
-                warnings.Add($"{name} has no .pak file. Unreal Engine 5 games usually need it next to the .utoc and .ucas files.");
+                warnings.Add(L.F($"{name} has no .pak file. Unreal Engine 5 games usually need it next to the .utoc and .ucas files."));
         }
         Problems = problems;
         Warnings = warnings;

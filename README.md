@@ -20,6 +20,22 @@ can write to and start `UEModManager.exe`; it needs the
 [.NET 8 Desktop Runtime (x64)](https://dotnet.microsoft.com/download/dotnet/8.0).
 How to install and use it, for players: [openmods.md](openmods.md).
 
+## Interface language
+
+In **Settings → Language**, choose **简体中文** or **English**. The interface
+updates immediately, keeping the current page and input. The choice is saved
+in `Data/settings.json` for the next launch. On the first launch, Chinese
+Windows installations use Simplified Chinese; other systems use English.
+
+Translations live in `src/UEManager.Core/Localization/Strings.json`; catalog-only
+messages live in `src/UEManager.Core/Catalog/Strings.json` and are excluded from
+the build without the catalog. Each entry has an English source and a `zh-CN`
+translation. Keep format placeholders such as `{0}` and `{1:P0}` intact.
+XAML uses `{ui:Loc resource-key}`; code uses `L.T("English text")` or
+`L.F($"English text {value}")`. View models inherit `LocalizedObservableObject`
+so computed labels refresh on a language change. Paths, mod names, downloaded
+descriptions, original logs and license bodies retain their original contents.
+
 ## Supported mod types
 
 | Type | Recognised by | Deployed to |
@@ -241,6 +257,7 @@ src/
     Theme/                Palette, control styles and optional art. Built into the exe
                           (see Theme/README.md).
   UEManager.Core.Tests/   xUnit tests for Core. Covers every operation that touches the game folder.
+  UEManager.UI.Tests/     WPF language switching, binding and state-preservation regression test.
 ```
 
 ## Build
@@ -260,7 +277,8 @@ exe holds no catalog code, text or address, and no `--catalog` option. The rest
 of the app reaches the catalog only through partial methods (`CreateCatalog`,
 `OnModsChanged`, `ReadCatalogArgument`, `AddCatalogResources`), which stay empty
 and vanish without it, and through two resource keys (`CatalogNavItem`,
-`CatalogPage`) that only the catalog fills. The tests build with the catalog.
+`CatalogPage`) that only the catalog fills. The shared Core and WPF tests run
+in both builds; catalog parser tests are included only with the catalog.
 
 Builds with and without the catalog keep their own build state in `obj\catalog`
 or `obj\base`.

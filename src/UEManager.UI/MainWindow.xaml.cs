@@ -1,4 +1,5 @@
 using System.Windows;
+using System.Windows.Data;
 using UEManager.UI.ViewModels;
 
 namespace UEManager.UI;
@@ -8,6 +9,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        OnWindowStateChanged();
         StateChanged += (_, _) => OnWindowStateChanged();
     }
 
@@ -46,7 +48,7 @@ public partial class MainWindow : Window
         var maximized = WindowState == WindowState.Maximized;
         Root.Margin = maximized ? SystemParameters.WindowResizeBorderThickness : new Thickness(0);
         MaximizeButton.Content = maximized ? "" : "";
-        MaximizeButton.ToolTip = maximized ? "Restore" : "Maximize";
+        MaximizeButton.SetBinding(ToolTipProperty, new Binding($"[{(maximized ? "Restore" : "Maximize")}]") { Source = L.Current });
     }
 
     private void OnMinimize(object sender, RoutedEventArgs e) => WindowState = WindowState.Minimized;

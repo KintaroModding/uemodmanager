@@ -27,7 +27,7 @@ public enum UpdateState
 /// <param name="releaseUrl">GitHub's answer for the newest release, or a test copy of it.</param>
 /// <param name="filePrefix">The start of the zip name of this build for this game, such as "uemm_phantom-blade-zero_".</param>
 public sealed partial class AppUpdateViewModel(MainViewModel owner, HttpClient http, AppPaths paths, string releaseUrl, string filePrefix)
-    : ObservableObject
+    : LocalizedObservableObject
 {
     /// <summary>How long the banner for a new version stays in the middle of the window.</summary>
     private static readonly TimeSpan BannerTime = TimeSpan.FromSeconds(3);
@@ -54,14 +54,14 @@ public sealed partial class AppUpdateViewModel(MainViewModel owner, HttpClient h
     [ObservableProperty]
     private bool isFlashing;
 
-    private string? failure;
+    private ModException? failure;
 
     public string StatusText => State switch
     {
-        UpdateState.Checking => "Checking for updates…",
-        UpdateState.UpToDate => "Up to date",
-        UpdateState.Available => $"Update available: {release?.Version}",
-        _ => "Update check failed",
+        UpdateState.Checking => L.T("Checking for updates…"),
+        UpdateState.UpToDate => L.T("Up to date"),
+        UpdateState.Available => L.F($"Update available: {release?.Version}"),
+        _ => L.T("Update check failed"),
     };
 
     public string StatusTone => State switch
@@ -81,21 +81,21 @@ public sealed partial class AppUpdateViewModel(MainViewModel owner, HttpClient h
 
     public string? StatusHint => State switch
     {
-        UpdateState.UpToDate => $"Version {AppInfo.Version} is the newest release.",
-        UpdateState.Available => "Show the update",
-        UpdateState.Failed => failure,
+        UpdateState.UpToDate => L.F($"Version {AppInfo.Version} is the newest release."),
+        UpdateState.Available => L.T("Show the update"),
+        UpdateState.Failed => failure?.Message,
         _ => null,
     };
 
     public bool IsAvailable => State == UpdateState.Available;
 
-    public string BannerTitle => $"Version {release?.Version} is available";
+    public string BannerTitle => L.F($"Version {release?.Version} is available");
 
-    public string DialogTitle => $"Update to version {release?.Version}";
+    public string DialogTitle => L.F($"Update to version {release?.Version}");
 
     public string DialogText => release?.Date is { } date
-        ? $"You have version {AppInfo.Version}. Version {release.Version} came out on {date.LocalDateTime.ToString("d MMM yyyy", CultureInfo.CurrentCulture)}."
-        : $"You have version {AppInfo.Version}.";
+        ? L.F($"You have version {AppInfo.Version}. Version {release.Version} came out on {date.LocalDateTime.ToString(L.T("d MMM yyyy"), CultureInfo.CurrentCulture)}.")
+        : L.F($"You have version {AppInfo.Version}.");
 
     public string? Notes => release?.Notes;
 
@@ -105,11 +105,11 @@ public sealed partial class AppUpdateViewModel(MainViewModel owner, HttpClient h
     private static string ExeName => Path.GetFileName(Environment.ProcessPath) ?? "UEModManager.exe";
 
     public string AutomaticText => CanUpdateItself
-        ? $"The app downloads {release!.File!.Name}, checks it, replaces {ExeName} and starts again. Your mods, settings and data stay as they are."
-        : "This release has no file for this app and game, so the app cannot update itself. Use the release page.";
+        ? L.F($"The app downloads {release!.File!.Name}, checks it, replaces {ExeName} and starts again. Your mods, settings and data stay as they are.")
+        : L.T("This release has no file for this app and game, so the app cannot update itself. Use the release page.");
 
     public string ManualText =>
-        $"Opens the release page. Download {release?.File?.Name ?? "the zip for your app"}, close the app, and replace {ExeName} with the one from the zip.";
+        L.F($"Opens the release page. Download {release?.File?.Name ?? L.T("the zip for your app")}, close the app, and replace {ExeName} with the one from the zip.");
 
     /// <summary>
     /// Asks GitHub for the newest release. A new version is announced once; offline or failing,
@@ -126,7 +126,7 @@ public sealed partial class AppUpdateViewModel(MainViewModel owner, HttpClient h
         catch (ModException ex)
         {
             Log.Warn($"Update check: {ex.Message}");
-            failure = ex.Message;
+            failure = ex;
             State = UpdateState.Failed;
         }
         OnPropertyChanged(string.Empty);
@@ -175,12 +175,12 @@ public sealed partial class AppUpdateViewModel(MainViewModel owner, HttpClient h
             return;
         IsDialogOpen = false;
         var folder = Path.Combine(paths.StagingDir, "update-" + Guid.NewGuid().ToString("N"));
-        var title = $"Downloading version {release.Version}…";
+        var title = L.F($"Downloading version {release.Version}…");
         var replaced = await owner.RunAsync(title, async () =>
         {
             var progress = new Progress<double>(share => owner.BusyText = $"{title}  {share:P0}");
-            var zip = await FileDownloader.DownloadAsync(http, file.Url, file.Name, file.Size, file.Sha256, folder, $"Version {release.Version}", progress);
-            owner.BusyText = "Installing the update…";
+            var zip = await FileDownloader.DownloadAsync(http, file.Url, file.Name, file.Size, file.Sha256, folder, L.F($"Version {release.Version}"), progress);
+            owner.BusyText = L.T("Installing the update…");
             await Task.Run(() =>
             {
                 var unpacked = Path.Combine(folder, "unpacked");
@@ -195,6 +195,6 @@ public sealed partial class AppUpdateViewModel(MainViewModel owner, HttpClient h
         Log.Info($"Updated to {release.Version}; starting the new version.");
         // The new exe is in place; only a failed restart is left to the player.
         if (!App.Restart())
-            owner.ShowToast($"Version {release.Version} is installed. Close the app and start it again to use it.");
+            owner.ShowToast(L.F($"Version {release.Version} is installed. Close the app and start it again to use it."));
     }
 }

@@ -22,7 +22,7 @@
 
     <StackPanel>
         <StackPanel Margin="0,6,0,0">
-            <TextBlock Style="{StaticResource Text.Overline}" Text="{ui:Tracked 'About'}" />
+            <TextBlock Style="{StaticResource Text.Overline}" Text="{ui:Loc Text.4efca0d10c5f, Tracked=True}" />
             <TextBlock Margin="0,10,0,0" Style="{StaticResource Text.Display}" Text="{Binding AppName}" />
             <Rectangle Width="200" Height="2" Margin="0,14,0,14" HorizontalAlignment="Left" Fill="{StaticResource Brush.Stroke}" />
             <TextBlock Style="{StaticResource Text.Small}" Text="{Binding AppVersionText}" />
@@ -30,23 +30,23 @@
 
         <Border Margin="0,28,0,0" Style="{StaticResource Card}">
             <StackPanel>
-                <TextBlock Style="{StaticResource Text.Title}" Text="What it does" />
+                <TextBlock Style="{StaticResource Text.Title}" Text="{ui:Loc Text.c74ea9dc9cd2}" />
                 <TextBlock Margin="0,8,0,0" Style="{StaticResource Text.Body}"
-                           Text="A mod manager for Unreal Engine games. It installs packaged mods (.pak, .utoc and .ucas), Blueprint mods, and UE4SS Lua and DLL mods, keeps its own copy of every mod, and records a checksum for every file it places. Files it did not place are never overwritten or removed." />
+                           Text="{ui:Loc Text.c99aad3f8c6c}" />
                 <TextBlock Margin="0,10,0,0" Style="{StaticResource Text.Body}"
-                           Text="Downloads are unpacked into a private staging folder first. Nothing inside a download is ever run." />
+                           Text="{ui:Loc Text.4b2657bf94ac}" />
             </StackPanel>
         </Border>
 
         <Border Margin="0,20,0,0" Style="{StaticResource Card}">
             <StackPanel>
                 <DockPanel>
-                    <Button DockPanel.Dock="Right" VerticalAlignment="Top" Content="Contribute on GitHub" ui:Icon.Glyph="&#xE8A7;"
+                    <Button DockPanel.Dock="Right" VerticalAlignment="Top" Content="{ui:Loc Text.73c910aa3287}" ui:Icon.Glyph="&#xE8A7;"
                             Command="{Binding OpenProjectPageCommand}" />
-                    <TextBlock Style="{StaticResource Text.Title}" Text="Contributors" />
+                    <TextBlock Style="{StaticResource Text.Title}" Text="{ui:Loc Text.350ad433c42f}" />
                 </DockPanel>
                 <TextBlock Margin="0,8,0,12" Style="{StaticResource Text.Body}"
-                           Text="Made by everyone below. Help improve the original: every contributor is named here, in every release." />
+                           Text="{ui:Loc Text.3a088ede2ad5}" />
                 <ItemsControl ItemsSource="{Binding Contributors}" Focusable="False">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
@@ -62,18 +62,18 @@
 
         <Border Margin="0,20,0,0" Style="{StaticResource Card}">
             <StackPanel>
-                <TextBlock Style="{StaticResource Text.Title}" Text="License" />
+                <TextBlock Style="{StaticResource Text.Title}" Text="{ui:Loc Text.c011d6097bfb}" />
                 <TextBlock Margin="0,8,0,12" Style="{StaticResource Text.Body}"
-                           Text="This app is free software: you may share and change it under the GNU General Public License, version 3, with the additional terms below. A work based on it keeps the credit to the original and its contributors, and carries a name of its own. It comes with ABSOLUTELY NO WARRANTY." />
+                           Text="{ui:Loc Text.62bf2724117c}" />
                 <ItemsControl ItemsSource="{Binding OwnLicenses}" ItemTemplate="{StaticResource LicenseText}" Focusable="False" />
             </StackPanel>
         </Border>
 
         <Border Margin="0,20,0,0" Style="{StaticResource Card}">
             <StackPanel>
-                <TextBlock Style="{StaticResource Text.Title}" Text="Open-source libraries" />
+                <TextBlock Style="{StaticResource Text.Title}" Text="{ui:Loc Text.67b526273374}" />
                 <TextBlock Margin="0,8,0,12" Style="{StaticResource Text.Body}"
-                           Text="Archive support by SharpCompress, MVVM helpers by CommunityToolkit.Mvvm. Both use the MIT license, which asks for its text to ship with the app:" />
+                           Text="{ui:Loc Text.3f92024b2797}" />
                 <ItemsControl ItemsSource="{Binding Licenses}" ItemTemplate="{StaticResource LicenseText}" Focusable="False" />
             </StackPanel>
         </Border>

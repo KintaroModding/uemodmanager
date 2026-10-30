@@ -1,0 +1,130 @@
+{
+  "Text.d4a33d5b78bc": {
+    "en": "Discover",
+    "zh-CN": "发现模组"
+  },
+  "Text.60e61ba8b582": {
+    "en": "Open-source mods, listed by openmods.nexus. Each file comes straight from the mod's GitHub release and is checked before anything reaches the game.",
+    "zh-CN": "由 openmods.nexus 收录的开源模组。文件直接从模组的 GitHub 发布页面下载，安装到游戏前会进行校验。"
+  },
+  "Text.cafa8fe6f157": {
+    "en": "Open openmods",
+    "zh-CN": "打开 openmods"
+  },
+  "Text.d8b8392e2c54": {
+    "en": "Try again",
+    "zh-CN": "重试"
+  },
+  "Text.0ad645e18ad9": {
+    "en": "The openmods list is not available right now",
+    "zh-CN": "暂时无法获取 openmods 列表"
+  },
+  "Text.f453c46f2c38": {
+    "en": "Loading the openmods list…",
+    "zh-CN": "正在加载 openmods 列表…"
+  },
+  "Text.3a5ecca188c0": {
+    "en": "Updated",
+    "zh-CN": "更新时间"
+  },
+  "Text.2cf333855a26": {
+    "en": "Sort by the date of the latest release",
+    "zh-CN": "按最新版本的发布日期排序"
+  },
+  "Text.03003c7d3552": {
+    "en": "Try another name, author or tag.",
+    "zh-CN": "请尝试其他名称、作者或标签。"
+  },
+  "Text.77b1f12ab50f": {
+    "en": "New mods show up here as soon as openmods lists them.",
+    "zh-CN": "openmods 收录的新模组会显示在这里。"
+  },
+  "Text.0a30a815d67d": {
+    "en": "Page",
+    "zh-CN": "详情页"
+  },
+  "Text.baed41ab4593": {
+    "en": "The mod's page on openmods, with its full description",
+    "zh-CN": "在 openmods 上查看模组的完整介绍"
+  },
+  "Text.0e570ca6fabe": {
+    "en": "Source",
+    "zh-CN": "源代码"
+  },
+  "Text.fd180318d962": {
+    "en": "The openmods list could not be read: {0}",
+    "zh-CN": "无法读取 openmods 列表：{0}"
+  },
+  "Text.d148fc8ed9e2": {
+    "en": "The openmods list could not be loaded: {0} answered {1} {2}.",
+    "zh-CN": "无法加载 openmods 列表：{0} 返回 {1} {2}。"
+  },
+  "Text.89351667dbf3": {
+    "en": "The openmods list could not be loaded: {0}",
+    "zh-CN": "无法加载 openmods 列表：{0}"
+  },
+  "Text.5b7db99c87b0": {
+    "en": "openmods uses a newer list format ({0}). Update the app to read it.",
+    "zh-CN": "openmods 使用了更新的列表格式（{0}）。请更新程序后读取。"
+  },
+  "Text.d57e3f625ade": {
+    "en": "This is not an openmods list.",
+    "zh-CN": "这不是有效的 openmods 列表。"
+  },
+  "Text.a12c64a980da": {
+    "en": "Test list: {0}. Start the app without --catalog to see the real one.",
+    "zh-CN": "测试列表：{0}。启动程序时不传入 --catalog 即可查看正式列表。"
+  },
+  "Text.1ac46d66bd28": {
+    "en": "No mods for {0} are listed on openmods yet.",
+    "zh-CN": "openmods 尚未收录 {0} 的模组。"
+  },
+  "Text.099b54949b78": {
+    "en": "The list is up to date. openmods refreshes it every 10 minutes.",
+    "zh-CN": "列表已是最新。openmods 每 10 分钟刷新一次。"
+  },
+  "Text.0c7cdc370254": {
+    "en": "by {0}",
+    "zh-CN": "作者：{0}"
+  },
+  "Text.576097008ee4": {
+    "en": "an unknown author",
+    "zh-CN": "未知作者"
+  },
+  "Text.7e677f20168b": {
+    "en": "listed by {0}",
+    "zh-CN": "收录者：{0}"
+  },
+  "Text.10fd38eaec02": {
+    "en": "No release yet",
+    "zh-CN": "暂无发布版本"
+  },
+  "Text.a919c7c2d1a4": {
+    "en": "Updated ",
+    "zh-CN": "更新于 "
+  },
+  "Text.e6003923694f": {
+    "en": "No download yet",
+    "zh-CN": "暂无下载"
+  },
+  "Text.7fd1c2192c6e": {
+    "en": "Several files: see the mod's page",
+    "zh-CN": "包含多个文件：请查看模组详情页"
+  },
+  "Text.b2a3049ec19b": {
+    "en": "{0}  ·  disabled",
+    "zh-CN": "{0}  ·  已禁用"
+  },
+  "Text.5a35efde13c8": {
+    "en": "Downloading {0}…",
+    "zh-CN": "正在下载 {0}…"
+  },
+  "Text.affe3471b632": {
+    "en": "Downloading {0}…  {1:P0}",
+    "zh-CN": "正在下载 {0}…  {1:P0}"
+  },
+  "Text.f35f4c4a492b": {
+    "en": "Filter: mod name, author, tag or description",
+    "zh-CN": "筛选：模组名称、作者、标签或描述"
+  }
+}

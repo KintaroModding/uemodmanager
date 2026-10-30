@@ -31,9 +31,9 @@
     <Border Style="{StaticResource Dialog}" Width="600">
         <StackPanel>
             <TextBlock Style="{StaticResource Text.Overline}" Text="{ui:Tracked 'UE4SS'}" />
-            <TextBlock Margin="0,8,0,0" Style="{StaticResource Text.Title}" Text="Install UE4SS" />
+            <TextBlock Margin="0,8,0,0" Style="{StaticResource Text.Title}" Text="{ui:Loc Text.17d5384ebd8b}" />
             <TextBlock Margin="0,8,0,0" Style="{StaticResource Text.Body}"
-                       Text="UE4SS loads Lua, DLL and Blueprint mods. Packaged mods (.pak, .utoc, .ucas) work without it." />
+                       Text="{ui:Loc Text.eac403b63f4e}" />
 
             <Border Margin="0,16,0,0" Padding="14,10" CornerRadius="2" BorderThickness="1"
                     Background="{StaticResource Brush.AccentWash}" BorderBrush="{StaticResource Brush.AccentDeep}"
@@ -47,15 +47,15 @@
                     Visibility="{Binding CanDownload, Converter={StaticResource Visible}}">
                 <DockPanel>
                     <Button DockPanel.Dock="Right" Margin="16,0,0,0" VerticalAlignment="Center" Style="{StaticResource Button.Primary}"
-                            Content="Download and install" ui:Icon.Glyph="&#xE896;" Command="{Binding DownloadAndInstallCommand}" />
+                            Content="{ui:Loc Text.b697d4f9d76a}" ui:Icon.Glyph="&#xE896;" Command="{Binding DownloadAndInstallCommand}" />
                     <StackPanel>
-                        <TextBlock FontWeight="SemiBold" Text="Automatic" />
+                        <TextBlock FontWeight="SemiBold" Text="{ui:Loc Text.d461a493a375}" />
                         <TextBlock Margin="0,4,0,0" Style="{StaticResource Text.Small}" TextWrapping="Wrap" TextTrimming="None"
                                    Text="{Binding DownloadAndInstallText}" />
                     </StackPanel>
                 </DockPanel>
             </Border>
-            <TextBlock Margin="0,18,0,0" Style="{StaticResource Text.Caption}" Text="{ui:Tracked 'Or by hand'}"
+            <TextBlock Margin="0,18,0,0" Style="{StaticResource Text.Caption}" Text="{ui:Loc Text.0979c2fe8ff8, Tracked=True}"
                        Visibility="{Binding CanDownload, Converter={StaticResource Visible}}" />
 
             <!-- Step 1 -->
@@ -70,7 +70,7 @@
                 <StackPanel Grid.Column="1">
                     <TextBlock Margin="0,3,0,0" TextWrapping="Wrap" LineHeight="19" Text="{Binding DownloadText}" />
                     <TextBlock Margin="0,4,0,10" Style="{StaticResource Text.Small}" Text="{Binding DownloadUrl}" />
-                    <Button HorizontalAlignment="Left" Content="Open download page" ui:Icon.Glyph="&#xE8A7;"
+                    <Button HorizontalAlignment="Left" Content="{ui:Loc Text.c1c304e33661}" ui:Icon.Glyph="&#xE8A7;"
                             Command="{Binding OpenDownloadCommand}" />
                 </StackPanel>
             </Grid>
@@ -86,13 +86,13 @@
                 </Border>
                 <StackPanel Grid.Column="1">
                     <TextBlock Margin="0,3,0,0" TextWrapping="Wrap" LineHeight="19"
-                               Text="Pick the downloaded zip. The manager unpacks it next to the game's exe and keeps any UE4SS settings you already have." />
+                               Text="{ui:Loc Text.202e3614fc39}" />
                     <TextBlock Margin="0,4,0,10" Style="{StaticResource Text.Path}" Text="{Binding Win64Path}" />
                     <StackPanel Orientation="Horizontal">
-                        <Button Style="{StaticResource Button.Primary}" Content="Install from file…" ui:Icon.Glyph="&#xE8E5;"
+                        <Button Style="{StaticResource Button.Primary}" Content="{ui:Loc Text.ca39931588c7}" ui:Icon.Glyph="&#xE8E5;"
                                 Command="{Binding InstallFromFileCommand}"
                                 Visibility="{Binding CannotDownload, Converter={StaticResource Visible}}" />
-                        <Button Content="Install from file…" ui:Icon.Glyph="&#xE8E5;"
+                        <Button Content="{ui:Loc Text.ca39931588c7}" ui:Icon.Glyph="&#xE8E5;"
                                 Command="{Binding InstallFromFileCommand}"
                                 Visibility="{Binding CanDownload, Converter={StaticResource Visible}}" />
                     </StackPanel>
@@ -100,10 +100,10 @@
             </Grid>
 
             <DockPanel Margin="0,26,0,0" LastChildFill="False">
-                <Button DockPanel.Dock="Right" Content="Close" Command="{Binding CloseCommand}" IsCancel="True" />
-                <Button DockPanel.Dock="Left" Content="Open exe folder" ui:Icon.Glyph="&#xE838;" Command="{Binding OpenWin64Command}" />
-                <Button DockPanel.Dock="Left" Margin="8,0,0,0" Content="Check again" ui:Icon.Glyph="&#xE72C;"
-                        Command="{Binding CheckAgainCommand}" ToolTip="Look for UE4SS again after installing it by hand" />
+                <Button DockPanel.Dock="Right" Content="{ui:Loc Text.7d9eb7acb13e}" Command="{Binding CloseCommand}" IsCancel="True" />
+                <Button DockPanel.Dock="Left" Content="{ui:Loc Text.1608311da5fe}" ui:Icon.Glyph="&#xE838;" Command="{Binding OpenWin64Command}" />
+                <Button DockPanel.Dock="Left" Margin="8,0,0,0" Content="{ui:Loc Text.fb7099ad8e81}" ui:Icon.Glyph="&#xE72C;"
+                        Command="{Binding CheckAgainCommand}" ToolTip="{ui:Loc Text.4efc22b570ac}" />
             </DockPanel>
         </StackPanel>
     </Border>

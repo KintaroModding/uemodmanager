@@ -19,11 +19,11 @@ public static class SelfUpdate
     {
         var exe = Directory.EnumerateFiles(folder, "*.exe", SearchOption.AllDirectories).ToList() is [var single]
             ? single
-            : throw new ModException("The update does not hold exactly one program file, so it was not installed.");
+            : throw new ModException(L.T("The update does not hold exactly one program file, so it was not installed."));
         // The product version carries the build's commit after a "+".
         var found = FileVersionInfo.GetVersionInfo(exe).ProductVersion?.Split('+')[0].Trim();
         if (!string.Equals(found, version, StringComparison.OrdinalIgnoreCase))
-            throw new ModException($"The update holds version {found ?? "unknown"} instead of {version}, so it was not installed.");
+            throw new ModException(L.F($"The update holds version {found ?? "unknown"} instead of {version}, so it was not installed."));
         return exe;
     }
 
@@ -58,7 +58,7 @@ public static class SelfUpdate
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             FileSystem.TryDeleteFile(staged);
-            throw new ModException($"The app could not replace its own file ({ex.Message}). Download the update from the release page instead.");
+            throw new ModException(L.F($"The app could not replace its own file ({ex.Message}). Download the update from the release page instead."));
         }
         try
         {
@@ -75,7 +75,7 @@ public static class SelfUpdate
                 Log.Error($"'{currentExe}' could not be put back from '{old}'.", undo);
             }
             FileSystem.TryDeleteFile(staged);
-            throw new ModException($"The app could not replace its own file ({ex.Message}). Download the update from the release page instead.");
+            throw new ModException(L.F($"The app could not replace its own file ({ex.Message}). Download the update from the release page instead."));
         }
         Log.Info($"Replaced '{currentExe}' with the new version; the old one is '{old}' until the next start.");
     }

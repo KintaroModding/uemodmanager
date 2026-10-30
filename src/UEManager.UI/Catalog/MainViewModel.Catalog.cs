@@ -47,15 +47,15 @@ public sealed partial class MainViewModel
         try
         {
             string? download = null;
-            await RunAsync($"Downloading {mod.Name}…", async () =>
+            await RunAsync(L.F($"Downloading {mod.Name}…"), async () =>
             {
-                var progress = new Progress<double>(share => BusyText = $"Downloading {mod.Name}…  {share:P0}");
+                var progress = new Progress<double>(share => BusyText = L.F($"Downloading {mod.Name}…  {share:P0}"));
                 download = await FileDownloader.DownloadAsync(Http, file.Url, file.Name, file.Size, file.Sha256, folder, mod.Name, progress);
             });
             if (download is null)
                 return;
             InstallPreview? preview = null;
-            await RunAsync($"Reading {file.Name}…", async () => preview = await Task.Run(() => manager!.Inspect(download)));
+            await RunAsync(L.F($"Reading {file.Name}…"), async () => preview = await Task.Run(() => manager!.Inspect(download)));
             if (preview is null)
                 return;
 

@@ -12,7 +12,7 @@
 
             <!-- Header -->
             <StackPanel DockPanel.Dock="Top">
-                <TextBlock Style="{StaticResource Text.Overline}" Text="{ui:Tracked 'Install mod'}" />
+                <TextBlock Style="{StaticResource Text.Overline}" Text="{ui:Loc Text.db3370a43178, Tracked=True}" />
                 <TextBlock Margin="0,8,0,0" Style="{StaticResource Text.Title}" TextWrapping="NoWrap"
                            TextTrimming="CharacterEllipsis" Text="{Binding SourceFileName}" ToolTip="{Binding SourceFileName}" />
                 <TextBlock Margin="0,4,0,0" Style="{StaticResource Text.Small}" Text="{Binding Summary}" />
@@ -22,7 +22,7 @@
             <DockPanel DockPanel.Dock="Bottom" Margin="0,22,0,0" LastChildFill="False">
                 <Button DockPanel.Dock="Right" Margin="8,0,0,0" Style="{StaticResource Button.Primary}"
                         Content="{Binding ConfirmText}" ui:Icon.Glyph="&#xE896;" Command="{Binding InstallCommand}" IsDefault="True" />
-                <Button DockPanel.Dock="Right" Content="Cancel" Command="{Binding CancelCommand}" IsCancel="True" />
+                <Button DockPanel.Dock="Right" Content="{ui:Loc Text.19766ed6ccb2}" Command="{Binding CancelCommand}" IsCancel="True" />
             </DockPanel>
 
             <ScrollViewer Margin="0,20,0,0" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
@@ -36,17 +36,17 @@
                             <ColumnDefinition Width="160" />
                         </Grid.ColumnDefinitions>
                         <StackPanel>
-                            <TextBlock Style="{StaticResource Text.Caption}" Text="{ui:Tracked 'Name'}" />
+                            <TextBlock Style="{StaticResource Text.Caption}" Text="{ui:Loc Text.dcd1d5223f73, Tracked=True}" />
                             <TextBox Margin="0,6,0,0" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}" />
                         </StackPanel>
                         <StackPanel Grid.Column="2">
-                            <TextBlock Style="{StaticResource Text.Caption}" Text="{ui:Tracked 'Version'}" />
+                            <TextBlock Style="{StaticResource Text.Caption}" Text="{ui:Loc Text.dd167905de0d, Tracked=True}" />
                             <TextBox Margin="0,6,0,0" Text="{Binding Version, UpdateSourceTrigger=PropertyChanged}" Tag="Optional" />
                         </StackPanel>
                     </Grid>
 
                     <!-- Packages -->
-                    <TextBlock Margin="0,22,0,8" Style="{StaticResource Text.Caption}" Text="{ui:Tracked 'Contents'}"
+                    <TextBlock Margin="0,22,0,8" Style="{StaticResource Text.Caption}" Text="{ui:Loc Text.437aea62a5bd, Tracked=True}"
                                Visibility="{Binding HasPackages, Converter={StaticResource Visible}}" />
                     <ItemsControl ItemsSource="{Binding Packages}" Focusable="False">
                         <ItemsControl.ItemTemplate>
@@ -96,7 +96,7 @@
                             Visibility="{Binding EditedSettingsText, Converter={StaticResource VisibleIfSet}}">
                         <StackPanel>
                             <CheckBox IsChecked="{Binding KeepSettings}">
-                                <TextBlock FontWeight="SemiBold" Text="Keep my settings" />
+                                <TextBlock FontWeight="SemiBold" Text="{ui:Loc Text.ca6e345ccac6}" />
                             </CheckBox>
                             <TextBlock Margin="26,4,0,0" TextWrapping="Wrap" LineHeight="18" Style="{StaticResource Text.Small}"
                                        TextTrimming="None" Text="{Binding EditedSettingsText}" />
@@ -126,7 +126,7 @@
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                    <Button Margin="22,8,0,0" HorizontalAlignment="Left" Content="Install UE4SS…" ui:Icon.Glyph="&#xE946;"
+                    <Button Margin="22,8,0,0" HorizontalAlignment="Left" Content="{ui:Loc Text.5ffe25975982}" ui:Icon.Glyph="&#xE946;"
                             Command="{Binding ShowUe4ssGuideCommand}"
                             Visibility="{Binding NeedsUe4ss, Converter={StaticResource Visible}}" />
                 </StackPanel>

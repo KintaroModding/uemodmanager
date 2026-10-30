@@ -15,7 +15,7 @@ public sealed record InstallChoice(IReadOnlyList<PackageGroup> Packages, string 
 public sealed record CatalogSource(string Id, string Name, string Version);
 
 /// <summary>The review step between reading a download and installing it.</summary>
-public sealed partial class InstallDialogViewModel : ObservableObject
+public sealed partial class InstallDialogViewModel : LocalizedObservableObject
 {
     private readonly ModManager manager;
     private readonly InstallPreview preview;
@@ -63,11 +63,11 @@ public sealed partial class InstallDialogViewModel : ObservableObject
     {
         get
         {
-            var parts = new List<string> { Format.Count(Packages.Count, "part", "parts") + " found" };
+            var parts = new List<string> { Format.Count(Packages.Count, "part", "parts") + L.T(" found") };
             if (preview.IgnoredFileCount > 0)
-                parts.Add(Format.Count(preview.IgnoredFileCount, "other file", "other files") + " ignored");
+                parts.Add(Format.Count(preview.IgnoredFileCount, "other file", "other files") + L.T(" ignored"));
             if (Packages.Count > 1)
-                parts.Add(Packages.All(p => p.IsVariant) ? "choose one variant" : "choose what to install");
+                parts.Add(Packages.All(p => p.IsVariant) ? L.T("choose one variant") : L.T("choose what to install"));
             return string.Join("  ·  ", parts);
         }
     }
@@ -90,7 +90,7 @@ public sealed partial class InstallDialogViewModel : ObservableObject
     private string? replaceText;
 
     [ObservableProperty]
-    private string confirmText = "Install";
+    private string confirmText = L.T("Install");
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(InstallCommand))]
@@ -156,19 +156,19 @@ public sealed partial class InstallDialogViewModel : ObservableObject
         var old = check.Replaces;
         ReplaceText = old is null
             ? null
-            : $"This updates the installed mod \"{old.Name}\"{(old.Version is null ? "" : $" (version {old.Version})")}. "
-              + "Its files are replaced, and put back if the update fails.";
+            : L.F($"This updates the installed mod \"{old.Name}\"{(old.Version is null ? "" : L.F($" (version {old.Version})"))}. ")
+              + L.T("Its files are replaced, and put back if the update fails.");
         EditedSettingsText = old is null || !check.HasEditedSettings
             ? null
-            : $"You changed {string.Join(", ", check.EditedSettings!.Select(SettingsFiles.Name))} of this mod. "
-              + "Keep your settings, or clear the box to use the new version's defaults. A copy of yours is saved in the backup folder either way.";
-        ConfirmText = old is null ? "Install" : "Update";
+            : L.F($"You changed {string.Join(", ", check.EditedSettings!.Select(SettingsFiles.Name))} of this mod. ")
+              + L.T("Keep your settings, or clear the box to use the new version's defaults. A copy of yours is saved in the backup folder either way.");
+        ConfirmText = old is null ? L.T("Install") : L.T("Update");
         CanInstall = check.CanInstall;
         NeedsUe4ss = check.NeedsUe4ss;
     }
 }
 
-public sealed partial class PackageOptionViewModel(PackageGroup package, Action<PackageOptionViewModel> changed) : ObservableObject
+public sealed partial class PackageOptionViewModel(PackageGroup package, Action<PackageOptionViewModel> changed) : LocalizedObservableObject
 {
     public PackageGroup Package => package;
 
@@ -178,7 +178,7 @@ public sealed partial class PackageOptionViewModel(PackageGroup package, Action<
     /// <summary>One of several variants: shown as a single choice.</summary>
     public bool IsVariant => package.VariantOf is not null;
 
-    public string KindText => package.TypeLabel;
+    public string KindText => L.T(package.TypeLabel);
 
     /// <summary>The files as they will be placed; a UE4SS mod's are shown inside its own folder.</summary>
     public string FilesText => string.Join("   ", package.Kind == PackageKind.Ue4ss

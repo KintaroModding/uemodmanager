@@ -52,9 +52,9 @@
     </LinearGradientBrush>
 
     <!-- Body text, titles, labels and icons. Font.Heading can point to a font in Theme\Fonts (see Theme\README.md). -->
-    <FontFamily x:Key="Font.Body">Segoe UI Variable Text, Segoe UI</FontFamily>
-    <FontFamily x:Key="Font.Heading">Palatino Linotype, Georgia</FontFamily>
-    <FontFamily x:Key="Font.Label">Bahnschrift, Segoe UI</FontFamily>
+    <FontFamily x:Key="Font.Body">Segoe UI Variable Text, Segoe UI, Microsoft YaHei UI</FontFamily>
+    <FontFamily x:Key="Font.Heading">Palatino Linotype, Georgia, Microsoft YaHei UI</FontFamily>
+    <FontFamily x:Key="Font.Label">Bahnschrift, Segoe UI, Microsoft YaHei UI</FontFamily>
     <FontFamily x:Key="Font.Icons">Segoe Fluent Icons, Segoe MDL2 Assets</FontFamily>
 
 </ResourceDictionary>

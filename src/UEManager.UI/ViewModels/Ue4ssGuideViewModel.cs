@@ -8,15 +8,15 @@ namespace UEManager.UI.ViewModels;
 /// The "Install UE4SS" popup: one-click download and install when a release is known (from
 /// the online manifest or the game profile); installing from a downloaded file always works.
 /// </summary>
-public sealed partial class Ue4ssGuideViewModel(MainViewModel owner, GameInstall game, Ue4ssRelease? release)
+public sealed partial class Ue4ssGuideViewModel(MainViewModel owner, GameInstall game, Ue4ssRelease? release) : LocalizedObservableObject
 {
     public const string OfficialReleases = "https://github.com/UE4SS-RE/RE-UE4SS/releases";
 
     public string DownloadUrl => game.Profile.Ue4ssDownloadUrl ?? OfficialReleases;
 
-    public string? Note => game.Profile.Ue4ssNote;
+    public string? Note => game.Profile.Ue4ssNote is { } note ? L.T(note) : null;
 
-    public string DownloadText => $"Download the UE4SS release for {game.Profile.DisplayName}.";
+    public string DownloadText => L.F($"Download the UE4SS release for {L.T(game.Profile.DisplayName)}.");
 
     /// <summary>A release file is known, so the manager can fetch it itself.</summary>
     public bool CanDownload => release is not null;
@@ -25,9 +25,9 @@ public sealed partial class Ue4ssGuideViewModel(MainViewModel owner, GameInstall
 
     public string DownloadAndInstallText => release is null
         ? ""
-        : $"The manager downloads {release.FileName}, "
-          + (string.IsNullOrWhiteSpace(release.Sha256) ? "" : "checks that it is the expected file, ")
-          + "and installs it into the game.";
+        : L.F($"The manager downloads {release.FileName}, ")
+          + (string.IsNullOrWhiteSpace(release.Sha256) ? "" : L.T("checks that it is the expected file, "))
+          + L.T("and installs it into the game.");
 
     public string Win64Path => game.BinariesPath;
 

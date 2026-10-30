@@ -9,7 +9,7 @@
              d:DataContext="{d:DesignInstance Type=vm:AppUpdateViewModel}">
     <Border Style="{StaticResource Dialog}" Width="580">
         <StackPanel>
-            <TextBlock Style="{StaticResource Text.Overline}" Text="{ui:Tracked 'Update'}" />
+            <TextBlock Style="{StaticResource Text.Overline}" Text="{ui:Loc Text.c1c1009d3f37, Tracked=True}" />
             <TextBlock Margin="0,8,0,0" Style="{StaticResource Text.Title}" Text="{Binding DialogTitle}" />
             <TextBlock Margin="0,8,0,0" Style="{StaticResource Text.Body}" Text="{Binding DialogText}" />
 
@@ -28,10 +28,10 @@
                     Background="{StaticResource Brush.Field}" BorderBrush="{StaticResource Brush.LineStrong}">
                 <DockPanel>
                     <Button DockPanel.Dock="Right" Margin="16,0,0,0" VerticalAlignment="Center" Style="{StaticResource Button.Primary}"
-                            Content="Update now" ui:Icon.Glyph="&#xE896;" Command="{Binding UpdateNowCommand}"
+                            Content="{ui:Loc Text.63bf045213ce}" ui:Icon.Glyph="&#xE896;" Command="{Binding UpdateNowCommand}"
                             IsEnabled="{Binding CanUpdateItself}" />
                     <StackPanel>
-                        <TextBlock FontWeight="SemiBold" Text="Automatic" />
+                        <TextBlock FontWeight="SemiBold" Text="{ui:Loc Text.d461a493a375}" />
                         <TextBlock Margin="0,4,0,0" Style="{StaticResource Text.Small}" TextWrapping="Wrap" TextTrimming="None"
                                    Text="{Binding AutomaticText}" />
                     </StackPanel>
@@ -43,9 +43,9 @@
                     Background="{StaticResource Brush.Field}" BorderBrush="{StaticResource Brush.Line}">
                 <DockPanel>
                     <Button DockPanel.Dock="Right" Margin="16,0,0,0" VerticalAlignment="Center"
-                            Content="Open release page" ui:Icon.Glyph="&#xE8A7;" Command="{Binding OpenReleasePageCommand}" />
+                            Content="{ui:Loc Text.cd6c9851e91a}" ui:Icon.Glyph="&#xE8A7;" Command="{Binding OpenReleasePageCommand}" />
                     <StackPanel>
-                        <TextBlock FontWeight="SemiBold" Text="By hand" />
+                        <TextBlock FontWeight="SemiBold" Text="{ui:Loc Text.573ad1256497}" />
                         <TextBlock Margin="0,4,0,0" Style="{StaticResource Text.Small}" TextWrapping="Wrap" TextTrimming="None"
                                    Text="{Binding ManualText}" />
                     </StackPanel>
@@ -53,7 +53,7 @@
             </Border>
 
             <DockPanel Margin="0,22,0,0" LastChildFill="False">
-                <Button DockPanel.Dock="Right" Content="Not now" Command="{Binding CloseCommand}" IsCancel="True" />
+                <Button DockPanel.Dock="Right" Content="{ui:Loc Text.a0e63d7c7125}" Command="{Binding CloseCommand}" IsCancel="True" />
             </DockPanel>
         </StackPanel>
     </Border>

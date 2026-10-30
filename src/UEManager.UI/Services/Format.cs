@@ -13,7 +13,7 @@ internal static class Format
     };
 
     public static string Count(int count, string singular, string plural) =>
-        count == 1 ? $"1 {singular}" : $"{count} {plural}";
+        $"{count} {L.T(count == 1 ? singular : plural)}";
 
     /// <summary>
     /// Wide letter spacing for labels, which WPF text cannot do by itself.
@@ -23,6 +23,8 @@ internal static class Format
     {
         if (string.IsNullOrEmpty(text))
             return "";
+        if (L.Current.Language == "zh-CN")
+            return text;
         var words = text.ToUpper(CultureInfo.CurrentCulture).Split(' ', StringSplitOptions.RemoveEmptyEntries);
         return string.Join("  ", words.Select(word => string.Join(' ', word.ToCharArray())));
     }
