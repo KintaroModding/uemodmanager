@@ -152,17 +152,21 @@ public sealed class ModManager
             warnings.Add($"UE4SS is not installed in this game. Lua, DLL and Blueprint mods only run with it. They are installed anyway and start working once UE4SS is in place.");
 
         var entries = selected
-            .SelectMany(p => p.RelativePaths.Select(path => (p.Target, Path: path)))
+            .SelectMany(p => p.RelativePaths.Select((path, i) => (p.Target, Path: path, Source: p.Files[i])))
             .ToList();
-        foreach (var duplicate in entries.GroupBy(e => (e.Target, e.Path.ToUpperInvariant())).Where(g => g.Count() > 1))
+        // A shared library that goes with several selected UE4SS mods is the same file each time.
+        foreach (var duplicate in entries.GroupBy(e => (e.Target, e.Path.ToUpperInvariant()))
+                     .Where(g => g.Select(e => e.Source).Distinct(StringComparer.OrdinalIgnoreCase).Count() > 1))
             problems.Add($"{duplicate.First().Path} is in more than one selected part. Select only one of them.");
+        var shared = entries.Where(e => SharedFiles.Is(e.Target, e.Path)).DistinctBy(e => e.Path.ToUpperInvariant()).ToList();
 
         ModRecord? replaces;
         IReadOnlyList<string> editedSettings = [];
         lock (gate)
         {
             var owners = new List<ModRecord>();
-            foreach (var (target, path) in entries.DistinctBy(e => (e.Target, e.Path.ToUpperInvariant())))
+            // Shared libraries say nothing about which mod this is: other mods may bring the same ones.
+            foreach (var (target, path, _) in entries.Where(e => !SharedFiles.Is(e.Target, e.Path)).DistinctBy(e => (e.Target, e.Path.ToUpperInvariant())))
             {
                 var owner = mods.FirstOrDefault(m => m.Files.Any(f => IsSameFile(f, target, path)));
                 if (owner is not null)
@@ -192,6 +196,19 @@ public sealed class ModManager
             }
             if (replaces is not null)
                 editedSettings = EditedSettings(replaces);
+
+            // One copy of a shared library serves every mod: one that is there must have the same content.
+            foreach (var (target, path, source) in shared)
+            {
+                var place = Path.Combine(TargetFolder(target), Local(path));
+                if (!File.Exists(place) || SameContent(place, source))
+                    continue;
+                var user = mods.FirstOrDefault(m => m != replaces && m.Enabled && m.Files.Any(f => IsSameFile(f, target, path) && f.DeployedPath is not null));
+                if (user is not null)
+                    problems.Add($"{path} is a library in UE4SS's shared folder. \"{user.Name}\" uses it in another version, and both cannot be in the game at once. Disable that mod first.");
+                else if (replaces?.Files.Any(f => IsSameFile(f, target, path) && f.DeployedPath is not null) != true)
+                    problems.Add($"{path} is already in {TargetName(target)}, but the manager did not install it. Move or delete it first.");
+            }
         }
         return new InstallCheck(problems, warnings, replaces, needsUe4ss, editedSettings);
     }
@@ -255,6 +272,9 @@ public sealed class ModManager
                     for (var i = 0; i < package.Files.Count; i++)
                     {
                         var relative = package.RelativePaths[i];
+                        // A shared library that goes with several selected UE4SS mods is kept once.
+                        if (record.Files.Any(f => IsSameFile(f, package.Target, relative)))
+                            continue;
                         var kept = keepSettings ? EditedSettingsCopy(old, package.Target, relative) : null;
                         AddToLibrary(record, package.Target, relative, package.Files[i], kept);
                     }
@@ -302,7 +322,7 @@ public sealed class ModManager
             if (enabled)
             {
                 var clash = mods.FirstOrDefault(other => other != mod && other.Enabled
-                    && other.Files.Any(f => mod.Files.Any(g => IsSameFile(f, g.Target, g.FileName))));
+                    && other.Files.Any(f => mod.Files.Any(g => !g.IsShared && IsSameFile(f, g.Target, g.FileName))));
                 if (clash is not null)
                     throw new ModException($"\"{mod.Name}\" uses the same files as \"{clash.Name}\". Disable that mod first.");
                 Deploy(mod);
@@ -462,7 +482,7 @@ public sealed class ModManager
         foreach (var mod in on)
         {
             var clash = enabledAfter.FirstOrDefault(other => other != mod
-                && other.Files.Any(f => mod.Files.Any(g => IsSameFile(f, g.Target, g.FileName))));
+                && other.Files.Any(f => mod.Files.Any(g => !g.IsShared && IsSameFile(f, g.Target, g.FileName))));
             if (clash is not null)
                 throw new ModException($"\"{mod.Name}\" uses the same files as \"{clash.Name}\". Disable that mod first.");
         }
@@ -802,6 +822,32 @@ public sealed class ModManager
         && string.Equals(FileSystem.Sha256(path), sha256, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
+    /// Deletes UE4SS's log, so the old lines are gone and the next game start begins a fresh one. It waits for the
+    /// game to close, as every change in the game folder does: UE4SS writes the log while the game runs.
+    /// </summary>
+    /// <returns>Whether there was a log to delete.</returns>
+    public bool ClearUe4ssLog()
+    {
+        lock (gate)
+        {
+            EnsureCanChange();
+            var log = Ue4ssRuntime.Detect(Game).LogPath;
+            if (!File.Exists(log))
+                return false;
+            try
+            {
+                File.Delete(log);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                throw new ModException($"The UE4SS log could not be deleted: another program may be using it. Close it, then try again. ({ex.Message})");
+            }
+            Log.Info($"Deleted the UE4SS log '{log}'.");
+            return true;
+        }
+    }
+
+    /// <summary>
     /// Removes UE4SS completely, whoever installed it: the proxy DLL and the whole ue4ss
     /// folder (for UE4SS 2.x, its files and Mods folder in Win64), including UE4SS's
     /// settings and every mod inside. Managed mods that lived there are disabled; their
@@ -991,7 +1037,7 @@ public sealed class ModManager
 
     /// <summary>
     /// A quick integrity check by file size. Checksums are compared only before files are removed.
-    /// Settings files are not checked: the player may change them.
+    /// Settings files are not checked: the player may change them. Neither are borrowed shared files.
     /// </summary>
     public static ModIntegrity Integrity(ModRecord mod)
     {
@@ -1002,7 +1048,8 @@ public sealed class ModManager
             var info = file.DeployedPath is null ? null : new FileInfo(file.DeployedPath);
             if (info is null || !info.Exists)
                 return ModIntegrity.FilesMissing;
-            if (!file.IsSettingsFile && info.Length != file.Size)
+            // A borrowed shared file belongs to whoever put it there, such as UE4SS, which may update it.
+            if (!file.IsSettingsFile && !file.Borrowed && info.Length != file.Size)
                 return ModIntegrity.FilesChanged;
         }
         return ModIntegrity.Intact;
@@ -1154,6 +1201,7 @@ public sealed class ModManager
     {
         var folders = Enum.GetValues<DeployTarget>().ToDictionary(t => t, TargetFolder);
         var taken = new List<ModFileRecord>();
+        var sharedInUse = new List<ModFileRecord>();
         string? temp = null;
         try
         {
@@ -1169,6 +1217,19 @@ public sealed class ModManager
                     taken.Add(file);
                     continue;
                 }
+                // One copy of a shared library serves every mod that brings it. When it was there before any of
+                // them, as one of UE4SS's own, it is borrowed and stays when they go.
+                if (file.IsShared && File.Exists(destination))
+                {
+                    if (!Matches(destination, file))
+                        throw new ModException($"{file.FileName} is already in UE4SS's shared folder in another version, from another mod or from UE4SS, so \"{mod.Name}\" cannot bring its own. Disable the mod that uses it first.");
+                    var others = OtherUsers([mod], destination).ToList();
+                    file.Borrowed = others.Count == 0 || others.Any(f => f.Borrowed);
+                    file.DeployedPath = destination;
+                    sharedInUse.Add(file);
+                    continue;
+                }
+                file.Borrowed = false;
                 if (File.Exists(destination))
                     throw new ModException($"{file.FileName} is already in {TargetName(file.Target)}, but it does not belong to \"{mod.Name}\". Move or delete it first.");
                 Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
@@ -1183,8 +1244,8 @@ public sealed class ModManager
         {
             if (temp is not null)
                 FileSystem.TryDeleteFile(temp);
-            // Files taken over were there before; they stay.
-            foreach (var file in taken)
+            // Files taken over were there before, and shared files in use stay too.
+            foreach (var file in taken.Concat(sharedInUse))
                 file.DeployedPath = null;
             RemoveDeployedFiles(mod);
             throw;
@@ -1204,7 +1265,8 @@ public sealed class ModManager
     /// </summary>
     private Removal Undeploy(IReadOnlyList<ModRecord> group)
     {
-        var files = group.SelectMany(m => m.Files).ToList();
+        // Shared files that other mods still use, or that were there before, stay in the game.
+        var files = group.SelectMany(m => m.Files).Where(f => !Keeps(group, f)).ToList();
         var changed = files
             .Where(f => !f.IsSettingsFile && f.DeployedPath is not null && File.Exists(f.DeployedPath) && !Matches(f.DeployedPath, f))
             .Select(f => f.FileName)
@@ -1214,7 +1276,9 @@ public sealed class ModManager
         foreach (var mod in group)
             SaveEditedSettings(mod);
 
-        var deployed = files.Where(f => f.DeployedPath is not null && File.Exists(f.DeployedPath)).Select(f => f.DeployedPath!);
+        // Several mods leaving together may share one copy of a library.
+        var deployed = files.Where(f => f.DeployedPath is not null && File.Exists(f.DeployedPath)).Select(f => f.DeployedPath!)
+            .Distinct(StringComparer.OrdinalIgnoreCase);
         var removal = new Removal(Park(deployed));
         foreach (var mod in group)
             removal.Disable(mod);
@@ -1391,13 +1455,16 @@ public sealed class ModManager
         }
     }
 
-    /// <summary>Rollback helper: removes files this operation deployed, without checks.</summary>
-    private static void RemoveDeployedFiles(ModRecord mod)
+    /// <summary>Rollback helper: removes files this operation deployed, without checks, except shared files that stay.</summary>
+    private void RemoveDeployedFiles(ModRecord mod)
     {
         foreach (var file in mod.Files.Where(f => f.DeployedPath is not null))
         {
-            FileSystem.TryDeleteFile(file.DeployedPath!);
-            RemoveEmptyFolders(file, file.DeployedPath!);
+            if (!Keeps([mod], file))
+            {
+                FileSystem.TryDeleteFile(file.DeployedPath!);
+                RemoveEmptyFolders(file, file.DeployedPath!);
+            }
             file.DeployedPath = null;
         }
         mod.Enabled = false;
@@ -1451,6 +1518,24 @@ public sealed class ModManager
     private static bool Matches(string path, ModFileRecord file) =>
         new FileInfo(path).Length == file.Size
         && string.Equals(FileSystem.Sha256(path), file.Sha256, StringComparison.OrdinalIgnoreCase);
+
+    private static bool SameContent(string path, string other) =>
+        new FileInfo(path).Length == new FileInfo(other).Length
+        && string.Equals(FileSystem.Sha256(path), FileSystem.Sha256(other), StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// A shared file that stays in the game when these mods leave it: another enabled mod uses it too, or it was
+    /// there before (<see cref="ModFileRecord.Borrowed"/>).
+    /// </summary>
+    private bool Keeps(IReadOnlyCollection<ModRecord> leaving, ModFileRecord file) =>
+        file.IsShared && file.DeployedPath is { } path
+        && (file.Borrowed || OtherUsers(leaving, path).Any());
+
+    /// <summary>The files of other enabled mods deployed at this place: a shared library they bring too.</summary>
+    private IEnumerable<ModFileRecord> OtherUsers(IReadOnlyCollection<ModRecord> except, string deployedPath) => mods
+        .Where(m => m.Enabled && !except.Contains(m))
+        .SelectMany(m => m.Files)
+        .Where(f => f.DeployedPath is not null && string.Equals(f.DeployedPath, deployedPath, StringComparison.OrdinalIgnoreCase));
 
     private void Save() => JsonFile.Write(StateFile, new ModState { Mods = mods, OffForTest = offForTest, Sets = sets });
 }

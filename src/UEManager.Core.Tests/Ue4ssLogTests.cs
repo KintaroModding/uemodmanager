@@ -48,45 +48,5 @@ public class Ue4ssLogTests : IDisposable
     }
 
     [Fact]
-    public void After_a_mark_only_the_new_lines_are_read()
-    {
-        var path = folder.File("UE4SS.log", "[12:00:00.001] UE4SS - v3.0.1\n[12:00:01.002] Starting Lua mod 'Witch'\n");
-        var mark = Ue4ssLog.Read(path)!.End;
-        File.AppendAllText(path, "[12:05:00.000] [Lua] Error: [Witch] main.lua:12\n");
-
-        var log = Ue4ssLog.Read(path, mark)!;
-
-        Assert.True(log.AfterMark);
-        Assert.Equal(["[12:05:00.000] [Lua] Error: [Witch] main.lua:12"], log.Lines.Select(l => l.Text));
-        Assert.Equal(1, log.ErrorCount);
-        Assert.Equal(3, log.End.LineCount);
-    }
-
-    [Fact]
-    public void A_line_still_being_written_shows_whole_after_the_mark()
-    {
-        var path = folder.File("UE4SS.log", "[12:00:00.001] UE4SS - v3.0.1\n[12:00:01.002] Starting Lua");
-        var mark = Ue4ssLog.Read(path)!.End;
-        File.AppendAllText(path, " mod 'Witch'\n");
-
-        var log = Ue4ssLog.Read(path, mark)!;
-
-        Assert.Equal(["[12:00:01.002] Starting Lua mod 'Witch'"], log.Lines.Select(l => l.Text));
-    }
-
-    [Fact]
-    public void A_new_game_start_reads_the_whole_log_again()
-    {
-        var path = folder.File("UE4SS.log", "[12:00:00.001] UE4SS - v3.0.1\nline 2\nline 3\n");
-        var mark = Ue4ssLog.Read(path)!.End;
-        File.WriteAllText(path, "[13:30:00.001] UE4SS - v3.0.1\nline 2\nline 3\nline 4\n");
-
-        var log = Ue4ssLog.Read(path, mark)!;
-
-        Assert.False(log.AfterMark);
-        Assert.Equal(4, log.Lines.Count);
-    }
-
-    [Fact]
     public void No_log_yet_is_null() => Assert.Null(Ue4ssLog.Read(folder.Combine("UE4SS.log")));
 }

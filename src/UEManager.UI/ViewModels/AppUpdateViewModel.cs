@@ -167,6 +167,10 @@ public sealed partial class AppUpdateViewModel(MainViewModel owner, HttpClient h
     [RelayCommand]
     private void OpenReleasePage() => owner.OpenPath(release?.PageUrl ?? AppInfo.ReleasesPageUrl);
 
+    /// <summary>A link in the release notes; only http and https links get here.</summary>
+    [RelayCommand]
+    private void OpenLink(string url) => owner.OpenPath(url);
+
     /// <summary>Downloads the zip of this build, checks it, puts the new exe in place of this one and restarts.</summary>
     [RelayCommand]
     private async Task UpdateNow()

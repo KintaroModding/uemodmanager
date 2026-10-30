@@ -69,13 +69,9 @@
                 <DockPanel>
                     <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
                         <Button Content="{ui:Loc 'Refresh'}" ui:Icon.Glyph="&#xE72C;" Command="{Binding RefreshCommand}" ToolTip="F5" />
-                        <!-- Clear hides the lines so far, Show all brings them back; the file stays as it is. -->
+                        <!-- Clear deletes the log file; UE4SS writes a new one at the next game start. -->
                         <Button Margin="8,0,0,0" Content="{ui:Loc 'Clear'}" ui:Icon.Glyph="&#xE894;" Command="{Binding ClearCommand}"
-                                IsEnabled="{Binding CanClear}" ToolTip="{ui:Loc 'Hide the lines so far. The log file stays as it is.'}"
-                                Visibility="{Binding IsCleared, Converter={StaticResource Hidden}}" />
-                        <Button Margin="8,0,0,0" Content="{ui:Loc 'Show all'}" ui:Icon.Glyph="&#xE8A9;" Command="{Binding ShowAllCommand}"
-                                ToolTip="{ui:Loc 'Show the whole log of this game start again.'}"
-                                Visibility="{Binding IsCleared, Converter={StaticResource Visible}}" />
+                                IsEnabled="{Binding HasLog}" ToolTip="{ui:Loc 'Delete the log, so the old lines are gone. UE4SS writes a new one at the next game start.'}" />
                         <Button Margin="8,0,0,0" Content="{ui:Loc 'Copy'}" ui:Icon.Glyph="&#xE8C8;" Command="{Binding CopyCommand}"
                                 IsEnabled="{Binding HasLog}" ToolTip="{ui:Loc 'Copy the log, to paste it into Discord'}" />
                         <Button Margin="8,0,0,0" Content="{ui:Loc 'Open log file'}" ui:Icon.Glyph="&#xE8A5;" Command="{Binding OpenLogCommand}"

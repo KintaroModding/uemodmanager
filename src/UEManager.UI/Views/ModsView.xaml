@@ -13,7 +13,7 @@
         <GridLength x:Key="Col.Type">92</GridLength>
         <GridLength x:Key="Col.Integrity">136</GridLength>
         <GridLength x:Key="Col.Date">104</GridLength>
-        <GridLength x:Key="Col.Actions">140</GridLength>
+        <GridLength x:Key="Col.Actions">176</GridLength>
     </UserControl.Resources>
 
     <StackPanel>
@@ -143,6 +143,8 @@
                                         <Button Margin="0,0,4,0" Style="{StaticResource Button.Icon}" ui:Icon.Glyph="&#xE7A7;"
                                                 Command="{Binding ResetSettingsCommand}" ToolTip="{ui:Loc 'Reset the settings to the ones the mod came with'}"
                                                 Visibility="{Binding HasSettings, Converter={StaticResource Visible}}" />
+                                        <Button Margin="0,0,4,0" Style="{StaticResource Button.Icon}" ui:Icon.Glyph="&#xE8FD;"
+                                                Command="{Binding ShowDetailsCommand}" ToolTip="{ui:Loc 'Show the files of this mod in their folders'}" />
                                         <Button Style="{StaticResource Button.Icon}" ui:Icon.Glyph="&#xE838;"
                                                 Command="{Binding OpenFolderCommand}" ToolTip="{ui:Loc 'Open the manager\'s copy of this mod'}" />
                                         <Button Margin="4,0,0,0" Style="{StaticResource Button.IconDanger}" ui:Icon.Glyph="&#xE74D;"

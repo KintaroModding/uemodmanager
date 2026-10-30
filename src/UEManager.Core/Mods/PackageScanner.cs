@@ -56,7 +56,8 @@ public sealed class PackageGroup
 
     /// <summary>
     /// Where each file goes below the target folder, in the order of <see cref="Files"/>:
-    /// the file name for a package, "ModName/Scripts/main.lua" for a UE4SS mod.
+    /// the file name for a package, "ModName/Scripts/main.lua" for a UE4SS mod, and "shared/json/json.lua"
+    /// for a library the UE4SS mod brings for UE4SS's shared folder.
     /// </summary>
     public IReadOnlyList<string> RelativePaths { get; }
 
@@ -96,11 +97,17 @@ public sealed class PackageGroup
         return new PackageGroup(name, folder, ordered, ordered.Select(f => Path.GetFileName(f)).ToList(), kind, target);
     }
 
-    internal static PackageGroup Ue4ssMod(string name, string folder, string root, IReadOnlyList<string> files)
+    /// <param name="sharedRoot">The shared folder next to the mod's folder, whose files go into UE4SS's shared folder.</param>
+    internal static PackageGroup Ue4ssMod(string name, string folder, string root, IReadOnlyList<string> files, string? sharedRoot = null)
     {
-        var ordered = files.Order(StringComparer.OrdinalIgnoreCase).ToList();
-        var relative = ordered.Select(f => name + "/" + Path.GetRelativePath(root, f).Replace('\\', '/')).ToList();
-        return new PackageGroup(name, folder, ordered, relative, PackageKind.Ue4ss, DeployTarget.Ue4ssMods);
+        var placed = files
+            .Select(f => (File: f, Place: sharedRoot is not null && f.StartsWith(sharedRoot + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
+                ? SharedFiles.Folder + "/" + Path.GetRelativePath(sharedRoot, f).Replace('\\', '/')
+                : name + "/" + Path.GetRelativePath(root, f).Replace('\\', '/')))
+            .OrderBy(f => f.Place, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        return new PackageGroup(name, folder, placed.Select(f => f.File).ToList(), placed.Select(f => f.Place).ToList(),
+            PackageKind.Ue4ss, DeployTarget.Ue4ssMods);
     }
 }
 
@@ -130,7 +137,11 @@ public static class PackageScanner
             var atTop = string.Equals(modRoot, root, StringComparison.OrdinalIgnoreCase);
             var name = atTop ? FileSystem.SafeName(fallbackName, "Mod") : Path.GetFileName(modRoot);
             var folder = atTop ? "" : RelativeFolder(root, Path.GetDirectoryName(modRoot)!);
-            drafts.Add(new Draft(name, folder, files.Where(f => IsInside(f, modRoot)).ToList(), modRoot));
+            // Libraries for UE4SS's shared folder, in a "shared" folder next to the mod's folder as in UE4SS's Mods
+            // folder: the mod loads them, so they go with it. Several mods in that folder each take them.
+            var shared = atTop ? null : Path.Combine(Path.GetDirectoryName(modRoot)!, SharedFiles.Folder);
+            var modFiles = files.Where(f => IsInside(f, modRoot) || (shared is not null && IsInside(f, shared))).ToList();
+            drafts.Add(new Draft(name, folder, modFiles, modRoot, shared));
         }
 
         var packageFiles = files
@@ -168,7 +179,7 @@ public static class PackageScanner
                     : "";
                 return d.Ue4ssRoot is null
                     ? PackageGroup.Packaged(d.Name, folder, d.Files, IsLogicMod(d.Folder) ? DeployTarget.LogicMods : DeployTarget.Mods)
-                    : PackageGroup.Ue4ssMod(d.Name, folder, d.Ue4ssRoot, d.Files);
+                    : PackageGroup.Ue4ssMod(d.Name, folder, d.Ue4ssRoot, d.Files, d.SharedRoot);
             })
             .OrderBy(p => p.Label, NaturalOrder.Instance)
             .ToList();
@@ -186,7 +197,8 @@ public static class PackageScanner
             }
         }
 
-        var used = packages.Sum(p => p.Files.Count);
+        // Shared libraries can go with several UE4SS mods; they count once.
+        var used = packages.SelectMany(p => p.Files).Distinct(StringComparer.OrdinalIgnoreCase).Count();
         var nestedArchives = files.Count(f => FileSystem.HasExtension(f, FileSystem.ArchiveExtensions));
         var runtime = files.Any(f => Path.GetFileName(f).Equals("UE4SS.dll", StringComparison.OrdinalIgnoreCase));
         return new ScanResult(packages, files.Count - used, nestedArchives, runtime);
@@ -261,5 +273,5 @@ public static class PackageScanner
         return string.Join('/', common.Take(length));
     }
 
-    private sealed record Draft(string Name, string Folder, List<string> Files, string? Ue4ssRoot);
+    private sealed record Draft(string Name, string Folder, List<string> Files, string? Ue4ssRoot, string? SharedRoot = null);
 }

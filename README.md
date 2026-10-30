@@ -73,6 +73,13 @@ one, so UE4SS starts it without `mods.txt` being edited. Disabling removes the
 folder again. Lua, DLL and Blueprint mods can be installed before UE4SS is,
 with a warning.
 
+A UE4SS mod may bring Lua libraries for UE4SS's `shared` folder, in a `shared`
+folder next to its own (such as `Mods/shared/json/json.lua`); they go with the
+mod. One copy serves every mod that brings the same file, and it goes when the
+last of them is disabled. A library that was there before, such as one of
+UE4SS's own, is used but never removed. Another version of a library that an
+enabled mod uses is refused, since only one can be in the game.
+
 A download with several folders that hold the same files (options such as
 `x1.5/`, `x2/`, `x10/`) offers them as one choice, sorted by number; the chosen
 variant is recorded with the mod.
@@ -165,9 +172,10 @@ is the end of `UE4SS.log` (the last 2000 lines), which UE4SS writes anew at
 every game start. Lines that speak of an error are red, warnings orange, and
 the mod folders an error names are listed. The page reads the log each time it
 opens; **Refresh**, **Copy** and **Open log file** are next to it. **Clear**
-hides the lines so far, so **Refresh** then shows only what UE4SS writes after
-that, until the next game start; **Show all** brings them back. The file itself
-is never changed, so a help report still holds the whole log. The search box
+deletes `UE4SS.log`, so the old lines are gone; UE4SS writes a new one at the
+next game start. Like every change in the game folder, it waits until the game
+is closed. The error marks in the Mods list go with the log, and until the next
+game start a help report holds no log and the page shows no UE4SS version from it. The search box
 shows only the lines that contain its text, in any case, such as a mod's name,
 together with **Only errors and warnings**, and counts them.
 
@@ -273,11 +281,13 @@ in a code block, on the clipboard for the help channel on Discord.
 
 ## Mod details
 
-A click on a mod's name on the Mods page shows its details: type, version,
-variant, when and from which download it was installed, its size, and every
-file it placed with its path in the game folder (the full path as a tooltip),
-size and state: in the game, a settings file the player may change, changed
-outside the manager, or missing. The state is checked by size, as the list does,
+A click on a mod's name, or on the list button of its row, on the Mods page
+shows its details: type, version, variant, when and from which download it was
+installed, its size, and every file it placed, in the tree of its folders in the
+game folder (a folder that holds only one folder shares its line, as
+`platform\steam\ue4ss\Mods`). Each file shows its size and state: in the game, a
+settings file the player may change, changed outside the manager, or missing;
+the full path is its tooltip. The state is checked by size, as the list does,
 not by checksum. A disabled mod lists its files as not in the game.
 
 ## Test without mods
@@ -416,6 +426,10 @@ A new version is announced once, without a sound: a banner in the middle of
 the window for 3 seconds, then the orange box flashes once. While a dialog or
 the busy screen is open, the banner waits. The announced version is kept in
 `settings.json` (`announcedUpdate`), so the next start only shows the orange box.
+
+The update window shows the release notes as GitHub does, for what release
+notes use: lists, **bold**, `code` and links. A link opens in the browser only
+when it is an http or https address.
 
 The app takes `uemm_<game>_…zip` from the release. The update window offers:
 

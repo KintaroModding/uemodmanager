@@ -146,18 +146,19 @@ public sealed partial class MainViewModel : LocalizedObservableObject
             return null;
         }
         // Another game was chosen meanwhile.
-        if (log is null || Game != game)
+        if (Game != game)
             return null;
         var marked = ue4ssErrors is { Folders.Count: > 0 };
-        ue4ssErrors = (named, log.WrittenAt);
+        // Without a log, as after Clear on the UE4SS page, no mod is marked.
+        ue4ssErrors = log is null ? null : (named, log.WrittenAt);
         if (marked || named.Count > 0)
             RefreshMods();
-        return (log, named);
+        return log is null ? null : (log, named);
     }
 
-    /// <summary>The folders a mod placed in UE4SS's Mods folder; none for a pak mod.</summary>
+    /// <summary>The folders a mod placed in UE4SS's Mods folder; none for a pak mod. The shared folder is UE4SS's.</summary>
     private static IEnumerable<string> Ue4ssFolders(ModRecord mod) => mod.Files
-        .Where(f => f.Target == DeployTarget.Ue4ssMods)
+        .Where(f => f.Target == DeployTarget.Ue4ssMods && !f.IsShared)
         .Select(f => f.FileName.Split('/')[0])
         .Distinct(StringComparer.OrdinalIgnoreCase);
 
@@ -924,6 +925,17 @@ public sealed partial class MainViewModel : LocalizedObservableObject
     {
         if (ue4ss is { Installed: true })
             TryOpen(ue4ss.Folder);
+    }
+
+    /// <summary>Clear on the UE4SS page: deletes UE4SS's log, so its old lines, and the marks they caused, are gone.</summary>
+    internal async Task ClearUe4ssLogAsync()
+    {
+        if (!EnsureGame())
+            return;
+        var game = Game!;
+        await RunAsync(L.T("Clearing the log…"), () => Task.Run(() => manager!.ClearUe4ssLog()));
+        await RefreshUe4ssLogAsync();
+        await ReadUe4ssErrorsAsync(game);
     }
 
     /// <summary>Looks for UE4SS again and reads its log, as when the UE4SS page opens.</summary>

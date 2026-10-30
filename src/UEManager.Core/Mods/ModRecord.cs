@@ -87,6 +87,29 @@ public sealed class ModFileRecord
     /// <summary>A settings file whose manager copy holds the player's changes.</summary>
     [JsonIgnore]
     public bool IsEdited => IsSettingsFile && !string.Equals(Sha256, DefaultSha256 ?? Sha256, StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// A Lua library in UE4SS's shared folder ("shared/json/json.lua"), next to UE4SS's own. Several mods may bring
+    /// the same one: one copy in the game serves them all, and it goes when the last of them is disabled.
+    /// </summary>
+    [JsonIgnore]
+    public bool IsShared => SharedFiles.Is(Target, FileName);
+
+    /// <summary>
+    /// A shared file that was already in the game, with the same content, when the mod was enabled, such as one of
+    /// UE4SS's own: the mod uses it, but never removes it.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool Borrowed { get; set; }
+}
+
+/// <summary>UE4SS's shared folder in its Mods folder, where Lua libraries live that every mod can load.</summary>
+public static class SharedFiles
+{
+    public const string Folder = "shared";
+
+    public static bool Is(DeployTarget target, string relativePath) =>
+        target == DeployTarget.Ue4ssMods && relativePath.StartsWith(Folder + "/", StringComparison.OrdinalIgnoreCase);
 }
 
 /// <summary>

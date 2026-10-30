@@ -20,10 +20,6 @@ public sealed partial class Ue4ssLogViewModel(MainViewModel owner) : LocalizedOb
     private IReadOnlyList<string> errorMods = [];
     private string? readError;
 
-    /// <summary>Where the player cleared the view, and when; null when the whole log is shown.</summary>
-    private Ue4ssLogMark? mark;
-    private DateTime clearedAt;
-
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShownLines), nameof(FoundText))]
     private bool onlyProblems;
@@ -38,11 +34,6 @@ public sealed partial class Ue4ssLogViewModel(MainViewModel owner) : LocalizedOb
     public bool IsSearching => !string.IsNullOrWhiteSpace(SearchText);
 
     public string FoundText => L.F($"Lines found: {ShownLines.Count}");
-
-    /// <summary>The view shows only the lines written after the player cleared it.</summary>
-    public bool IsCleared => log is { AfterMark: true };
-
-    public bool CanClear => log is { Lines.Count: > 0 };
 
     public IReadOnlyList<Ue4ssLogLineItem> ShownLines => log is null
         ? []
@@ -66,8 +57,6 @@ public sealed partial class Ue4ssLogViewModel(MainViewModel owner) : LocalizedOb
         ({ Installed: false } or null, _) => L.T("UE4SS is not installed, so there is no log."),
         _ when readError is not null => L.F($"The log could not be read: {readError}"),
         (_, null) => L.T("No log yet. UE4SS writes it each time the game starts."),
-        (_, { AfterMark: true, Lines.Count: 0 }) => L.F($"Cleared at {clearedAt:t}. Refresh shows what UE4SS writes after that."),
-        (_, { AfterMark: true }) => L.F($"Since {clearedAt:t}:  {Errors(log)},  {Warnings(log)}.") + Shortened(log),
         _ => L.F($"Game start of {log.WrittenAt:g}:  {Errors(log)},  {Warnings(log)}.") + Shortened(log),
     };
 
@@ -94,10 +83,9 @@ public sealed partial class Ue4ssLogViewModel(MainViewModel owner) : LocalizedOb
         {
             try
             {
-                var after = mark;
                 (log, errorMods) = await Task.Run(() =>
                 {
-                    var read = Ue4ssLog.Read(current.LogPath, after);
+                    var read = Ue4ssLog.Read(current.LogPath);
                     return (read, read?.ModsNamedInErrors(current.ModFolders()) ?? []);
                 });
             }
@@ -107,33 +95,15 @@ public sealed partial class Ue4ssLogViewModel(MainViewModel owner) : LocalizedOb
                 readError = ex.Message;
             }
         }
-        // A new game start writes a new log, which shows whole again.
-        if (log is not { AfterMark: true })
-            mark = null;
         OnPropertyChanged(string.Empty);
     }
 
     [RelayCommand]
     private Task Refresh() => owner.RefreshUe4ssLogAsync();
 
-    /// <summary>Hides the lines so far; Refresh then shows only what UE4SS writes after. The file stays as it is.</summary>
+    /// <summary>Deletes the log, so its old lines are gone; UE4SS writes a new one at the next game start.</summary>
     [RelayCommand]
-    private Task Clear()
-    {
-        if (log is null)
-            return Task.CompletedTask;
-        mark = log.End;
-        clearedAt = DateTime.Now;
-        return LoadAsync(runtime);
-    }
-
-    /// <summary>Shows the whole log of this game start again.</summary>
-    [RelayCommand]
-    private Task ShowAll()
-    {
-        mark = null;
-        return LoadAsync(runtime);
-    }
+    private Task Clear() => owner.ClearUe4ssLogAsync();
 
     [RelayCommand]
     private void OpenLog()

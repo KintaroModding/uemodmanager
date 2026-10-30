@@ -13,13 +13,13 @@
             <TextBlock Margin="0,8,0,0" Style="{StaticResource Text.Title}" Text="{Binding DialogTitle}" />
             <TextBlock Margin="0,8,0,0" Style="{StaticResource Text.Body}" Text="{Binding DialogText}" />
 
-            <!-- What changed, as written on the release. -->
-            <Border Margin="0,14,0,0" MaxHeight="170" Padding="14,10" CornerRadius="2" BorderThickness="1"
+            <!-- What changed, as written on the release, shown as GitHub shows it. -->
+            <Border Margin="0,14,0,0" MaxHeight="230" Padding="14,10" CornerRadius="2" BorderThickness="1"
                     Background="{StaticResource Brush.Field}" BorderBrush="{StaticResource Brush.Line}"
                     Visibility="{Binding Notes, Converter={StaticResource VisibleIfSet}}">
                 <ScrollViewer VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
-                    <TextBlock FontSize="12" LineHeight="18" TextWrapping="Wrap" Foreground="{StaticResource Brush.TextMuted}"
-                               Text="{Binding Notes}" />
+                    <StackPanel Margin="0,0,0,2" TextElement.FontSize="12" TextElement.Foreground="{StaticResource Brush.TextMuted}"
+                                ui:ReleaseNotes.LinkCommand="{Binding OpenLinkCommand}" ui:ReleaseNotes.Text="{Binding Notes}" />
                 </ScrollViewer>
             </Border>
 
