@@ -13,7 +13,7 @@ namespace UEManager.UI.ViewModels;
 public sealed record Ue4ssLogLineItem(string Text, string Tone);
 
 /// <summary>The log part of the UE4SS page: the end of UE4SS.log from the last game start, errors and warnings marked.</summary>
-public sealed partial class Ue4ssLogViewModel(MainViewModel owner) : ObservableObject
+public sealed partial class Ue4ssLogViewModel(MainViewModel owner) : LocalizedObservableObject
 {
     private Ue4ssRuntime? runtime;
     private Ue4ssLog? log;
@@ -40,19 +40,19 @@ public sealed partial class Ue4ssLogViewModel(MainViewModel owner) : ObservableO
 
     public string SummaryText => (runtime, log) switch
     {
-        ({ Installed: false } or null, _) => "UE4SS is not installed, so there is no log.",
-        _ when readError is not null => $"The log could not be read: {readError}",
-        (_, null) => "No log yet. UE4SS writes it each time the game starts.",
-        _ => $"Game start of {log.WrittenAt:g}:  {Format.Count(log.ErrorCount, "error", "errors")},  "
+        ({ Installed: false } or null, _) => L.T("UE4SS is not installed, so there is no log."),
+        _ when readError is not null => L.F($"The log could not be read: {readError}"),
+        (_, null) => L.T("No log yet. UE4SS writes it each time the game starts."),
+        _ => L.F($"Game start of {log.WrittenAt:g}:  {Format.Count(log.ErrorCount, "error", "errors")},  ")
             + $"{Format.Count(log.WarningCount, "warning", "warnings")}."
-            + (log.Truncated ? $"  Showing the last {Ue4ssLog.MaxLines} lines." : ""),
+            + (log.Truncated ? L.F($"  Showing the last {Ue4ssLog.MaxLines} lines.") : ""),
     };
 
     public string SummaryTone => log is null ? "" : log.ErrorCount > 0 ? "bad" : log.WarningCount > 0 ? "warn" : "good";
 
     public bool HasErrorMods => errorMods.Count > 0;
 
-    public string ErrorModsText => $"Errors name these mods: {string.Join(", ", errorMods)}";
+    public string ErrorModsText => L.F($"Errors name these mods: {string.Join(", ", errorMods)}");
 
     /// <summary>Reads the log of the installed UE4SS again.</summary>
     public async Task LoadAsync(Ue4ssRuntime? current)
@@ -98,11 +98,11 @@ public sealed partial class Ue4ssLogViewModel(MainViewModel owner) : ObservableO
         try
         {
             Clipboard.SetText(string.Join(Environment.NewLine, log.Lines.Select(l => l.Text)));
-            owner.ShowToast("The UE4SS log is on the clipboard.");
+            owner.ShowToast(L.T("The UE4SS log is on the clipboard."));
         }
         catch (COMException ex)
         {
-            owner.ShowToast($"The clipboard is in use by another app: {ex.Message}", isError: true);
+            owner.ShowToast(L.F($"The clipboard is in use by another app: {ex.Message}"), isError: true);
         }
     }
 }

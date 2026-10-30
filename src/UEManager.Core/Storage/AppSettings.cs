@@ -3,6 +3,9 @@ namespace UEManager.Core.Storage;
 /// <summary>User choices that survive a restart.</summary>
 public sealed class AppSettings
 {
+    /// <summary>UI language, "en" or "zh-CN"; null follows the OS on the first launch.</summary>
+    public string? Language { get; set; }
+
     /// <summary>Install folder per game profile id, set when the user locates the game by hand.</summary>
     public Dictionary<string, string> GamePaths { get; set; } = new(StringComparer.OrdinalIgnoreCase);
 
@@ -34,7 +37,7 @@ public sealed class AppSettings
         {
             return JsonFile.Read<AppSettings>(paths.SettingsFile) ?? new AppSettings();
         }
-        catch (Exception ex) when (ex is IOException or System.Text.Json.JsonException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or System.Text.Json.JsonException)
         {
             Log.Warn($"Settings could not be read, defaults are used: {ex.Message}");
             return new AppSettings();

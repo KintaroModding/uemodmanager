@@ -76,7 +76,7 @@ public static class AppReleases
             if (response.StatusCode == HttpStatusCode.NotFound)
                 throw new ModException("No release is published yet.");
             if (!response.IsSuccessStatusCode)
-                throw new ModException($"GitHub answered {(int)response.StatusCode} {response.ReasonPhrase}. Try again later.");
+                throw ModException.Localized($"GitHub answered {(int)response.StatusCode} {response.ReasonPhrase}. Try again later.");
             var release = Parse(await response.Content.ReadAsStringAsync(timeout.Token), filePrefix,
                 allowHttp: new Uri(url).Scheme == Uri.UriSchemeHttp);
             Log.Info($"Newest release: {release.Version}; file for this build: {release.File?.Name ?? "none"}.");
@@ -84,7 +84,7 @@ public static class AppReleases
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException or UriFormatException)
         {
-            throw new ModException($"The newest release could not be read: {ex.Message}");
+            throw ModException.Localized($"The newest release could not be read: {ex.Message}");
         }
     }
 

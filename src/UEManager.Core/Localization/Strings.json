@@ -1,0 +1,1866 @@
+{
+  "Text.d72e311c4dda": {
+    "en": "Minimize",
+    "zh-CN": "最小化"
+  },
+  "Text.fba6c2c5d946": {
+    "en": "Maximize",
+    "zh-CN": "最大化"
+  },
+  "Text.7d9eb7acb13e": {
+    "en": "Close",
+    "zh-CN": "关闭"
+  },
+  "Text.785b37b68247": {
+    "en": "Mod manager",
+    "zh-CN": "模组管理器"
+  },
+  "Text.f719136ce60d": {
+    "en": "Join our Discord",
+    "zh-CN": "加入 Discord 社区"
+  },
+  "Text.5d7ab65d7560": {
+    "en": "Questions, news and help: the community on Discord",
+    "zh-CN": "在 Discord 社区交流、查看消息和获取帮助"
+  },
+  "Text.e76ca89af5ff": {
+    "en": "Launch game",
+    "zh-CN": "启动游戏"
+  },
+  "Text.3a78695388b3": {
+    "en": "Home",
+    "zh-CN": "主页"
+  },
+  "Text.6e58b577a084": {
+    "en": "Mods",
+    "zh-CN": "模组"
+  },
+  "Text.74a883a037bc": {
+    "en": "Settings",
+    "zh-CN": "设置"
+  },
+  "Text.4efca0d10c5f": {
+    "en": "About",
+    "zh-CN": "关于"
+  },
+  "Text.90022dc36898": {
+    "en": "What a pre-release means",
+    "zh-CN": "什么是预发布版本"
+  },
+  "Text.a90d2f735a49": {
+    "en": "Pre-release",
+    "zh-CN": "预发布版本"
+  },
+  "Text.48845bff334a": {
+    "en": "Dismiss",
+    "zh-CN": "关闭提示"
+  },
+  "Text.04fb8eedd30c": {
+    "en": "Click the orange box at the bottom left to update.",
+    "zh-CN": "点击左下角的橙色提示框进行更新。"
+  },
+  "Text.bcdbf529daff": {
+    "en": "Drop to install",
+    "zh-CN": "拖放以安装"
+  },
+  "Text.b0986d3a199b": {
+    "en": ".zip  ·  .7z  ·  .rar  ·  .pak  ·  .utoc  ·  .ucas  ·  folders",
+    "zh-CN": ".zip  ·  .7z  ·  .rar  ·  .pak  ·  .utoc  ·  .ucas  ·  文件夹"
+  },
+  "Text.63e615c21158": {
+    "en": "About this version",
+    "zh-CN": "关于此版本"
+  },
+  "Text.4e4aff86a1bb": {
+    "en": "UE MM is at the beginning of its development. This version most likely works. If something does not, an update with a fix follows quickly.\n\nEither way, expect frequent changes: features, screens and texts can still change from one version to the next.",
+    "zh-CN": "UE MM 尚处于开发初期。此版本应该可以正常使用。如果遇到问题，我们会尽快发布修复更新。\n\n开发期间会频繁更新，功能、界面和文案可能随版本变化。"
+  },
+  "Text.5ad3dbd1242a": {
+    "en": "Got it",
+    "zh-CN": "知道了"
+  },
+  "Text.e089714c8fe1": {
+    "en": "Start clean",
+    "zh-CN": "恢复初始状态"
+  },
+  "Text.476de5548881": {
+    "en": "Reset modding",
+    "zh-CN": "重置模组环境"
+  },
+  "Text.eee1b0fa369f": {
+    "en": "Backups of your saves and of changed mod settings stay. Mods put straight into the game's Paks folder by hand are not found: for a full check, let Steam or the Epic Games Launcher verify the game files.",
+    "zh-CN": "存档和已修改的模组设置备份将会保留。手动放入游戏 Paks 文件夹的模组无法被检测到。如需完整检查，请使用 Steam 或 Epic 游戏启动器验证游戏文件。"
+  },
+  "Text.acc364aa126f": {
+    "en": "Also reset the app's settings: the game folder, sorting and other choices. The app then starts again.",
+    "zh-CN": "同时重置程序设置，包括游戏文件夹、排序和其他选项。程序随后会重新启动。"
+  },
+  "Text.19766ed6ccb2": {
+    "en": "Cancel",
+    "zh-CN": "取消"
+  },
+  "Text.0e9161011702": {
+    "en": "Refresh",
+    "zh-CN": "刷新"
+  },
+  "Text.dcd1d5223f73": {
+    "en": "Name",
+    "zh-CN": "名称"
+  },
+  "Text.588a08236c7e": {
+    "en": "Sort by name",
+    "zh-CN": "按名称排序"
+  },
+  "Text.18b7974b1a46": {
+    "en": "No mods match the search",
+    "zh-CN": "没有符合搜索条件的模组"
+  },
+  "Text.c74ea9dc9cd2": {
+    "en": "What it does",
+    "zh-CN": "功能介绍"
+  },
+  "Text.c99aad3f8c6c": {
+    "en": "A mod manager for Unreal Engine games. It installs packaged mods (.pak, .utoc and .ucas), Blueprint mods, and UE4SS Lua and DLL mods, keeps its own copy of every mod, and records a checksum for every file it places. Files it did not place are never overwritten or removed.",
+    "zh-CN": "适用于虚幻引擎游戏的模组管理器。支持打包模组（.pak、.utoc、.ucas）、蓝图模组和 UE4SS Lua、DLL 模组，为每个模组保留副本，并记录每个部署文件的校验和。管理器不会覆盖或删除非自身部署的文件。"
+  },
+  "Text.4b2657bf94ac": {
+    "en": "Downloads are unpacked into a private staging folder first. Nothing inside a download is ever run.",
+    "zh-CN": "下载内容会先解压到独立的暂存文件夹中，管理器不会运行其中的任何文件。"
+  },
+  "Text.73c910aa3287": {
+    "en": "Contribute on GitHub",
+    "zh-CN": "在 GitHub 上参与贡献"
+  },
+  "Text.350ad433c42f": {
+    "en": "Contributors",
+    "zh-CN": "贡献者"
+  },
+  "Text.3a088ede2ad5": {
+    "en": "Made by everyone below. Help improve the original: every contributor is named here, in every release.",
+    "zh-CN": "由以下贡献者共同开发。欢迎帮助改进原项目，每个版本都会在这里列出所有贡献者。"
+  },
+  "Text.c011d6097bfb": {
+    "en": "License",
+    "zh-CN": "许可证"
+  },
+  "Text.62bf2724117c": {
+    "en": "This app is free software: you may share and change it under the GNU General Public License, version 3, with the additional terms below. A work based on it keeps the credit to the original and its contributors, and carries a name of its own. It comes with ABSOLUTELY NO WARRANTY.",
+    "zh-CN": "本程序是自由软件，您可以依照 GNU 通用公共许可证第 3 版及以下附加条款分享和修改。衍生作品须保留原项目及贡献者的署名，并使用独立名称。本程序不提供任何担保。"
+  },
+  "Text.67b526273374": {
+    "en": "Open-source libraries",
+    "zh-CN": "开源库"
+  },
+  "Text.3f92024b2797": {
+    "en": "Archive support by SharpCompress, MVVM helpers by CommunityToolkit.Mvvm. Both use the MIT license, which asks for its text to ship with the app:",
+    "zh-CN": "SharpCompress 提供压缩包支持，CommunityToolkit.Mvvm 提供 MVVM 辅助功能。两者均采用 MIT 许可证，要求随程序附带以下许可文本："
+  },
+  "Text.b79cac926e0b": {
+    "en": "Help",
+    "zh-CN": "帮助"
+  },
+  "Text.53de38dec81e": {
+    "en": "Report a problem",
+    "zh-CN": "报告问题"
+  },
+  "Text.49370e64206a": {
+    "en": "Say in a few words what happened and what you did just before. The manager adds facts about the game, UE4SS and your mods, and leaves out your Windows user name. Nothing is sent: copy the report and paste it into the help channel on Discord.",
+    "zh-CN": "请简要描述问题和发生前的操作。管理器会补充游戏、UE4SS 和模组信息，并隐藏您的 Windows 用户名。报告不会自动发送，请复制后粘贴到 Discord 的帮助频道。"
+  },
+  "Text.b6ce788d9786": {
+    "en": "Report",
+    "zh-CN": "问题报告"
+  },
+  "Text.ffedb1c8424a": {
+    "en": "Copy report",
+    "zh-CN": "复制报告"
+  },
+  "Text.7edb8b7bdadb": {
+    "en": "Ready your blade",
+    "zh-CN": "准备出发"
+  },
+  "Text.0f96d734dccb": {
+    "en": "Game updated",
+    "zh-CN": "游戏已更新"
+  },
+  "Text.998195e4aaa2": {
+    "en": "Search again",
+    "zh-CN": "重新搜索"
+  },
+  "Text.7d11d6748463": {
+    "en": "Locate game folder…",
+    "zh-CN": "选择游戏文件夹…"
+  },
+  "Text.96ba641b93a5": {
+    "en": "Game not found",
+    "zh-CN": "未找到游戏"
+  },
+  "Text.ee7da936b5cb": {
+    "en": "Store",
+    "zh-CN": "游戏平台"
+  },
+  "Text.bdd254b65baa": {
+    "en": "Build",
+    "zh-CN": "构建版本"
+  },
+  "Text.59cafc8e425d": {
+    "en": "Mods installed",
+    "zh-CN": "已安装模组"
+  },
+  "Text.813be2e91fbb": {
+    "en": "Unmanaged files",
+    "zh-CN": "未托管文件"
+  },
+  "Text.a61af3cb506e": {
+    "en": "In the mods folder, left alone",
+    "zh-CN": "模组文件夹中未由管理器部署的文件，不作修改"
+  },
+  "Text.0eb95fb6244c": {
+    "en": "Quick start",
+    "zh-CN": "快速开始"
+  },
+  "Text.233ffd651ceb": {
+    "en": "Add a new mod",
+    "zh-CN": "添加模组"
+  },
+  "Text.c59ed2fc878a": {
+    "en": "Drop a .zip, .7z or .rar download, a .pak file or a mod folder anywhere on this window. It is unpacked and checked before anything reaches the game.",
+    "zh-CN": "将下载的 .zip、.7z、.rar 压缩包、.pak 文件或模组文件夹拖放到此窗口即可。安装到游戏前会先解压并检查。"
+  },
+  "Text.da5686723e32": {
+    "en": "Install from 7z/zip/rar…",
+    "zh-CN": "从压缩包安装…"
+  },
+  "Text.15e3c65eafdb": {
+    "en": "Install from folder…",
+    "zh-CN": "从文件夹安装…"
+  },
+  "Text.a6b4705c6883": {
+    "en": "Change…",
+    "zh-CN": "更改…"
+  },
+  "Text.bf107fc83125": {
+    "en": "Choose another game folder",
+    "zh-CN": "选择其他游戏文件夹"
+  },
+  "Text.c3fc54aa5390": {
+    "en": "Installation",
+    "zh-CN": "安装位置"
+  },
+  "Text.33611d3d2314": {
+    "en": "Game folders",
+    "zh-CN": "游戏文件夹"
+  },
+  "Text.9c215bf11f75": {
+    "en": "Install folder",
+    "zh-CN": "安装文件夹"
+  },
+  "Text.840e19f02190": {
+    "en": "Mods folder",
+    "zh-CN": "模组文件夹"
+  },
+  "Text.5ffe25975982": {
+    "en": "Install UE4SS…",
+    "zh-CN": "安装 UE4SS…"
+  },
+  "Text.553221725e47": {
+    "en": "Open game folder",
+    "zh-CN": "打开游戏文件夹"
+  },
+  "Text.00e989018b91": {
+    "en": "Open mods folder",
+    "zh-CN": "打开模组文件夹"
+  },
+  "Text.db3370a43178": {
+    "en": "Install mod",
+    "zh-CN": "安装模组"
+  },
+  "Text.dd167905de0d": {
+    "en": "Version",
+    "zh-CN": "版本"
+  },
+  "Text.437aea62a5bd": {
+    "en": "Contents",
+    "zh-CN": "内容"
+  },
+  "Text.ca6e345ccac6": {
+    "en": "Keep my settings",
+    "zh-CN": "保留我的设置"
+  },
+  "Text.7b790708ff1b": {
+    "en": "Collection",
+    "zh-CN": "模组库"
+  },
+  "Text.e7e259aef4cf": {
+    "en": "A checksum is recorded for each file the manager places in the game. Disabling a mod removes only its own files, and only while they are unchanged.",
+    "zh-CN": "管理器会记录每个部署到游戏的文件的校验和。禁用模组时，仅删除该模组自身且未经修改的文件。"
+  },
+  "Text.920e413c7d41": {
+    "en": "Status",
+    "zh-CN": "状态"
+  },
+  "Text.2fe83d132e3d": {
+    "en": "Mod",
+    "zh-CN": "模组"
+  },
+  "Text.baaddf70fb5d": {
+    "en": "Type",
+    "zh-CN": "类型"
+  },
+  "Text.ad5ea6aae7ca": {
+    "en": "Integrity",
+    "zh-CN": "文件完整性"
+  },
+  "Text.f8b32f4e92bd": {
+    "en": "Installed",
+    "zh-CN": "已安装"
+  },
+  "Text.50ce1033d6b4": {
+    "en": "Sort by installation date",
+    "zh-CN": "按安装日期排序"
+  },
+  "Text.e4aaa9197142": {
+    "en": "Enable or disable",
+    "zh-CN": "启用或禁用"
+  },
+  "Text.e59dcddb99fa": {
+    "en": "Reset the settings to the ones the mod came with",
+    "zh-CN": "将设置恢复为模组自带的默认值"
+  },
+  "Text.8c748652881c": {
+    "en": "Open the manager's copy of this mod",
+    "zh-CN": "打开管理器保存的模组副本"
+  },
+  "Text.fe199528850a": {
+    "en": "Uninstall",
+    "zh-CN": "卸载"
+  },
+  "Text.2cc79061d7c5": {
+    "en": "The manager never changes or removes them.",
+    "zh-CN": "管理器不会修改或删除这些文件。"
+  },
+  "Text.b332c3492d5e": {
+    "en": "Configuration",
+    "zh-CN": "程序配置"
+  },
+  "Text.8aa6b308086c": {
+    "en": "Game installation",
+    "zh-CN": "游戏安装"
+  },
+  "Text.31405bb6198e": {
+    "en": "Found automatically through Steam or the Epic Games Launcher. Choose the folder yourself when it was not found, or to use another copy of the game.",
+    "zh-CN": "通过 Steam 或 Epic 游戏启动器自动查找。未找到游戏或需要使用其他游戏副本时，请手动选择文件夹。"
+  },
+  "Text.6c1458561521": {
+    "en": "Found through",
+    "zh-CN": "查找方式"
+  },
+  "Text.58b1306d2f1d": {
+    "en": "Save backups",
+    "zh-CN": "存档备份"
+  },
+  "Text.ccab6b75784a": {
+    "en": "A broken mod can break a save. When you turn it on below, Launch game first zips your save folder, and the manager keeps the last 5 backups. To go back to one, close the game, unzip it and copy its files over the save folder.",
+    "zh-CN": "有问题的模组可能损坏存档。开启下方选项后，点击“启动游戏”会先将存档文件夹压缩备份，并保留最近 5 份备份。恢复时，请先关闭游戏，再解压备份，将其中的文件复制到存档文件夹并覆盖。"
+  },
+  "Text.2d1bffbfb103": {
+    "en": "Save folder",
+    "zh-CN": "存档文件夹"
+  },
+  "Text.3334fee2c77f": {
+    "en": "Backups",
+    "zh-CN": "备份"
+  },
+  "Text.bbfb91c3aa91": {
+    "en": "Back up my saves each time I start the game here",
+    "zh-CN": "每次从这里启动游戏时备份存档"
+  },
+  "Text.b50188d32de7": {
+    "en": "Choose save folder…",
+    "zh-CN": "选择存档文件夹…"
+  },
+  "Text.02a2840b598b": {
+    "en": "Back up now",
+    "zh-CN": "立即备份"
+  },
+  "Text.ebc2586955c9": {
+    "en": "Open save folder",
+    "zh-CN": "打开存档文件夹"
+  },
+  "Text.72fe99ae5201": {
+    "en": "Open save backups",
+    "zh-CN": "打开存档备份"
+  },
+  "Text.0dd4f0daa390": {
+    "en": "Where the manager expects the game's files, as set by the game profile built into this app.",
+    "zh-CN": "由程序内置的游戏配置指定的游戏文件位置。"
+  },
+  "Text.59923a31cb78": {
+    "en": "Project folder",
+    "zh-CN": "项目文件夹"
+  },
+  "Text.e20badb0276b": {
+    "en": "Paks folder",
+    "zh-CN": "Paks 文件夹"
+  },
+  "Text.186fbf156248": {
+    "en": "Blueprint mods",
+    "zh-CN": "蓝图模组"
+  },
+  "Text.fbe5b57eb3dd": {
+    "en": "Game exe",
+    "zh-CN": "游戏程序"
+  },
+  "Text.83395394d6a8": {
+    "en": "Manager data",
+    "zh-CN": "管理器数据"
+  },
+  "Text.540de3378af8": {
+    "en": "The list of installed mods, the manager's copy of each mod, backups of your saves and of mod settings you changed, and the logs. All kept in the Data folder next to UEModManager.exe, so the app folder can be moved as a whole.",
+    "zh-CN": "已安装模组列表、各模组副本、存档备份、已修改的模组设置备份及日志均保存在 UEModManager.exe 旁的 Data 文件夹中，您可以整体移动程序文件夹。"
+  },
+  "Text.3e55f576865b": {
+    "en": "Data folder",
+    "zh-CN": "数据文件夹"
+  },
+  "Text.24bec7410199": {
+    "en": "Open data folder",
+    "zh-CN": "打开数据文件夹"
+  },
+  "Text.591889ac42e0": {
+    "en": "Open logs",
+    "zh-CN": "打开日志文件夹"
+  },
+  "Text.c44c0f2bc813": {
+    "en": "Open settings backups",
+    "zh-CN": "打开设置备份"
+  },
+  "Text.3a37ea390c0d": {
+    "en": "Mod settings you changed, saved before an update or an uninstall replaced them",
+    "zh-CN": "更新或卸载模组前，备份您修改过的模组设置"
+  },
+  "Text.5b90daeb2765": {
+    "en": "Reset modding…",
+    "zh-CN": "重置模组环境…"
+  },
+  "Text.1cd92fdd7bf2": {
+    "en": "Start clean: removes every mod and UE4SS from the game, so it is back to its original files. You choose whether the mods also leave the manager.",
+    "zh-CN": "移除游戏中的所有模组和 UE4SS，使游戏恢复原始文件。您可以选择是否同时从管理器中删除模组。"
+  },
+  "Text.574106585e48": {
+    "en": "Report a problem…",
+    "zh-CN": "报告问题…"
+  },
+  "Text.fd64e81bf74d": {
+    "en": "Get help",
+    "zh-CN": "获取帮助"
+  },
+  "Text.79fe72d78397": {
+    "en": "Something does not work? Make a report for the help channel on Discord: you say what happened, the manager adds the facts a helper asks for first.",
+    "zh-CN": "遇到问题？为 Discord 帮助频道生成一份报告。您描述发生了什么，管理器补充排查所需的信息。"
+  },
+  "Text.17d5384ebd8b": {
+    "en": "Install UE4SS",
+    "zh-CN": "安装 UE4SS"
+  },
+  "Text.eac403b63f4e": {
+    "en": "UE4SS loads Lua, DLL and Blueprint mods. Packaged mods (.pak, .utoc, .ucas) work without it.",
+    "zh-CN": "UE4SS 用于加载 Lua、DLL 和蓝图模组。打包模组（.pak、.utoc、.ucas）无需 UE4SS 即可使用。"
+  },
+  "Text.b697d4f9d76a": {
+    "en": "Download and install",
+    "zh-CN": "下载安装"
+  },
+  "Text.d461a493a375": {
+    "en": "Automatic",
+    "zh-CN": "自动安装"
+  },
+  "Text.0979c2fe8ff8": {
+    "en": "Or by hand",
+    "zh-CN": "或手动安装"
+  },
+  "Text.c1c304e33661": {
+    "en": "Open download page",
+    "zh-CN": "打开下载页面"
+  },
+  "Text.202e3614fc39": {
+    "en": "Pick the downloaded zip. The manager unpacks it next to the game's exe and keeps any UE4SS settings you already have.",
+    "zh-CN": "选择下载好的压缩包。管理器会将其解压到游戏程序旁，并保留现有 UE4SS 设置。"
+  },
+  "Text.ca39931588c7": {
+    "en": "Install from file…",
+    "zh-CN": "从文件安装…"
+  },
+  "Text.1608311da5fe": {
+    "en": "Open exe folder",
+    "zh-CN": "打开程序文件夹"
+  },
+  "Text.fb7099ad8e81": {
+    "en": "Check again",
+    "zh-CN": "重新检查"
+  },
+  "Text.4efc22b570ac": {
+    "en": "Look for UE4SS again after installing it by hand",
+    "zh-CN": "手动安装后重新检测 UE4SS"
+  },
+  "Text.f7647a211199": {
+    "en": "Script loader",
+    "zh-CN": "脚本加载器"
+  },
+  "Text.26a6882f13d7": {
+    "en": "UE4SS lets the game load Lua, C++ (DLL) and Blueprint mods. Packaged mods (.pak, .utoc, .ucas) work without it.",
+    "zh-CN": "UE4SS 让游戏能够加载 Lua、C++（DLL）和蓝图模组。打包模组（.pak、.utoc、.ucas）无需 UE4SS 即可使用。"
+  },
+  "Text.109311589787": {
+    "en": "Runtime",
+    "zh-CN": "运行环境"
+  },
+  "Text.cce7a491b3a7": {
+    "en": "Install and update keep your UE4SS settings, mods.txt and the files of your mods. Close the game before you change UE4SS.",
+    "zh-CN": "安装和更新时会保留 UE4SS 设置、mods.txt 和模组文件。修改 UE4SS 前请先关闭游戏。"
+  },
+  "Text.02d9b63afa35": {
+    "en": "UE4SS folder",
+    "zh-CN": "UE4SS 文件夹"
+  },
+  "Text.5425c8a0e9f5": {
+    "en": "Your mods",
+    "zh-CN": "您的模组"
+  },
+  "Text.861b7ef29cbf": {
+    "en": "Open UE4SS folder",
+    "zh-CN": "打开 UE4SS 文件夹"
+  },
+  "Text.e46579459fdf": {
+    "en": "Remove UE4SS…",
+    "zh-CN": "移除 UE4SS…"
+  },
+  "Text.e21f935f11d7": {
+    "en": "Copy",
+    "zh-CN": "复制"
+  },
+  "Text.720d8f45b595": {
+    "en": "Copy the log, to paste it into Discord",
+    "zh-CN": "复制日志，以便粘贴到 Discord"
+  },
+  "Text.ec1bc0439a97": {
+    "en": "Open log file",
+    "zh-CN": "打开日志文件"
+  },
+  "Text.21e49eb2b299": {
+    "en": "Log",
+    "zh-CN": "日志"
+  },
+  "Text.ca3909838dd7": {
+    "en": "What UE4SS wrote during the last game start. Red lines speak of an error, orange lines of a warning.",
+    "zh-CN": "UE4SS 在上次游戏启动时写入的日志。红色表示错误，橙色表示警告。"
+  },
+  "Text.2629da71f3a8": {
+    "en": "Only errors and warnings",
+    "zh-CN": "仅显示错误和警告"
+  },
+  "Text.c1c1009d3f37": {
+    "en": "Update",
+    "zh-CN": "更新"
+  },
+  "Text.63bf045213ce": {
+    "en": "Update now",
+    "zh-CN": "立即更新"
+  },
+  "Text.cd6c9851e91a": {
+    "en": "Open release page",
+    "zh-CN": "打开发布页面"
+  },
+  "Text.573ad1256497": {
+    "en": "By hand",
+    "zh-CN": "手动更新"
+  },
+  "Text.a0e63d7c7125": {
+    "en": "Not now",
+    "zh-CN": "暂不更新"
+  },
+  "Text.68ff63fb82e0": {
+    "en": "download",
+    "zh-CN": "下载内容"
+  },
+  "Text.a3bfbd3fb2e6": {
+    "en": "{0} could not be downloaded: the server answered {1} {2}.",
+    "zh-CN": "无法下载 {0}：服务器返回 {1} {2}。"
+  },
+  "Text.dd1700197529": {
+    "en": "{0} could not be downloaded: no data arrived for {1:0} seconds. ",
+    "zh-CN": "无法下载 {0}：已连续 {1:0} 秒未收到数据。"
+  },
+  "Text.ebb4b987190f": {
+    "en": "Check the connection, then try again.",
+    "zh-CN": "请检查网络连接后重试。"
+  },
+  "Text.605fa37e066c": {
+    "en": "{0} could not be downloaded: {1}",
+    "zh-CN": "无法下载 {0}：{1}"
+  },
+  "Text.d611238be0b0": {
+    "en": "{0} was downloaded, but the file has {1:N0} bytes instead of {2:N0}, ",
+    "zh-CN": "{0} 已下载，但文件大小为 {1:N0} 字节，预期应为 {2:N0} 字节，"
+  },
+  "Text.c0813e661400": {
+    "en": "so it was not installed. Try again later.",
+    "zh-CN": "因此未安装。请稍后重试。"
+  },
+  "Text.b3cb036c2b42": {
+    "en": "{0} was downloaded, but the file is not the expected one (its checksum differs), so it was not installed.",
+    "zh-CN": "{0} 已下载，但文件校验和与预期不符，因此未安装。"
+  },
+  "Text.6c359c2afc4f": {
+    "en": "{0} cannot write to its data folder:\n\n{1}\n\n",
+    "zh-CN": "{0} 无法写入数据文件夹：\n\n{1}\n\n"
+  },
+  "Text.35d313d2476e": {
+    "en": "The app keeps everything in a Data folder next to UEModManager.exe, so it needs ",
+    "zh-CN": "程序将所有数据保存在 UEModManager.exe 旁的 Data 文件夹中，"
+  },
+  "Text.40cb86832988": {
+    "en": "write access to the folder it runs from. Windows protects folders such as ",
+    "zh-CN": "因此需要对所在文件夹拥有写入权限。Windows 会保护某些文件夹，例如 "
+  },
+  "Text.5eb2d8a7b964": {
+    "en": "C:\\Program Files.\n\n",
+    "zh-CN": "C:\\Program Files。\n\n"
+  },
+  "Text.257da83b774a": {
+    "en": "Move the whole app folder to a place you can write to, for example ",
+    "zh-CN": "请将整个程序文件夹移动到可写入的位置，例如 "
+  },
+  "Text.0c5d5261909c": {
+    "en": "C:\\Games\\UEModManager or a folder on another drive, and start it again.\n\n",
+    "zh-CN": "C:\\Games\\UEModManager 或其他磁盘中的文件夹，然后重新启动程序。\n\n"
+  },
+  "Text.ee55294545b1": {
+    "en": "Details: {0}",
+    "zh-CN": "详细信息：{0}"
+  },
+  "Text.5b1835d52ab3": {
+    "en": "This build contains no game profile.",
+    "zh-CN": "此构建未包含游戏配置。"
+  },
+  "Text.de3dc86b1c4b": {
+    "en": "{0} is already running with the data folder\n\n{1}\n\nbut it does not answer. ",
+    "zh-CN": "{0} 已在使用以下数据文件夹运行：\n\n{1}\n\n但没有响应。"
+  },
+  "Text.8cd6a87f0dd2": {
+    "en": "Close it, or end UEModManager.exe in the Task Manager, then start the app again.",
+    "zh-CN": "请关闭程序，或在任务管理器中结束 UEModManager.exe，然后重新启动。"
+  },
+  "Text.3ff8cd83338a": {
+    "en": "Something went wrong: {0}\n\nThe details are in the log.",
+    "zh-CN": "发生错误：{0}\n\n详细信息已记录在日志中。"
+  },
+  "Text.a76e13b98392": {
+    "en": "Restore",
+    "zh-CN": "还原"
+  },
+  "Text.db39a40dae6f": {
+    "en": "No game executable was found in the install folder.",
+    "zh-CN": "在安装文件夹中未找到游戏程序。"
+  },
+  "Text.b0e6658b4f64": {
+    "en": "the Engine folder",
+    "zh-CN": "Engine 文件夹"
+  },
+  "Text.69c0c66caef9": {
+    "en": "the {0} folder",
+    "zh-CN": "{0} 文件夹"
+  },
+  "Text.280e04b4c15b": {
+    "en": "the game's exe in {0}",
+    "zh-CN": "位于 {0} 的游戏程序"
+  },
+  "Text.3839f4ee307c": {
+    "en": "Game profile '{0}' is not valid JSON: {1}",
+    "zh-CN": "游戏配置“{0}”不是有效的 JSON：{1}"
+  },
+  "Text.97ea40d8a3a8": {
+    "en": "Game profile '{0}' needs an id and a displayName.",
+    "zh-CN": "游戏配置“{0}”缺少 id 或 displayName。"
+  },
+  "Text.8534769f5540": {
+    "en": "The save folder was not found: {0}",
+    "zh-CN": "未找到存档文件夹：{0}"
+  },
+  "Text.0f39b64728c2": {
+    "en": "The save folder is empty: {0}",
+    "zh-CN": "存档文件夹为空：{0}"
+  },
+  "Text.039234d55a65": {
+    "en": "'{0}' holds the manager's own Data folder, ",
+    "zh-CN": "“{0}”包含管理器自身的 Data 文件夹，"
+  },
+  "Text.234a7fe19f2e": {
+    "en": "so it cannot be installed. Choose the folder of the mod itself.",
+    "zh-CN": "无法安装。请选择模组本身的文件夹。"
+  },
+  "Text.7b828cc4242b": {
+    "en": "'{0}' does not exist.",
+    "zh-CN": "“{0}”不存在。"
+  },
+  "Text.228cd92cc68b": {
+    "en": "'{0}' is not a supported mod file. Use a .zip, .7z, .rar, .pak, .utoc or .ucas file, or a folder.",
+    "zh-CN": "“{0}”不是支持的模组文件。请使用 .zip、.7z、.rar、.pak、.utoc、.ucas 文件或文件夹。"
+  },
+  "Text.84b5d0990f52": {
+    "en": "The archive contains an unsafe path and was not extracted: {0}",
+    "zh-CN": "压缩包中包含不安全的路径，已停止解压：{0}"
+  },
+  "Text.26dbdb5931a2": {
+    "en": "'{0}' could not be extracted: {1}",
+    "zh-CN": "无法解压“{0}”：{1}"
+  },
+  "Text.7ead61336b5c": {
+    "en": "The archive contains a link, which is not allowed: {0}",
+    "zh-CN": "压缩包中包含不允许使用的链接：{0}"
+  },
+  "Text.2fa36bc3f48d": {
+    "en": "This download contains the UE4SS runtime itself, which the manager does not install. ",
+    "zh-CN": "此下载内容是 UE4SS 运行环境本身，不能作为模组安装。"
+  },
+  "Text.9d623105ffc3": {
+    "en": "Install UE4SS by hand into {0}, then install its mods here.",
+    "zh-CN": "请将 UE4SS 手动安装到 {0}，然后在这里安装模组。"
+  },
+  "Text.4560c37be9c2": {
+    "en": "No mod files were found. The download holds another archive: extract it and install that one.",
+    "zh-CN": "未找到模组文件。下载内容中包含另一个压缩包，请先将其解压后再安装。"
+  },
+  "Text.ab577ad6d4ce": {
+    "en": "No mod files were found: no .pak, .utoc or .ucas files, and no UE4SS mod folder with Scripts\\main.lua or dlls.",
+    "zh-CN": "未找到模组文件：没有 .pak、.utoc、.ucas 文件，也没有包含 Scripts\\main.lua 或 dlls 的 UE4SS 模组文件夹。"
+  },
+  "Text.bc0ce2c5f002": {
+    "en": "Select at least one part to install.",
+    "zh-CN": "请至少选择一个安装部分。"
+  },
+  "Text.c2748c312f19": {
+    "en": "UE4SS is not installed in this game. Lua, DLL and Blueprint mods only run with it. ",
+    "zh-CN": "此游戏尚未安装 UE4SS，Lua、DLL 和蓝图模组需要它才能运行。"
+  },
+  "Text.9597b82d54e5": {
+    "en": "They are installed anyway and start working once UE4SS is in place.",
+    "zh-CN": "这些模组仍会安装，安装 UE4SS 后即可使用。"
+  },
+  "Text.b445040b19d6": {
+    "en": "{0} is in more than one selected part. Select only one of them.",
+    "zh-CN": "多个选中部分包含 {0}，请仅选择其中一个。"
+  },
+  "Text.4a852168434f": {
+    "en": "{0} is already in {1}, but the manager did not install it. Move or delete it first.",
+    "zh-CN": "{1} 中已存在 {0}，但该文件并非由管理器部署。请先移动或删除它。"
+  },
+  "Text.c536067aacdb": {
+    "en": "\"{0}\" uses the same files. Disable or uninstall it first.",
+    "zh-CN": "“{0}”使用了相同文件，请先禁用或卸载它。"
+  },
+  "Text.a4514dca8607": {
+    "en": "This download uses files of several installed mods: {0}. Uninstall them first.",
+    "zh-CN": "此下载内容与多个已安装模组共用文件：{0}。请先卸载这些模组。"
+  },
+  "Text.acdea8053f66": {
+    "en": "This download uses the same files as \"{0}\". Replace that mod, or uninstall it first.",
+    "zh-CN": "此下载内容与“{0}”使用了相同文件。请替换或先卸载该模组。"
+  },
+  "Text.fd5ba9fcfa55": {
+    "en": "\"{0}\" uses the same files as \"{1}\". Disable that mod first.",
+    "zh-CN": "“{0}”与“{1}”使用了相同文件。请先禁用该模组。"
+  },
+  "Text.623e581628a6": {
+    "en": "The original settings of \"{0}\" were not kept: it was installed with an older version ",
+    "zh-CN": "“{0}”是使用旧版管理器安装的，未保留原始设置。"
+  },
+  "Text.7f635f6c77b1": {
+    "en": "of the manager. Install the mod again to get them back.",
+    "zh-CN": "请重新安装模组以恢复原始设置。"
+  },
+  "Text.6d0ada4a5d0f": {
+    "en": "The settings of \"{0}\" could not be reset, so nothing was changed. ",
+    "zh-CN": "无法重置“{0}”的设置，未作任何更改。"
+  },
+  "Text.c1b87eddea5a": {
+    "en": "A file may be in use. ({0})",
+    "zh-CN": "某个文件可能正在使用中。（{0}）"
+  },
+  "Text.fb8111eca263": {
+    "en": "{0} is running. Close the game first, then try again.",
+    "zh-CN": "{0} 正在运行。请先关闭游戏后重试。"
+  },
+  "Text.88ca7c70b272": {
+    "en": "The mods in {0}",
+    "zh-CN": "{0} 中的模组"
+  },
+  "Text.58074bd93121": {
+    "en": "This is not a UE4SS release: ue4ss\\UE4SS.dll was not found in it.",
+    "zh-CN": "这不是 UE4SS 发布包：其中未找到 ue4ss\\UE4SS.dll。"
+  },
+  "Text.a0059c207c87": {
+    "en": "The game's exe was not found in {0}, so UE4SS cannot be installed. ",
+    "zh-CN": "在 {0} 中未找到游戏程序，无法安装 UE4SS。"
+  },
+  "Text.1f4f46fe7128": {
+    "en": "Use Report a problem, so the game profile can be corrected.",
+    "zh-CN": "请使用“报告问题”功能，以便修正游戏配置。"
+  },
+  "Text.009485148f98": {
+    "en": "{0} is already in {1}, but UE4SS is not installed: another tool uses it. ",
+    "zh-CN": "{1} 中已存在 {0}，但 UE4SS 尚未安装，说明其他工具正在使用它。"
+  },
+  "Text.9361141d0797": {
+    "en": "Remove that tool first, or install UE4SS by hand.",
+    "zh-CN": "请先移除该工具，或手动安装 UE4SS。"
+  },
+  "Text.e4a307a74582": {
+    "en": "UE4SS is not installed in this game.",
+    "zh-CN": "此游戏尚未安装 UE4SS。"
+  },
+  "Text.922b89f2f0c1": {
+    "en": "These mod files were changed outside the manager, so nothing was removed: {0}.",
+    "zh-CN": "以下模组文件在管理器之外被修改，未移除任何文件：{0}。"
+  },
+  "Text.eefc17ef0dc7": {
+    "en": "The mods",
+    "zh-CN": "模组"
+  },
+  "Text.e68c56fee3c1": {
+    "en": "{0} could not be moved out of the game: a program may be using it. ",
+    "zh-CN": "无法将 {0} 移出游戏，某个程序可能正在使用它。"
+  },
+  "Text.4b74203e221f": {
+    "en": "Close it, then reset again. ({0})",
+    "zh-CN": "请关闭该程序后再次重置。（{0}）"
+  },
+  "Text.41cc5ee88afe": {
+    "en": "That mod is no longer installed.",
+    "zh-CN": "该模组已不再安装。"
+  },
+  "Text.239eaa907fe5": {
+    "en": "Your enabled mods are still in another folder of {0}: {1}. ",
+    "zh-CN": "您已启用的模组仍在 {0} 的另一个文件夹中：{1}。"
+  },
+  "Text.b0759264b908": {
+    "en": "Move them to this folder first.",
+    "zh-CN": "请先将模组移动到此文件夹。"
+  },
+  "Text.e71dcafd0a72": {
+    "en": "The manager's copy of {0} is missing. Reinstall \"{1}\".",
+    "zh-CN": "管理器保存的 {0} 副本缺失。请重新安装“{1}”。"
+  },
+  "Text.124702b9c889": {
+    "en": "{0} is already in {1}, but it does not belong to \"{2}\". Move or delete it first.",
+    "zh-CN": "{1} 中已存在 {0}，但它不属于“{2}”。请先移动或删除它。"
+  },
+  "Text.477c83826197": {
+    "en": "These files were changed outside the manager, so nothing was removed: {0}.",
+    "zh-CN": "以下文件在管理器之外被修改，未移除任何文件：{0}。"
+  },
+  "Text.2f9da778627e": {
+    "en": "The manager could not save its list of mods, so nothing was changed. Another program, ",
+    "zh-CN": "管理器无法保存模组列表，未作任何更改。其他程序（例如杀毒软件或同步工具）"
+  },
+  "Text.e08d194944ec": {
+    "en": "such as a virus scanner or a sync tool, may be using {0}. Try again. ({1})",
+    "zh-CN": "可能正在使用 {0}。请重试。（{1}）"
+  },
+  "Text.6fb27ccd8b82": {
+    "en": "{0} could not be removed from the game because a file is in use or protected. ",
+    "zh-CN": "无法从游戏中移除 {0}，因为文件正在使用或受保护。"
+  },
+  "Text.3773e2a24ef4": {
+    "en": "Close the game and try again. ({0})",
+    "zh-CN": "请关闭游戏后重试。（{0}）"
+  },
+  "Text.a3c1d50cedc8": {
+    "en": "the LogicMods folder",
+    "zh-CN": "LogicMods 文件夹"
+  },
+  "Text.173e4ddc0ba3": {
+    "en": "the UE4SS Mods folder",
+    "zh-CN": "UE4SS Mods 文件夹"
+  },
+  "Text.d5f017cb68c5": {
+    "en": "the mods folder",
+    "zh-CN": "模组文件夹"
+  },
+  "Text.696f52e5d179": {
+    "en": "Blueprint",
+    "zh-CN": "蓝图"
+  },
+  "Text.4e54e05aa123": {
+    "en": "{0}.utoc has no matching .ucas file.",
+    "zh-CN": "{0}.utoc 缺少对应的 .ucas 文件。"
+  },
+  "Text.077f7e12549e": {
+    "en": "{0}.ucas has no matching .utoc file.",
+    "zh-CN": "{0}.ucas 缺少对应的 .utoc 文件。"
+  },
+  "Text.865b4ed42a82": {
+    "en": "{0} has no .pak file. Unreal Engine 5 games usually need it next to the .utoc and .ucas files.",
+    "zh-CN": "{0} 缺少 .pak 文件。虚幻引擎 5 游戏通常需要将它与 .utoc、.ucas 文件放在一起。"
+  },
+  "Text.ee7011261347": {
+    "en": "The newest release names no version.",
+    "zh-CN": "最新发布版本未指定版本号。"
+  },
+  "Text.e607a1ab317b": {
+    "en": "No release is published yet.",
+    "zh-CN": "尚无发布版本。"
+  },
+  "Text.3717a1b30b86": {
+    "en": "GitHub answered {0} {1}. Try again later.",
+    "zh-CN": "GitHub 返回 {0} {1}。请稍后重试。"
+  },
+  "Text.e8a22fcba307": {
+    "en": "The newest release could not be read: {0}",
+    "zh-CN": "无法读取最新发布版本：{0}"
+  },
+  "Text.aa53a21c29e0": {
+    "en": "The update does not hold exactly one program file, so it was not installed.",
+    "zh-CN": "更新包中没有且仅有一个程序文件，因此未安装。"
+  },
+  "Text.f6e411470924": {
+    "en": "The update holds version {0} instead of {1}, so it was not installed.",
+    "zh-CN": "更新包包含的是版本 {0}，预期应为 {1}，因此未安装。"
+  },
+  "Text.9cbf14674fcd": {
+    "en": "The app could not replace its own file ({0}). Download the update from the release page instead.",
+    "zh-CN": "程序无法替换自身文件（{0}）。请从发布页面下载更新。"
+  },
+  "Text.126813912ddb": {
+    "en": "{0} of {1} shown",
+    "zh-CN": "显示 {0} / {1} 项"
+  },
+  "Text.9699394c5080": {
+    "en": "Version {0}",
+    "zh-CN": "版本 {0}"
+  },
+  "Text.569ca49f4aaf": {
+    "en": "Install",
+    "zh-CN": "安装"
+  },
+  "Text.8075c43b8927": {
+    "en": "Installed  ·  {0}",
+    "zh-CN": "已安装  ·  {0}"
+  },
+  "Text.3578966737e7": {
+    "en": "Update to {0}",
+    "zh-CN": "更新到 {0}"
+  },
+  "Text.f5d364f38a89": {
+    "en": "Reading {0}…",
+    "zh-CN": "正在读取 {0}…"
+  },
+  "Text.9d3a6bcca0ac": {
+    "en": "CommunityToolkit.Mvvm: notices for code it includes",
+    "zh-CN": "CommunityToolkit.Mvvm：所包含代码的声明"
+  },
+  "Text.4f2055f6594a": {
+    "en": "GNU General Public License, version 3",
+    "zh-CN": "GNU 通用公共许可证第 3 版"
+  },
+  "Text.e92baf731399": {
+    "en": "Copyright and additional terms",
+    "zh-CN": "版权和附加条款"
+  },
+  "Text.52cb06e86213": {
+    "en": "'{0}' is not built into this exe.",
+    "zh-CN": "“{0}”未内置在此程序中。"
+  },
+  "Text.497a19986d82": {
+    "en": "Checking for updates…",
+    "zh-CN": "正在检查更新…"
+  },
+  "Text.ce29b7f85b9e": {
+    "en": "Up to date",
+    "zh-CN": "已是最新版本"
+  },
+  "Text.68e4656ce0ff": {
+    "en": "Update available: {0}",
+    "zh-CN": "发现更新：{0}"
+  },
+  "Text.45fd5081ff0d": {
+    "en": "Update check failed",
+    "zh-CN": "检查更新失败"
+  },
+  "Text.b84b3f316f7b": {
+    "en": "Version {0} is the newest release.",
+    "zh-CN": "版本 {0} 已是最新版本。"
+  },
+  "Text.844942dd43d7": {
+    "en": "Show the update",
+    "zh-CN": "查看更新"
+  },
+  "Text.03b00e0792bd": {
+    "en": "Version {0} is available",
+    "zh-CN": "版本 {0} 已发布"
+  },
+  "Text.ae075154e133": {
+    "en": "Update to version {0}",
+    "zh-CN": "更新到版本 {0}"
+  },
+  "Text.a99abb9da434": {
+    "en": "You have version {0}. Version {1} came out on {2}.",
+    "zh-CN": "当前版本为 {0}。版本 {1} 发布于 {2}。"
+  },
+  "Text.8ced20fe16eb": {
+    "en": "You have version {0}.",
+    "zh-CN": "当前版本为 {0}。"
+  },
+  "Text.50bcc687f8a3": {
+    "en": "The app downloads {0}, checks it, replaces {1} and starts again. Your mods, settings and data stay as they are.",
+    "zh-CN": "程序将下载 {0}，校验后替换 {1} 并重新启动。模组、设置和数据均会保留。"
+  },
+  "Text.c8d9b289dac7": {
+    "en": "This release has no file for this app and game, so the app cannot update itself. Use the release page.",
+    "zh-CN": "此版本未提供适用于本程序和游戏的更新文件，无法自动更新。请前往发布页面下载。"
+  },
+  "Text.83dc33618f5f": {
+    "en": "Opens the release page. Download {0}, close the app, and replace {1} with the one from the zip.",
+    "zh-CN": "打开发布页面。请下载 {0}，关闭程序，再用压缩包中的程序替换 {1}。"
+  },
+  "Text.c662abf5a38a": {
+    "en": "the zip for your app",
+    "zh-CN": "适用于本程序的压缩包"
+  },
+  "Text.1dea91f9720c": {
+    "en": "Downloading version {0}…",
+    "zh-CN": "正在下载版本 {0}…"
+  },
+  "Text.5b1d19f3d6a7": {
+    "en": "Installing the update…",
+    "zh-CN": "正在安装更新…"
+  },
+  "Text.6effdc7473d2": {
+    "en": "Version {0} is installed. Close the app and start it again to use it.",
+    "zh-CN": "版本 {0} 已安装。请关闭并重新启动程序以使用新版本。"
+  },
+  "Text.4a18149ef74a": {
+    "en": "Copied. Paste it into the help channel on Discord.",
+    "zh-CN": "已复制。请粘贴到 Discord 帮助频道。"
+  },
+  "Text.ac557bb1cdde": {
+    "en": "The clipboard is in use by another app. Try again. ({0})",
+    "zh-CN": "剪贴板正被其他程序占用，请重试。（{0}）"
+  },
+  "Text.37a680133bd0": {
+    "en": "part",
+    "zh-CN": "个部分"
+  },
+  "Text.d887db09649d": {
+    "en": "parts",
+    "zh-CN": "个部分"
+  },
+  "Text.710b0411e0e4": {
+    "en": " found",
+    "zh-CN": "已找到"
+  },
+  "Text.6ae74cdd2062": {
+    "en": "other file",
+    "zh-CN": "个其他文件"
+  },
+  "Text.b4dcffb0da96": {
+    "en": "other files",
+    "zh-CN": "个其他文件"
+  },
+  "Text.dfcfd33c13e2": {
+    "en": " ignored",
+    "zh-CN": "已忽略"
+  },
+  "Text.85d6729ada9c": {
+    "en": "choose one variant",
+    "zh-CN": "选择一个变体"
+  },
+  "Text.3ea9daa1dc86": {
+    "en": "choose what to install",
+    "zh-CN": "选择要安装的内容"
+  },
+  "Text.a206a3b659e3": {
+    "en": "This updates the installed mod \"{0}\"{1}. ",
+    "zh-CN": "即将更新已安装的模组“{0}”{1}。"
+  },
+  "Text.45d8619a9f2c": {
+    "en": " (version {0})",
+    "zh-CN": "（版本 {0}）"
+  },
+  "Text.745c3affeede": {
+    "en": "Its files are replaced, and put back if the update fails.",
+    "zh-CN": "模组文件将被替换。如果更新失败，会恢复原文件。"
+  },
+  "Text.99f728c8f447": {
+    "en": "You changed {0} of this mod. ",
+    "zh-CN": "您修改了此模组的 {0}。"
+  },
+  "Text.5094d05d0c4b": {
+    "en": "Keep your settings, or clear the box to use the new version's defaults. A copy of yours is saved in the backup folder either way.",
+    "zh-CN": "保留勾选以保留您的设置，取消勾选则使用新版本的默认设置。无论选择哪项，都会备份您的设置。"
+  },
+  "Text.c86a5ea78008": {
+    "en": "Game connected",
+    "zh-CN": "已连接游戏"
+  },
+  "Text.12c4156729b7": {
+    "en": "{0} was not found in Steam or the Epic Games Launcher. Choose its install folder, or search again.",
+    "zh-CN": "未在 Steam 或 Epic 游戏启动器中找到 {0}。请选择安装文件夹，或重新搜索。"
+  },
+  "Text.74ccd4330384": {
+    "en": "Folder",
+    "zh-CN": "文件夹"
+  },
+  "Text.14fac78e8c46": {
+    "en": "Found automatically",
+    "zh-CN": "自动找到"
+  },
+  "Text.1c5796c27c47": {
+    "en": "Chosen by hand",
+    "zh-CN": "手动选择"
+  },
+  "Text.0ffc918a70aa": {
+    "en": "Not found yet",
+    "zh-CN": "尚未找到"
+  },
+  "Text.6941a753fb3d": {
+    "en": "Coming in the next update. Save backups need the exact save folder of {0}, which is not known for sure yet.",
+    "zh-CN": "将在后续更新中提供。存档备份需要 {0} 的准确存档路径，目前尚未确定。"
+  },
+  "Text.347d3069439c": {
+    "en": "Not known yet",
+    "zh-CN": "尚未确定"
+  },
+  "Text.2a6b7387296c": {
+    "en": "It is in the game folder. Locate {0} first.",
+    "zh-CN": "位于游戏文件夹中。请先选择 {0} 的安装位置。"
+  },
+  "Text.53679e762dd9": {
+    "en": "Save backups come in the next update, once this folder is known for sure.",
+    "zh-CN": "确定此文件夹位置后，将在后续更新中提供存档备份。"
+  },
+  "Text.1bb7baf8a170": {
+    "en": "This folder does not exist yet. The game makes it at its first save.",
+    "zh-CN": "此文件夹尚不存在，游戏首次保存存档时会创建它。"
+  },
+  "Text.4e0a7bd83efe": {
+    "en": "From the game profile",
+    "zh-CN": "来自游戏配置"
+  },
+  "Text.adb85cf22bfc": {
+    "en": "None yet",
+    "zh-CN": "暂无"
+  },
+  "Text.5fae0739b7c2": {
+    "en": "{0} of {1} kept  ·  newest {2:g}",
+    "zh-CN": "已保留 {0} / {1} 份  ·  最新：{2:g}"
+  },
+  "Text.cf4dc337c739": {
+    "en": "{0} was updated from {1} {2} to {3}. ",
+    "zh-CN": "{0} 已从{1} {2} 更新到 {3}。"
+  },
+  "Text.44575cf5b285": {
+    "en": "build",
+    "zh-CN": "构建版本"
+  },
+  "Text.f280a4bf67b9": {
+    "en": "A game update can break mods until their authors update them. If the game crashes or acts strangely, ",
+    "zh-CN": "游戏更新后，部分模组可能需要作者更新才能正常使用。如果游戏崩溃或出现异常，"
+  },
+  "Text.b2185fb127cd": {
+    "en": "disable mods one by one to find the one that needs an update.",
+    "zh-CN": "请逐个禁用模组，以找出需要更新的模组。"
+  },
+  "Text.6025d1bd692c": {
+    "en": "Steam build id",
+    "zh-CN": "Steam 构建 ID"
+  },
+  "Text.607a72ff4e05": {
+    "en": "Epic version",
+    "zh-CN": "Epic 版本"
+  },
+  "Text.6644a6761855": {
+    "en": "Not known for this install",
+    "zh-CN": "此安装的版本未知"
+  },
+  "Text.4895f73177ab": {
+    "en": "Not set",
+    "zh-CN": "未设置"
+  },
+  "Text.112200e328a8": {
+    "en": "Not found in {0}",
+    "zh-CN": "在 {0} 中未找到"
+  },
+  "Text.d177cdc09a4e": {
+    "en": "Not installed",
+    "zh-CN": "未安装"
+  },
+  "Text.7b0ea531cc5c": {
+    "en": "UE4SS is not installed",
+    "zh-CN": "未安装 UE4SS"
+  },
+  "Text.c12540849ece": {
+    "en": "None of your installed mods needs UE4SS.",
+    "zh-CN": "已安装的模组均不需要 UE4SS。"
+  },
+  "Text.407c605a44c6": {
+    "en": "{0} UE4SS; {1} enabled.",
+    "zh-CN": "{0} UE4SS；已启用 {1} 个。"
+  },
+  "Text.e81fc8925a3f": {
+    "en": "installed mod needs",
+    "zh-CN": "个已安装模组需要"
+  },
+  "Text.020d72e1d12c": {
+    "en": "installed mods need",
+    "zh-CN": "个已安装模组需要"
+  },
+  "Text.8d0f061138a1": {
+    "en": "Not used by this profile",
+    "zh-CN": "此配置未使用"
+  },
+  "Text.b8c2ad2a8d1c": {
+    "en": "{0}  (detected; the profile says \"{1}\")",
+    "zh-CN": "{0}（检测结果；配置指定为“{1}”）"
+  },
+  "Text.4449e5a62280": {
+    "en": "{0} enabled",
+    "zh-CN": "已启用 {0} 个"
+  },
+  "Text.f2f7a818ae47": {
+    "en": "No mods installed yet",
+    "zh-CN": "尚未安装模组"
+  },
+  "Text.94ba761e73a0": {
+    "en": "Drop a download anywhere on this window, or install from an archive or a folder.",
+    "zh-CN": "将下载内容拖放到此窗口，或从压缩包、文件夹安装。"
+  },
+  "Text.bac0360e645e": {
+    "en": "Try another name, version or file name.",
+    "zh-CN": "请尝试其他名称、版本或文件名。"
+  },
+  "Text.e0ba802b55ec": {
+    "en": "{0} in the mods folder {1} not installed by the manager",
+    "zh-CN": "模组文件夹中的 {0} {1}由管理器部署"
+  },
+  "Text.3b9c358f36f0": {
+    "en": "file",
+    "zh-CN": "个文件"
+  },
+  "Text.b63b99f6383b": {
+    "en": "was",
+    "zh-CN": "未"
+  },
+  "Text.910adfb42464": {
+    "en": "were",
+    "zh-CN": "未"
+  },
+  "Text.4cec5cd4787b": {
+    "en": "Looking for the game…",
+    "zh-CN": "正在查找游戏…"
+  },
+  "Text.532d3b3d44ea": {
+    "en": "Finish the current step first, then try again.",
+    "zh-CN": "请先完成当前操作后重试。"
+  },
+  "Text.9ac62af0eb86": {
+    "en": "'{0}' is not a mod file this manager can install.",
+    "zh-CN": "“{0}”不是此管理器可以安装的模组文件。"
+  },
+  "Text.92debbac36c2": {
+    "en": "\"{0}\" is UE4SS itself, not a mod. Install it into {1}? ",
+    "zh-CN": "“{0}”是 UE4SS 本身，并非模组。是否将它安装到 {1}？"
+  },
+  "Text.cae6db63f191": {
+    "en": "Your existing UE4SS settings are kept.",
+    "zh-CN": "现有 UE4SS 设置将会保留。"
+  },
+  "Text.e22c24238eb0": {
+    "en": "Enabling…",
+    "zh-CN": "正在启用…"
+  },
+  "Text.fb7bdec372ee": {
+    "en": "Disabling…",
+    "zh-CN": "正在禁用…"
+  },
+  "Text.bdfe536e6154": {
+    "en": " Settings you changed are backed up first.",
+    "zh-CN": "您修改过的设置会先行备份。"
+  },
+  "Text.dfae41acace4": {
+    "en": "Uninstall mod",
+    "zh-CN": "卸载模组"
+  },
+  "Text.9cd6bb22b662": {
+    "en": "Remove \"{0}\" from the game and from the manager's library? The original download is not touched.{1}",
+    "zh-CN": "是否从游戏和管理器的模组库中移除“{0}”？原始下载文件不受影响。{1}"
+  },
+  "Text.a4e4bc881019": {
+    "en": "Uninstalling…",
+    "zh-CN": "正在卸载…"
+  },
+  "Text.72e4eb6ea116": {
+    "en": "Uninstalled \"{0}\".",
+    "zh-CN": "已卸载“{0}”。"
+  },
+  "Text.c0eb7bf1d852": {
+    "en": "Uninstalled \"{0}\". The settings you changed were backed up to {1}.",
+    "zh-CN": "已卸载“{0}”。您修改过的设置已备份到 {1}。"
+  },
+  "Text.d33a83aa1ac7": {
+    "en": "Reset settings",
+    "zh-CN": "重置设置"
+  },
+  "Text.92fdaeef5714": {
+    "en": "Put back the settings \"{0}\" came with? The settings you changed are backed up first.\n\nClose the game first.",
+    "zh-CN": "是否恢复“{0}”自带的默认设置？您修改过的设置会先行备份。\n\n请先关闭游戏。"
+  },
+  "Text.310a98fa0a73": {
+    "en": "Resetting settings…",
+    "zh-CN": "正在重置设置…"
+  },
+  "Text.34039c75e10c": {
+    "en": "The settings of \"{0}\" are already the ones it came with.",
+    "zh-CN": "“{0}”的设置已经是初始默认值。"
+  },
+  "Text.6ef940477050": {
+    "en": "Reset the settings of \"{0}\". Your version was backed up to {1}.",
+    "zh-CN": "已重置“{0}”的设置。您的设置已备份到 {1}。"
+  },
+  "Text.d8d07160e69c": {
+    "en": "Installing {0}…",
+    "zh-CN": "正在安装 {0}…"
+  },
+  "Text.8904925fa36b": {
+    "en": "Installed \"{0}\".",
+    "zh-CN": "已安装“{0}”。"
+  },
+  "Text.b508ab95f48e": {
+    "en": "Updated \"{0}\".",
+    "zh-CN": "已更新“{0}”。"
+  },
+  "Text.e12a179ddc52": {
+    "en": "Updated \"{0}\" to version {1}.",
+    "zh-CN": "已将“{0}”更新到版本 {1}。"
+  },
+  "Text.6c393e43d75d": {
+    "en": "Choose the downloaded UE4SS release",
+    "zh-CN": "选择下载好的 UE4SS 发布包"
+  },
+  "Text.545eaf14e3e4": {
+    "en": "UE4SS release (*.zip, *.7z)|*.zip;*.7z",
+    "zh-CN": "UE4SS 发布包 (*.zip, *.7z)|*.zip;*.7z"
+  },
+  "Text.6f5cc4e2adf2": {
+    "en": "Downloading UE4SS…",
+    "zh-CN": "正在下载 UE4SS…"
+  },
+  "Text.60794aef1de9": {
+    "en": "Downloading UE4SS…  {0:P0}",
+    "zh-CN": "正在下载 UE4SS…  {0:P0}"
+  },
+  "Text.fd5771fe9086": {
+    "en": "Installing UE4SS…",
+    "zh-CN": "正在安装 UE4SS…"
+  },
+  "Text.1a6e2326c57e": {
+    "en": "Remove UE4SS",
+    "zh-CN": "移除 UE4SS"
+  },
+  "Text.78cf59f3f59e": {
+    "en": "This removes UE4SS from {0} completely: dwmapi.dll and the whole ue4ss folder, ",
+    "zh-CN": "这会从 {0} 中完整移除 UE4SS，包括 dwmapi.dll 和整个 ue4ss 文件夹，"
+  },
+  "Text.30e5dbfdf7f1": {
+    "en": "with UE4SS's settings and every mod inside it, also mods installed by hand.\n\n",
+    "zh-CN": "以及 UE4SS 设置和文件夹内的所有模组（包括手动安装的模组）。\n\n"
+  },
+  "Text.06222607374c": {
+    "en": "Mods in your list that need UE4SS are disabled. Their copies stay in the library, ",
+    "zh-CN": "列表中需要 UE4SS 的模组将被禁用，其副本仍会保留在模组库中，"
+  },
+  "Text.3aa66623307a": {
+    "en": "so you can enable them again after installing UE4SS.\n\nClose the game first.",
+    "zh-CN": "安装 UE4SS 后即可重新启用。\n\n请先关闭游戏。"
+  },
+  "Text.dce287516c0b": {
+    "en": "Removing UE4SS…",
+    "zh-CN": "正在移除 UE4SS…"
+  },
+  "Text.1409a00029dd": {
+    "en": "UE4SS removed.",
+    "zh-CN": "已移除 UE4SS。"
+  },
+  "Text.3b782b625c25": {
+    "en": "UE4SS removed. 1 mod was disabled and stays in the library.",
+    "zh-CN": "已移除 UE4SS。1 个模组已禁用并保留在模组库中。"
+  },
+  "Text.94ce0ccea96b": {
+    "en": "UE4SS removed. {0} mods were disabled and stay in the library.",
+    "zh-CN": "已移除 UE4SS。{0} 个模组已禁用并保留在模组库中。"
+  },
+  "Text.d9bc5f25d9f7": {
+    "en": "Looking at the game…",
+    "zh-CN": "正在检查游戏…"
+  },
+  "Text.e0282113fac5": {
+    "en": "Resetting modding…",
+    "zh-CN": "正在重置模组环境…"
+  },
+  "Text.f54dde0abbf7": {
+    "en": "{0} turned off",
+    "zh-CN": "已禁用 {0}"
+  },
+  "Text.e55cffc81a5a": {
+    "en": "mod",
+    "zh-CN": "个模组"
+  },
+  "Text.822942069e89": {
+    "en": "UE4SS removed",
+    "zh-CN": "已移除 UE4SS"
+  },
+  "Text.8202d3919b50": {
+    "en": "{0} moved to a backup folder",
+    "zh-CN": "已将 {0} 移至备份文件夹"
+  },
+  "Text.b35a9368f7e8": {
+    "en": "{0} deleted from the manager",
+    "zh-CN": "已从管理器中删除 {0}"
+  },
+  "Text.6c3296c75df8": {
+    "en": "{0} had no mods to remove.",
+    "zh-CN": "{0} 没有需要移除的模组。"
+  },
+  "Text.cc75ac79393a": {
+    "en": "Modding reset: {0}. {1} is back to its original files.",
+    "zh-CN": "模组环境已重置：{0}。{1} 已恢复原始文件。"
+  },
+  "Text.a2ed4e2817cb": {
+    "en": "Modding is reset, but the app's settings could not be reset: {0}",
+    "zh-CN": "模组环境已重置，但程序设置重置失败：{0}"
+  },
+  "Text.c5d3f199918f": {
+    "en": "Modding and the app's settings are reset. Close the app and start it again.",
+    "zh-CN": "模组环境和程序设置已重置。请关闭并重新启动程序。"
+  },
+  "Text.4e7e2f4eca85": {
+    "en": " {0} removed.",
+    "zh-CN": "已移除 {0}。"
+  },
+  "Text.fc5493e317da": {
+    "en": "old file was",
+    "zh-CN": "个旧文件"
+  },
+  "Text.eb568cd1f0db": {
+    "en": "old files were",
+    "zh-CN": "个旧文件"
+  },
+  "Text.bf896bdb8267": {
+    "en": " {0} kept.",
+    "zh-CN": "已保留 {0}。"
+  },
+  "Text.2a00b802de58": {
+    "en": "existing file was",
+    "zh-CN": "个现有文件"
+  },
+  "Text.8b88cbb9e17f": {
+    "en": "existing files were",
+    "zh-CN": "个现有文件"
+  },
+  "Text.628cf68777f4": {
+    "en": " Start the game once to show its version.",
+    "zh-CN": "启动一次游戏后即可显示版本。"
+  },
+  "Text.90b0a2b51824": {
+    "en": "UE4SS updated.",
+    "zh-CN": "UE4SS 已更新。"
+  },
+  "Text.fa15c0f52703": {
+    "en": "UE4SS installed.",
+    "zh-CN": "UE4SS 已安装。"
+  },
+  "Text.b18d43ed5756": {
+    "en": "UE4SS found.",
+    "zh-CN": "已找到 UE4SS。"
+  },
+  "Text.723056ebbdb5": {
+    "en": "UE4SS found: {0}.",
+    "zh-CN": "已找到 UE4SS：{0}。"
+  },
+  "Text.42db2fc900a2": {
+    "en": "UE4SS was not found yet. UE4SS.dll belongs in {0}.",
+    "zh-CN": "尚未找到 UE4SS。UE4SS.dll 应放在 {0} 中。"
+  },
+  "Text.e8bb0ffe46eb": {
+    "en": "Choose mod archives",
+    "zh-CN": "选择模组压缩包"
+  },
+  "Text.df73b056f57b": {
+    "en": "Archives (*.7z, *.zip, *.rar)|*.7z;*.zip;*.rar",
+    "zh-CN": "压缩包 (*.7z, *.zip, *.rar)|*.7z;*.zip;*.rar"
+  },
+  "Text.73f15bdd4783": {
+    "en": "Choose extracted mod folders",
+    "zh-CN": "选择解压后的模组文件夹"
+  },
+  "Text.55e231dbc81e": {
+    "en": "Choose the {0} install folder",
+    "zh-CN": "选择 {0} 的安装文件夹"
+  },
+  "Text.283c8e6666c8": {
+    "en": "the Engine and {0} folders",
+    "zh-CN": "Engine 和 {0} 文件夹"
+  },
+  "Text.55d0adeeb41b": {
+    "en": "This does not look like the {0} install folder. Choose the game's main folder, the one that holds {1}.",
+    "zh-CN": "此文件夹似乎不是 {0} 的安装位置。请选择包含 {1} 的游戏主文件夹。"
+  },
+  "Text.ff2703625d3b": {
+    "en": "Using {0}.",
+    "zh-CN": "正在使用 {0}。"
+  },
+  "Text.a9d0ac55ef68": {
+    "en": "Searching Steam and Epic…",
+    "zh-CN": "正在搜索 Steam 和 Epic…"
+  },
+  "Text.69ea9e0d5583": {
+    "en": "{0} was not found automatically. Choose its folder by hand.",
+    "zh-CN": "未自动找到 {0}，请手动选择文件夹。"
+  },
+  "Text.c17487187b66": {
+    "en": "Found {0} through {1}.",
+    "zh-CN": "已通过 {1} 找到 {0}。"
+  },
+  "Text.6b8d062c7f48": {
+    "en": "Backing up your saves…",
+    "zh-CN": "正在备份存档…"
+  },
+  "Text.6e3d8de6db2d": {
+    "en": " There are no saves to back up yet.",
+    "zh-CN": "尚无可备份的存档。"
+  },
+  "Text.95284b36e422": {
+    "en": "Saves not backed up",
+    "zh-CN": "存档未备份"
+  },
+  "Text.0109c18364fb": {
+    "en": "Your saves could not be backed up: {0}\n\nStart {1} anyway?",
+    "zh-CN": "无法备份存档：{0}\n\n仍要启动 {1} 吗？"
+  },
+  "Text.a330c2786496": {
+    "en": "Start anyway",
+    "zh-CN": "仍然启动"
+  },
+  "Text.c02dfec53146": {
+    "en": "Starting {0}…{1}",
+    "zh-CN": "正在启动 {0}…{1}"
+  },
+  "Text.c477b66e75b6": {
+    "en": "The game could not be started: {0}",
+    "zh-CN": "无法启动游戏：{0}"
+  },
+  "Text.a9ceec6db35c": {
+    "en": "Choose the folder that holds your {0} saves",
+    "zh-CN": "选择包含 {0} 存档的文件夹"
+  },
+  "Text.16b5801c9cbc": {
+    "en": "The save folder was not found. Choose it first.",
+    "zh-CN": "未找到存档文件夹，请先选择。"
+  },
+  "Text.472555adb254": {
+    "en": "Save backups are not available for {0} yet.",
+    "zh-CN": "{0} 暂不支持存档备份。"
+  },
+  "Text.aa6c6c12b133": {
+    "en": "Saves backed up to {0}.",
+    "zh-CN": "存档已备份到 {0}。"
+  },
+  "Text.5063e8c161fd": {
+    "en": "Collecting the facts…",
+    "zh-CN": "正在收集信息…"
+  },
+  "Text.628d1be2f7b6": {
+    "en": "Reading the mod list…",
+    "zh-CN": "正在读取模组列表…"
+  },
+  "Text.a2a228a748b8": {
+    "en": "Using {0}, where your mods are.",
+    "zh-CN": "正在使用模组所在的文件夹 {0}。"
+  },
+  "Text.af55e5753a1f": {
+    "en": "Move your mods",
+    "zh-CN": "移动模组"
+  },
+  "Text.9f4996628bf2": {
+    "en": "{0} still installed in another folder of {1}:\n\n",
+    "zh-CN": "{0}仍安装在 {1} 的另一个文件夹中：\n\n"
+  },
+  "Text.b698415aa1cf": {
+    "en": "enabled mod is",
+    "zh-CN": "个已启用的模组"
+  },
+  "Text.be6e09af5d91": {
+    "en": "enabled mods are",
+    "zh-CN": "个已启用的模组"
+  },
+  "Text.e38b224ff1b4": {
+    "en": "{0}\n\nMove {1} to {2}? The mod files are removed from the other ",
+    "zh-CN": "{0}\n\n是否将{1}移动到 {2}？模组文件会从原文件夹移除，"
+  },
+  "Text.2ad8a7049d7c": {
+    "en": "it",
+    "zh-CN": "该模组"
+  },
+  "Text.c9a8dc336964": {
+    "en": "them",
+    "zh-CN": "这些模组"
+  },
+  "Text.9ad1da26ec65": {
+    "en": "folder and installed in this one. Close the game first.\n\nKeep the other folder to go on using it.",
+    "zh-CN": "并安装到此文件夹。请先关闭游戏。\n\n若要继续使用原位置，请选择“保留原文件夹”。"
+  },
+  "Text.c00b74b5a5df": {
+    "en": "Move mods",
+    "zh-CN": "移动模组"
+  },
+  "Text.c1e0310ef901": {
+    "en": "Keep the other folder",
+    "zh-CN": "保留原文件夹"
+  },
+  "Text.7857d077dc34": {
+    "en": "Moving mods…",
+    "zh-CN": "正在移动模组…"
+  },
+  "Text.a12ed70f902f": {
+    "en": "Moved {0} to {1}.",
+    "zh-CN": "已将 {0} 移动到 {1}。"
+  },
+  "Text.90c3afed8dab": {
+    "en": "Moved {0} to {1}. ",
+    "zh-CN": "已将 {0} 移动到 {1}。"
+  },
+  "Text.d9ddffd8f165": {
+    "en": "{0} stayed disabled, because another file of the same name is in the way.",
+    "zh-CN": "{0} 与现有文件同名，仍保持禁用状态。"
+  },
+  "Text.70fbebb08eaf": {
+    "en": "Locate {0} first: Settings > Locate game folder.",
+    "zh-CN": "请先选择 {0}：设置 > 选择游戏文件夹。"
+  },
+  "Text.9a8187d8cbf8": {
+    "en": "Something went wrong: {0}",
+    "zh-CN": "发生错误：{0}"
+  },
+  "Text.182bd5c8d362": {
+    "en": "'{0}' could not be opened: {1}",
+    "zh-CN": "无法打开“{0}”：{1}"
+  },
+  "Text.719682208f57": {
+    "en": "Settings could not be saved: {0}",
+    "zh-CN": "无法保存设置：{0}"
+  },
+  "Text.92c1cdfdf4cb": {
+    "en": "Enabled",
+    "zh-CN": "已启用"
+  },
+  "Text.75081b593d15": {
+    "en": "Disabled",
+    "zh-CN": "已禁用"
+  },
+  "Text.0b9631f883a1": {
+    "en": "Variant {0}",
+    "zh-CN": "变体 {0}"
+  },
+  "Text.26d3b9c33f72": {
+    "en": "Edit this mod's settings: {0}. ",
+    "zh-CN": "编辑此模组的设置：{0}。"
+  },
+  "Text.ec5508d4f399": {
+    "en": "Most mods read them when the game starts.",
+    "zh-CN": "大多数模组会在游戏启动时读取设置。"
+  },
+  "Text.479bced7b2be": {
+    "en": "Enable the mod to edit its settings",
+    "zh-CN": "启用模组后才能编辑设置"
+  },
+  "Text.a5dc3fe9452f": {
+    "en": "Deployed",
+    "zh-CN": "已部署"
+  },
+  "Text.cb17cda88107": {
+    "en": "Files missing",
+    "zh-CN": "文件缺失"
+  },
+  "Text.b42c8ffb89c6": {
+    "en": "Files changed",
+    "zh-CN": "文件已修改"
+  },
+  "Text.b4a596b4772d": {
+    "en": "Some deployed files are gone. Disable and enable the mod to put them back.",
+    "zh-CN": "部分已部署的文件缺失。请禁用并重新启用模组以恢复文件。"
+  },
+  "Text.611f11945dda": {
+    "en": "A deployed file was changed outside the manager. The manager will not remove it.",
+    "zh-CN": "某个已部署的文件在管理器之外被修改，管理器不会移除它。"
+  },
+  "Text.b90c937d9aef": {
+    "en": "This takes {0} back to its original files, so you can start clean. Close the game first.",
+    "zh-CN": "这会将 {0} 恢复为原始文件，以便重新开始。请先关闭游戏。"
+  },
+  "Text.f97b4a34b8b3": {
+    "en": "Also delete the {0} from the manager. ",
+    "zh-CN": "同时从管理器中删除 {0}。"
+  },
+  "Text.13634dd74ed0": {
+    "en": "Without this, they stay in the Mods list, turned off, ready to turn on again.",
+    "zh-CN": "不勾选时，模组会保留在列表中并被禁用，之后可以重新启用。"
+  },
+  "Text.6761fcc09bbf": {
+    "en": "Also delete the mods from the manager. There are none.",
+    "zh-CN": "同时从管理器中删除模组。目前没有模组。"
+  },
+  "Text.95cf7b22a97b": {
+    "en": "{0} removed from the game.",
+    "zh-CN": "将从游戏中移除 {0}。"
+  },
+  "Text.a6e5da8b252d": {
+    "en": "UE4SS is removed, with its settings and every mod in its folder, also mods put there by hand.",
+    "zh-CN": "UE4SS 将被移除，包括其设置及文件夹中的所有模组（含手动安装的模组）。"
+  },
+  "Text.4b2baa0f3ff0": {
+    "en": "{0} in the mods folders that the manager did not install ",
+    "zh-CN": "模组文件夹中有 {0} 未由管理器安装，"
+  },
+  "Text.84abc51a17f1": {
+    "en": "{0} to a backup folder.",
+    "zh-CN": "{0}到备份文件夹。"
+  },
+  "Text.8aca04ab6ee7": {
+    "en": "moves",
+    "zh-CN": "将移动"
+  },
+  "Text.683a62ce15fb": {
+    "en": "move",
+    "zh-CN": "将移动"
+  },
+  "Text.ad090392a081": {
+    "en": "The game has no mods and no UE4SS to remove.",
+    "zh-CN": "游戏中没有需要移除的模组或 UE4SS。"
+  },
+  "Text.a9de42b1114d": {
+    "en": "Download the UE4SS release for {0}.",
+    "zh-CN": "下载适用于 {0} 的 UE4SS 版本。"
+  },
+  "Text.2fcb6808b650": {
+    "en": "The manager downloads {0}, ",
+    "zh-CN": "管理器将下载 {0}，"
+  },
+  "Text.df174584ff47": {
+    "en": "checks that it is the expected file, ",
+    "zh-CN": "校验文件，"
+  },
+  "Text.3da6f4a6e460": {
+    "en": "and installs it into the game.",
+    "zh-CN": "然后安装到游戏中。"
+  },
+  "Text.403e3624c1a1": {
+    "en": "UE4SS is not installed, so there is no log.",
+    "zh-CN": "UE4SS 尚未安装，因此没有日志。"
+  },
+  "Text.0e439e7553e6": {
+    "en": "The log could not be read: {0}",
+    "zh-CN": "无法读取日志：{0}"
+  },
+  "Text.70c1b39eabf8": {
+    "en": "No log yet. UE4SS writes it each time the game starts.",
+    "zh-CN": "暂无日志。UE4SS 会在每次启动游戏时写入日志。"
+  },
+  "Text.6bf785c599cf": {
+    "en": "Game start of {0:g}:  {1},  ",
+    "zh-CN": "游戏启动于 {0:g}：{1}，"
+  },
+  "Text.ca00fccfb408": {
+    "en": "error",
+    "zh-CN": "个错误"
+  },
+  "Text.be4bd5677277": {
+    "en": "errors",
+    "zh-CN": "个错误"
+  },
+  "Text.4bd9354bb652": {
+    "en": "warning",
+    "zh-CN": "个警告"
+  },
+  "Text.227690d7c303": {
+    "en": "warnings",
+    "zh-CN": "个警告"
+  },
+  "Text.91f2040fa021": {
+    "en": "  Showing the last {0} lines.",
+    "zh-CN": "仅显示最后 {0} 行。"
+  },
+  "Text.23cd101ca230": {
+    "en": "Errors name these mods: {0}",
+    "zh-CN": "错误中提到以下模组：{0}"
+  },
+  "Text.a4c433ec3cf9": {
+    "en": "The UE4SS log is on the clipboard.",
+    "zh-CN": "UE4SS 日志已复制到剪贴板。"
+  },
+  "Text.112922474250": {
+    "en": "The clipboard is in use by another app: {0}",
+    "zh-CN": "剪贴板正被其他程序占用：{0}"
+  },
+  "Text.3d7db37d08f9": {
+    "en": "files",
+    "zh-CN": "个文件"
+  },
+  "Text.695073cb6649": {
+    "en": "mods",
+    "zh-CN": "个模组"
+  },
+  "Text.5ca4f3850ccc": {
+    "en": "version",
+    "zh-CN": "版本"
+  },
+  "Text.a4fe65264ef7": {
+    "en": "Language",
+    "zh-CN": "语言"
+  },
+  "Text.8027f432a7fb": {
+    "en": "Interface language",
+    "zh-CN": "界面语言"
+  },
+  "Text.f52310f5bd04": {
+    "en": "Changes take effect immediately and are saved for the next launch.",
+    "zh-CN": "选择后立即生效，下次启动时会保留。"
+  },
+  "Text.84601ccf7311": {
+    "en": "Install, enable and remove packaged mods safely. Every file placed in the game is tracked, and files the manager did not place are never touched.",
+    "zh-CN": "安全地安装、启用和移除打包模组。跟踪所有部署到游戏的文件，不修改其他来源的文件。"
+  },
+  "Text.5b0398a83723": {
+    "en": "Test build: the manager pointed at Mortal Shell II to check detection, install, enable, disable and uninstall.",
+    "zh-CN": "测试构建：以 Mortal Shell II 验证检测、安装、启用、禁用和卸载功能。"
+  },
+  "Text.4de639bad6bf": {
+    "en": "Use the UE4SS release made for Phantom Blade Zero. It adds the files UE4SS needs to read this game's structures.",
+    "zh-CN": "请使用专为影之刃零制作的 UE4SS 版本，其中包含读取此游戏结构所需的文件。"
+  },
+  "Text.7805e62435c2": {
+    "en": "Phantom Blade Zero",
+    "zh-CN": "影之刃零"
+  },
+  "Text.50da262d09f8": {
+    "en": "Filter: mod name, version, PAK / IoStore, or file name",
+    "zh-CN": "筛选：模组名称、版本、PAK / IoStore 或文件名"
+  },
+  "Text.fb37d9d39248": {
+    "en": "What happened? For example: since I installed Witch 1.2, the game crashes when a fight starts.",
+    "zh-CN": "发生了什么？例如：安装 Witch 1.2 后，游戏在战斗开始时崩溃。"
+  },
+  "Text.454af593a992": {
+    "en": "d MMM yyyy",
+    "zh-CN": "yyyy年M月d日"
+  }
+}

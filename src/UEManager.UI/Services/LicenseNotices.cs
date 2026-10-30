@@ -4,7 +4,12 @@ using System.Reflection;
 namespace UEManager.UI.Services;
 
 /// <summary>A license text built into the exe.</summary>
-public sealed record LicenseNotice(string Name, string Text);
+public sealed class LicenseNotice(string name, string text) : LocalizedObservableObject
+{
+    public string Name => L.T(name);
+
+    public string Text => text;
+}
 
 /// <summary>
 /// The license texts built into the exe: the app's own (GPL-3.0 with additional terms, and its
@@ -42,7 +47,7 @@ internal static class LicenseNotices
     private static LicenseNotice Read(string name, string resource)
     {
         using var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(resource)
-            ?? throw new InvalidOperationException($"'{resource}' is not built into this exe.");
+            ?? throw new InvalidOperationException(L.F($"'{resource}' is not built into this exe."));
         using var reader = new StreamReader(stream);
         return new LicenseNotice(name, reader.ReadToEnd().Trim());
     }

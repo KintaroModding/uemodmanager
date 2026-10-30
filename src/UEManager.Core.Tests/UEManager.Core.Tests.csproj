@@ -20,6 +20,11 @@
     <Using Include="Xunit" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(Catalog)' != 'true'">
+    <!-- The parser is not compiled into the build without the catalog. -->
+    <Compile Remove="CatalogTests.cs" />
+  </ItemGroup>
+
   <ItemGroup>
     <!-- Every game profile, including those a default build leaves out, so all of them are checked. -->
     <None Include="..\UEManager.Core\Games\Profiles\*.json" LinkBase="Profiles" CopyToOutputDirectory="PreserveNewest" />

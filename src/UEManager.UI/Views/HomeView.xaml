@@ -12,10 +12,10 @@
         <!-- Header -->
         <Grid Margin="0,6,0,0">
             <StackPanel>
-                <TextBlock Style="{StaticResource Text.Overline}" Text="{ui:Tracked 'Ready your blade'}" />
-                <TextBlock Margin="0,10,0,0" Style="{StaticResource Text.Display}" FontSize="40" Text="{Binding Profile.DisplayName}" />
+                <TextBlock Style="{StaticResource Text.Overline}" Text="{ui:Loc Text.7edb8b7bdadb, Tracked=True}" />
+                <TextBlock Margin="0,10,0,0" Style="{StaticResource Text.Display}" FontSize="40" Text="{Binding GameDisplayName}" />
                 <Rectangle Width="200" Height="2" Margin="0,12,0,12" HorizontalAlignment="Left" Fill="{StaticResource Brush.Stroke}" />
-                <TextBlock MaxWidth="640" HorizontalAlignment="Left" Style="{StaticResource Text.Body}" Text="{Binding Profile.Tagline}" />
+                <TextBlock MaxWidth="640" HorizontalAlignment="Left" Style="{StaticResource Text.Body}" Text="{Binding GameTagline}" />
             </StackPanel>
             <Border HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,2,0,0" Style="{StaticResource Badge}" Padding="10,5">
                 <StackPanel Orientation="Horizontal">
@@ -30,12 +30,12 @@
         <Border Margin="0,20,0,0" Style="{StaticResource Card}" BorderBrush="{StaticResource Brush.Warning}"
                 Visibility="{Binding IsGameUpdated, Converter={StaticResource Visible}}">
             <DockPanel>
-                <Button DockPanel.Dock="Right" Margin="20,0,0,0" VerticalAlignment="Center" Content="Got it"
+                <Button DockPanel.Dock="Right" Margin="20,0,0,0" VerticalAlignment="Center" Content="{ui:Loc Text.5ad3dbd1242a}"
                         ui:Icon.Glyph="&#xE73E;" Command="{Binding DismissGameUpdateCommand}" />
                 <TextBlock DockPanel.Dock="Left" Style="{StaticResource Text.Icon}" FontSize="22" Margin="0,0,18,0"
                            Foreground="{StaticResource Brush.Warning}" Text="&#xE7BA;" />
                 <StackPanel>
-                    <TextBlock Style="{StaticResource Text.Title}" Text="Game updated" />
+                    <TextBlock Style="{StaticResource Text.Title}" Text="{ui:Loc Text.0f96d734dccb}" />
                     <TextBlock Margin="0,4,0,0" Style="{StaticResource Text.Body}" Text="{Binding GameUpdatedText}" />
                 </StackPanel>
             </DockPanel>
@@ -46,14 +46,14 @@
                 Visibility="{Binding IsGameFound, Converter={StaticResource Hidden}}">
             <DockPanel>
                 <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center" Margin="20,0,0,0">
-                    <Button Content="Search again" ui:Icon.Glyph="&#xE72C;" Command="{Binding DetectGameCommand}" />
-                    <Button Margin="8,0,0,0" Style="{StaticResource Button.Primary}" Content="Locate game folder…"
+                    <Button Content="{ui:Loc Text.998195e4aaa2}" ui:Icon.Glyph="&#xE72C;" Command="{Binding DetectGameCommand}" />
+                    <Button Margin="8,0,0,0" Style="{StaticResource Button.Primary}" Content="{ui:Loc Text.7d11d6748463}"
                             ui:Icon.Glyph="&#xE838;" Command="{Binding LocateGameCommand}" />
                 </StackPanel>
                 <TextBlock DockPanel.Dock="Left" Style="{StaticResource Text.Icon}" FontSize="22" Margin="0,0,18,0"
                            Foreground="{StaticResource Brush.Accent}" Text="&#xE7BA;" />
                 <StackPanel>
-                    <TextBlock Style="{StaticResource Text.Title}" Text="Game not found" />
+                    <TextBlock Style="{StaticResource Text.Title}" Text="{ui:Loc Text.96ba641b93a5}" />
                     <TextBlock Margin="0,4,0,0" Style="{StaticResource Text.Body}" Text="{Binding NotFoundHint}" />
                 </StackPanel>
             </DockPanel>
@@ -64,30 +64,30 @@
             <UniformGrid Columns="4">
                 <Border BorderBrush="{StaticResource Brush.Line}" BorderThickness="0,0,1,0" Padding="22,14">
                     <StackPanel>
-                        <TextBlock Style="{StaticResource Text.Caption}" Text="{ui:Tracked 'Store'}" />
+                        <TextBlock Style="{StaticResource Text.Caption}" Text="{ui:Loc Text.ee7da936b5cb, Tracked=True}" />
                         <TextBlock Margin="0,8,0,4" Style="{StaticResource Text.Value}" Text="{Binding StoreText}" />
                         <TextBlock Style="{StaticResource Text.Small}" Text="{Binding StoreDetail}" />
                     </StackPanel>
                 </Border>
                 <Border BorderBrush="{StaticResource Brush.Line}" BorderThickness="0,0,1,0" Padding="22,14">
                     <StackPanel>
-                        <TextBlock Style="{StaticResource Text.Caption}" Text="{ui:Tracked 'Build'}" />
+                        <TextBlock Style="{StaticResource Text.Caption}" Text="{ui:Loc Text.bdd254b65baa, Tracked=True}" />
                         <TextBlock Margin="0,8,0,4" Style="{StaticResource Text.Value}" Text="{Binding BuildText}" />
                         <TextBlock Style="{StaticResource Text.Small}" Text="{Binding BuildDetail}" />
                     </StackPanel>
                 </Border>
                 <Border BorderBrush="{StaticResource Brush.Line}" BorderThickness="0,0,1,0" Padding="22,14">
                     <StackPanel>
-                        <TextBlock Style="{StaticResource Text.Caption}" Text="{ui:Tracked 'Mods installed'}" />
+                        <TextBlock Style="{StaticResource Text.Caption}" Text="{ui:Loc Text.59cafc8e425d, Tracked=True}" />
                         <TextBlock Margin="0,8,0,4" Style="{StaticResource Text.Value}" Text="{Binding InstalledCount}" />
                         <TextBlock Style="{StaticResource Text.Small}" Text="{Binding EnabledText}" />
                     </StackPanel>
                 </Border>
                 <Border Padding="22,14">
                     <StackPanel>
-                        <TextBlock Style="{StaticResource Text.Caption}" Text="{ui:Tracked 'Unmanaged files'}" />
+                        <TextBlock Style="{StaticResource Text.Caption}" Text="{ui:Loc Text.813be2e91fbb, Tracked=True}" />
                         <TextBlock Margin="0,8,0,4" Style="{StaticResource Text.Value}" Text="{Binding UnmanagedCount}" />
-                        <TextBlock Style="{StaticResource Text.Small}" Text="In the mods folder, left alone" />
+                        <TextBlock Style="{StaticResource Text.Small}" Text="{ui:Loc Text.a61af3cb506e}" />
                     </StackPanel>
                 </Border>
             </UniformGrid>
@@ -106,15 +106,15 @@
                     <DockPanel>
                         <TextBlock DockPanel.Dock="Right" Style="{StaticResource Text.Icon}" FontSize="18"
                                    Foreground="{StaticResource Brush.Accent}" Text="&#xE896;" />
-                        <TextBlock Style="{StaticResource Text.Overline}" Text="{ui:Tracked 'Quick start'}" />
+                        <TextBlock Style="{StaticResource Text.Overline}" Text="{ui:Loc Text.0eb95fb6244c, Tracked=True}" />
                     </DockPanel>
-                    <TextBlock Margin="0,8,0,0" Style="{StaticResource Text.Title}" Text="Add a new mod" />
+                    <TextBlock Margin="0,8,0,0" Style="{StaticResource Text.Title}" Text="{ui:Loc Text.233ffd651ceb}" />
                     <TextBlock Margin="0,10,0,20" Style="{StaticResource Text.Body}"
-                               Text="Drop a .zip, .7z or .rar download, a .pak file or a mod folder anywhere on this window. It is unpacked and checked before anything reaches the game." />
+                               Text="{ui:Loc Text.c59ed2fc878a}" />
                     <WrapPanel>
-                        <Button Margin="0,0,8,8" Style="{StaticResource Button.Primary}" Content="Install from 7z/zip/rar…"
+                        <Button Margin="0,0,8,8" Style="{StaticResource Button.Primary}" Content="{ui:Loc Text.da5686723e32}"
                                 ui:Icon.Glyph="&#xE896;" Command="{Binding InstallFromArchiveCommand}" />
-                        <Button Margin="0,0,0,8" Content="Install from folder…" ui:Icon.Glyph="&#xE8B7;"
+                        <Button Margin="0,0,0,8" Content="{ui:Loc Text.15e3c65eafdb}" ui:Icon.Glyph="&#xE8B7;"
                                 Command="{Binding InstallFromFolderCommand}" />
                     </WrapPanel>
                 </StackPanel>
@@ -124,20 +124,20 @@
                 <StackPanel>
                     <DockPanel>
                         <Button DockPanel.Dock="Right" Margin="0,-6,0,-6" Padding="10,4" FontSize="12"
-                                Content="Change…" ui:Icon.Glyph="&#xE70F;" Command="{Binding LocateGameCommand}"
-                                ToolTip="Choose another game folder" />
-                        <TextBlock VerticalAlignment="Center" Style="{StaticResource Text.Overline}" Text="{ui:Tracked 'Installation'}" />
+                                Content="{ui:Loc Text.a6b4705c6883}" ui:Icon.Glyph="&#xE70F;" Command="{Binding LocateGameCommand}"
+                                ToolTip="{ui:Loc Text.bf107fc83125}" />
+                        <TextBlock VerticalAlignment="Center" Style="{StaticResource Text.Overline}" Text="{ui:Loc Text.c3fc54aa5390, Tracked=True}" />
                     </DockPanel>
-                    <TextBlock Margin="0,8,0,10" Style="{StaticResource Text.Title}" Text="Game folders" />
-                    <TextBlock Style="{StaticResource Text.Caption}" Text="{ui:Tracked 'Install folder'}" />
+                    <TextBlock Margin="0,8,0,10" Style="{StaticResource Text.Title}" Text="{ui:Loc Text.33611d3d2314}" />
+                    <TextBlock Style="{StaticResource Text.Caption}" Text="{ui:Loc Text.9c215bf11f75, Tracked=True}" />
                     <TextBlock Margin="0,4,0,10" Style="{StaticResource Text.Path}" Text="{Binding GamePath}" />
-                    <TextBlock Style="{StaticResource Text.Caption}" Text="{ui:Tracked 'Mods folder'}" />
+                    <TextBlock Style="{StaticResource Text.Caption}" Text="{ui:Loc Text.840e19f02190, Tracked=True}" />
                     <TextBlock Margin="0,4,0,10" Style="{StaticResource Text.Path}" Text="{Binding ModsPath}" />
                     <TextBlock Style="{StaticResource Text.Caption}" Text="{ui:Tracked 'UE4SS'}" />
                     <StackPanel Margin="0,4,0,14" Orientation="Horizontal">
                         <TextBlock VerticalAlignment="Center" Style="{StaticResource Text.Small}" Foreground="{StaticResource Brush.Text}"
                                    Text="{Binding Ue4ssText}" />
-                        <Button Margin="12,-4,0,-4" Padding="9,3" FontSize="12" Content="Install UE4SS…" ui:Icon.Glyph="&#xE946;"
+                        <Button Margin="12,-4,0,-4" Padding="9,3" FontSize="12" Content="{ui:Loc Text.5ffe25975982}" ui:Icon.Glyph="&#xE946;"
                                 Command="{Binding ShowUe4ssGuideCommand}"
                                 Visibility="{Binding IsUe4ssMissing, Converter={StaticResource Visible}}" />
                         <Button Margin="12,-4,0,-4" Padding="9,3" FontSize="12" Style="{StaticResource Button.Primary}"
@@ -145,8 +145,8 @@
                                 Visibility="{Binding IsUe4ssUpdateAvailable, Converter={StaticResource Visible}}" />
                     </StackPanel>
                     <WrapPanel>
-                        <Button Margin="0,0,8,8" Content="Open game folder" ui:Icon.Glyph="&#xE838;" Command="{Binding OpenGameFolderCommand}" />
-                        <Button Margin="0,0,0,8" Content="Open mods folder" ui:Icon.Glyph="&#xE838;" Command="{Binding OpenModFolderCommand}" />
+                        <Button Margin="0,0,8,8" Content="{ui:Loc Text.553221725e47}" ui:Icon.Glyph="&#xE838;" Command="{Binding OpenGameFolderCommand}" />
+                        <Button Margin="0,0,0,8" Content="{ui:Loc Text.00e989018b91}" ui:Icon.Glyph="&#xE838;" Command="{Binding OpenModFolderCommand}" />
                     </WrapPanel>
                 </StackPanel>
             </Border>

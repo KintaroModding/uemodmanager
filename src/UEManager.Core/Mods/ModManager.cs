@@ -115,20 +115,20 @@ public sealed class ModManager
         var warnings = new List<string>();
         if (preview.ContainsUe4ssRuntime)
         {
-            problems.Add($"This download contains the UE4SS runtime itself, which the manager does not install. "
-                + $"Install UE4SS by hand into {Game.BinariesPath}, then install its mods here.");
+            problems.Add(L.T($"This download contains the UE4SS runtime itself, which the manager does not install. ")
+                + L.F($"Install UE4SS by hand into {Game.BinariesPath}, then install its mods here."));
             return new InstallCheck(problems, warnings, null);
         }
         if (preview.Packages.Count == 0)
         {
             problems.Add(preview.NestedArchiveCount > 0
-                ? "No mod files were found. The download holds another archive: extract it and install that one."
-                : "No mod files were found: no .pak, .utoc or .ucas files, and no UE4SS mod folder with Scripts\\main.lua or dlls.");
+                ? L.T("No mod files were found. The download holds another archive: extract it and install that one.")
+                : L.T("No mod files were found: no .pak, .utoc or .ucas files, and no UE4SS mod folder with Scripts\\main.lua or dlls."));
             return new InstallCheck(problems, warnings, null);
         }
         if (selected.Count == 0)
         {
-            problems.Add("Select at least one part to install.");
+            problems.Add(L.T("Select at least one part to install."));
             return new InstallCheck(problems, warnings, null);
         }
         foreach (var package in selected)
@@ -140,14 +140,14 @@ public sealed class ModManager
         var needsUe4ss = !Ue4ssRuntime.Detect(Game).Installed
             && selected.Any(p => p.Target is DeployTarget.Ue4ssMods or DeployTarget.LogicMods);
         if (needsUe4ss)
-            warnings.Add("UE4SS is not installed in this game. Lua, DLL and Blueprint mods only run with it. "
-                + "They are installed anyway and start working once UE4SS is in place.");
+            warnings.Add(L.T("UE4SS is not installed in this game. Lua, DLL and Blueprint mods only run with it. ")
+                + L.T("They are installed anyway and start working once UE4SS is in place."));
 
         var entries = selected
             .SelectMany(p => p.RelativePaths.Select(path => (p.Target, Path: path)))
             .ToList();
         foreach (var duplicate in entries.GroupBy(e => (e.Target, e.Path.ToUpperInvariant())).Where(g => g.Count() > 1))
-            problems.Add($"{duplicate.First().Path} is in more than one selected part. Select only one of them.");
+            problems.Add(L.F($"{duplicate.First().Path} is in more than one selected part. Select only one of them."));
 
         ModRecord? replaces;
         IReadOnlyList<string> editedSettings = [];
@@ -164,7 +164,7 @@ public sealed class ModManager
                 }
                 else if (File.Exists(Path.Combine(TargetFolder(target), Local(path))))
                 {
-                    problems.Add($"{path} is already in {TargetName(target)}, but the manager did not install it. Move or delete it first.");
+                    problems.Add(L.F($"{path} is already in {TargetName(target)}, but the manager did not install it. Move or delete it first."));
                 }
             }
 
@@ -174,12 +174,12 @@ public sealed class ModManager
                 replaces = mods.FirstOrDefault(m => string.Equals(m.CatalogId, catalogId, StringComparison.OrdinalIgnoreCase))
                     ?? (owners is [{ CatalogId: null } handInstalled] ? handInstalled : null);
                 foreach (var other in owners.Where(o => o != replaces && o.Enabled))
-                    problems.Add($"\"{other.Name}\" uses the same files. Disable or uninstall it first.");
+                    problems.Add(L.F($"\"{other.Name}\" uses the same files. Disable or uninstall it first."));
             }
             else
             {
                 if (owners.Count > 1)
-                    problems.Add($"This download uses files of several installed mods: {string.Join(", ", owners.Select(o => o.Name))}. Uninstall them first.");
+                    problems.Add(L.F($"This download uses files of several installed mods: {string.Join(", ", owners.Select(o => o.Name))}. Uninstall them first."));
                 replaces = owners.Count == 1 ? owners[0] : null;
             }
             if (replaces is not null)
@@ -209,7 +209,7 @@ public sealed class ModManager
                 throw new ModException(string.Join(Environment.NewLine, check.Problems));
             var old = check.Replaces;
             if (old is not null && !replace)
-                throw new ModException($"This download uses the same files as \"{old.Name}\". Replace that mod, or uninstall it first.");
+                throw new ModException(L.F($"This download uses the same files as \"{old.Name}\". Replace that mod, or uninstall it first."));
 
             var record = new ModRecord
             {
@@ -288,7 +288,7 @@ public sealed class ModManager
                 var clash = mods.FirstOrDefault(other => other != mod && other.Enabled
                     && other.Files.Any(f => mod.Files.Any(g => IsSameFile(f, g.Target, g.FileName))));
                 if (clash is not null)
-                    throw new ModException($"\"{mod.Name}\" uses the same files as \"{clash.Name}\". Disable that mod first.");
+                    throw new ModException(L.F($"\"{mod.Name}\" uses the same files as \"{clash.Name}\". Disable that mod first."));
                 Deploy(mod);
                 Commit(undo: () => RemoveDeployedFiles(mod));
             }
@@ -353,8 +353,8 @@ public sealed class ModManager
                 return null;
             }
             if (edited.Any(f => !File.Exists(DefaultsPath(mod, f))))
-                throw new ModException($"The original settings of \"{mod.Name}\" were not kept: it was installed with an older version "
-                    + "of the manager. Install the mod again to get them back.");
+                throw new ModException(L.F($"The original settings of \"{mod.Name}\" were not kept: it was installed with an older version ")
+                    + L.T("of the manager. Install the mod again to get them back."));
 
             var backup = BackUpEditedSettings(mod);
             // The player's version of each file and its record, put back when a copy or the save fails.
@@ -397,8 +397,8 @@ public sealed class ModManager
             catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
             {
                 Undo();
-                throw new ModException($"The settings of \"{mod.Name}\" could not be reset, so nothing was changed. "
-                    + $"A file may be in use. ({ex.Message})");
+                throw new ModException(L.F($"The settings of \"{mod.Name}\" could not be reset, so nothing was changed. ")
+                    + L.F($"A file may be in use. ({ex.Message})"));
             }
             Commit(undo: Undo);
             Log.Info($"Reset the settings of \"{mod.Name}\" to the shipped ones.");
@@ -424,10 +424,10 @@ public sealed class ModManager
                 return [];
             if (isGameRunning(Game)
                 || (GameLocator.Resolve(Game.Profile, other, GameStore.Manual) is { } install && isGameRunning(install)))
-                throw new ModException($"{Game.Profile.DisplayName} is running. Close the game first, then try again.");
+                throw new ModException(L.F($"{Game.Profile.DisplayName} is running. Close the game first, then try again."));
 
             var moving = mods.Where(IsInOtherInstall).ToList();
-            var removal = Undeploy(moving, $"The mods in {other}");
+            var removal = Undeploy(moving, L.F($"The mods in {other}"));
             var stayed = new List<ModRecord>();
             // Files that were already here with the same content; undoing the move leaves them.
             var taken = new HashSet<ModFileRecord>();
@@ -485,11 +485,11 @@ public sealed class ModManager
             {
                 ArchiveStager.Stage(package, staging);
                 var root = Ue4ssPackageRoot(staging)
-                    ?? throw new ModException("This is not a UE4SS release: ue4ss\\UE4SS.dll was not found in it.");
+                    ?? throw new ModException(L.T("This is not a UE4SS release: ue4ss\\UE4SS.dll was not found in it."));
                 var win64 = Game.BinariesPath;
                 if (Game.FindShippingExecutable() is null)
-                    throw new ModException($"The game's exe was not found in {win64}, so UE4SS cannot be installed. "
-                        + "Use Report a problem, so the game profile can be corrected.");
+                    throw new ModException(L.F($"The game's exe was not found in {win64}, so UE4SS cannot be installed. ")
+                        + L.T("Use Report a problem, so the game profile can be corrected."));
 
                 // Proxy DLLs such as dwmapi.dll stand in for a Windows library the game loads.
                 // One that is already there while UE4SS is not belongs to another tool.
@@ -497,8 +497,8 @@ public sealed class ModManager
                 foreach (var proxy in Directory.EnumerateFiles(root, "*.dll").Select(f => Path.GetFileName(f)))
                 {
                     if (!updating && File.Exists(Path.Combine(win64, proxy)))
-                        throw new ModException($"{proxy} is already in {win64}, but UE4SS is not installed: another tool uses it. "
-                            + "Remove that tool first, or install UE4SS by hand.");
+                        throw new ModException(L.F($"{proxy} is already in {win64}, but UE4SS is not installed: another tool uses it. ")
+                            + L.T("Remove that tool first, or install UE4SS by hand."));
                 }
 
                 var owned = mods.SelectMany(m => m.Files)
@@ -626,7 +626,7 @@ public sealed class ModManager
             var current = Path.Combine(win64, "ue4ss");
             var legacy = File.Exists(Path.Combine(win64, "UE4SS.dll"));
             if (!Directory.Exists(current) && !legacy)
-                throw new ModException("UE4SS is not installed in this game.");
+                throw new ModException(L.T("UE4SS is not installed in this game."));
 
             var affected = mods.Where(m => m.Enabled && m.Files.Any(f => f.Target == DeployTarget.Ue4ssMods)).ToList();
             // A mixed mod's files outside UE4SS's folder, such as its pak, are checked like any removal.
@@ -635,7 +635,7 @@ public sealed class ModManager
                 .ToList();
             var changed = outside.Where(f => !Matches(f.DeployedPath!, f)).Select(f => f.FileName).ToList();
             if (changed.Count > 0)
-                throw new ModException($"These mod files were changed outside the manager, so nothing was removed: {string.Join(", ", changed)}.");
+                throw new ModException(L.F($"These mod files were changed outside the manager, so nothing was removed: {string.Join(", ", changed)}."));
             foreach (var mod in affected)
                 SaveEditedSettings(mod);
 
@@ -684,7 +684,7 @@ public sealed class ModManager
             EnsureCanChange();
             var enabled = mods.Where(m => m.Enabled).ToList();
             if (enabled.Count > 0)
-                Commit(Undeploy(enabled, "The mods"));
+                Commit(Undeploy(enabled, L.T("The mods")));
 
             var ue4ssRemoved = IsUe4ssInstalled();
             if (ue4ssRemoved)
@@ -705,8 +705,8 @@ public sealed class ModManager
                     }
                     catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
                     {
-                        throw new ModException($"{relative} could not be moved out of the game: a program may be using it. "
-                            + $"Close it, then reset again. ({ex.Message})");
+                        throw new ModException(L.F($"{relative} could not be moved out of the game: a program may be using it. ")
+                            + L.F($"Close it, then reset again. ({ex.Message})"));
                     }
                 }
                 Log.Info($"Moved {others.Count} file(s) the manager did not install to '{backup}'.");
@@ -838,7 +838,7 @@ public sealed class ModManager
     }
 
     private ModRecord Find(string id) =>
-        mods.FirstOrDefault(m => m.Id == id) ?? throw new ModException("That mod is no longer installed.");
+        mods.FirstOrDefault(m => m.Id == id) ?? throw new ModException(L.T("That mod is no longer installed."));
 
     /// <summary>
     /// Every change to the game folder stops while the game runs: it holds the mounted paks and UE4SS.
@@ -847,10 +847,10 @@ public sealed class ModManager
     private void EnsureCanChange()
     {
         if (OtherInstallRoot is not null)
-            throw new ModException($"Your enabled mods are still in another folder of {Game.Profile.DisplayName}: {OtherInstallRoot}. "
-                + "Move them to this folder first.");
+            throw new ModException(L.F($"Your enabled mods are still in another folder of {Game.Profile.DisplayName}: {OtherInstallRoot}. ")
+                + L.T("Move them to this folder first."));
         if (isGameRunning(Game))
-            throw new ModException($"{Game.Profile.DisplayName} is running. Close the game first, then try again.");
+            throw new ModException(L.F($"{Game.Profile.DisplayName} is running. Close the game first, then try again."));
     }
 
     private bool IsInThisInstall(string path) =>
@@ -972,7 +972,7 @@ public sealed class ModManager
             {
                 var source = LibraryPath(mod, file);
                 if (!File.Exists(source))
-                    throw new ModException($"The manager's copy of {file.FileName} is missing. Reinstall \"{mod.Name}\".");
+                    throw new ModException(L.F($"The manager's copy of {file.FileName} is missing. Reinstall \"{mod.Name}\"."));
                 var destination = Path.Combine(folders[file.Target], Local(file.FileName));
                 if (takeIdentical && File.Exists(destination) && Matches(destination, file))
                 {
@@ -981,7 +981,7 @@ public sealed class ModManager
                     continue;
                 }
                 if (File.Exists(destination))
-                    throw new ModException($"{file.FileName} is already in {TargetName(file.Target)}, but it does not belong to \"{mod.Name}\". Move or delete it first.");
+                    throw new ModException(L.F($"{file.FileName} is already in {TargetName(file.Target)}, but it does not belong to \"{mod.Name}\". Move or delete it first."));
                 Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
                 temp = destination + ".uemm-tmp";
                 File.Copy(source, temp, overwrite: true);
@@ -1022,7 +1022,7 @@ public sealed class ModManager
             .Select(f => f.FileName)
             .ToList();
         if (changed.Count > 0)
-            throw new ModException($"These files were changed outside the manager, so nothing was removed: {string.Join(", ", changed)}.");
+            throw new ModException(L.F($"These files were changed outside the manager, so nothing was removed: {string.Join(", ", changed)}."));
         foreach (var mod in group)
             SaveEditedSettings(mod);
 
@@ -1049,8 +1049,8 @@ public sealed class ModManager
             Log.Error($"The mod list could not be saved to '{StateFile}'; the change is undone.", ex);
             undo?.Invoke();
             removal?.PutBack();
-            throw new ModException("The manager could not save its list of mods, so nothing was changed. Another program, "
-                + $"such as a virus scanner or a sync tool, may be using {StateFile}. Try again. ({ex.Message})");
+            throw new ModException(L.T("The manager could not save its list of mods, so nothing was changed. Another program, ")
+                + L.F($"such as a virus scanner or a sync tool, may be using {StateFile}. Try again. ({ex.Message})"));
         }
         removal?.Finish();
     }
@@ -1181,8 +1181,8 @@ public sealed class ModManager
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
             Unpark(parked);
-            throw new ModException($"{what} could not be removed from the game because a file is in use or protected. "
-                + $"Close the game and try again. ({ex.Message})");
+            throw new ModException(L.F($"{what} could not be removed from the game because a file is in use or protected. ")
+                + L.F($"Close the game and try again. ({ex.Message})"));
         }
         return parked;
     }
@@ -1260,9 +1260,9 @@ public sealed class ModManager
 
     private static string TargetName(DeployTarget target) => target switch
     {
-        DeployTarget.LogicMods => "the LogicMods folder",
-        DeployTarget.Ue4ssMods => "the UE4SS Mods folder",
-        _ => "the mods folder",
+        DeployTarget.LogicMods => L.T("the LogicMods folder"),
+        DeployTarget.Ue4ssMods => L.T("the UE4SS Mods folder"),
+        _ => L.T("the mods folder"),
     };
 
     private static bool Matches(string path, ModFileRecord file) =>

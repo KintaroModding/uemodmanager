@@ -17,7 +17,7 @@ namespace UEManager.UI.Catalog;
 /// The openmods page: the game's mods listed on openmods.nexus, each with a one-click install.
 /// The lists are read when the page opens, at most every 10 minutes, as openmods asks.
 /// </summary>
-public sealed partial class CatalogViewModel : ObservableObject
+public sealed partial class CatalogViewModel : LocalizedObservableObject
 {
     public const string SiteUrl = "https://openmods.nexus/";
 
@@ -26,6 +26,8 @@ public sealed partial class CatalogViewModel : ObservableObject
     private readonly RemoteImages images;
     private readonly string gamesUrl;
     private readonly string? steamAppId;
+    private readonly bool isTest;
+    private ModException? failure;
     private DateTimeOffset loadedAt;
     private bool loaded;
     private IReadOnlyList<ModRecord> installed = [];
@@ -43,7 +45,7 @@ public sealed partial class CatalogViewModel : ObservableObject
         this.gamesUrl = gamesUrl;
         this.steamAppId = steamAppId;
         images = new RemoteImages(http);
-        TestCatalogText = isTest ? $"Test list: {gamesUrl}. Start the app without --catalog to see the real one." : null;
+        this.isTest = isTest;
         ItemsView = CollectionViewSource.GetDefaultView(Items);
         ItemsView.Filter = item => item is CatalogItemViewModel mod && mod.Matches(SearchText);
         this.sortField = sortField;
@@ -56,15 +58,14 @@ public sealed partial class CatalogViewModel : ObservableObject
     /// <summary>The cards as shown: filtered by the search and sorted.</summary>
     public ICollectionView ItemsView { get; }
 
-    public string? TestCatalogText { get; }
+    public string? TestCatalogText => isTest
+        ? L.F($"Test list: {gamesUrl}. Start the app without --catalog to see the real one.") : null;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowEmpty))]
     private bool isLoading;
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShowEmpty))]
-    private string? error;
+    public string? Error => failure?.Message;
 
     [ObservableProperty]
     private string searchText = "";
@@ -83,12 +84,12 @@ public sealed partial class CatalogViewModel : ObservableObject
 
     public bool HasItems => Items.Count > 0;
 
-    public string CountText => $"{ItemsView.Cast<object>().Count()} of {Items.Count} shown";
+    public string CountText => L.F($"{ItemsView.Cast<object>().Count()} of {Items.Count} shown");
 
     /// <summary>The lists were read, and openmods lists nothing for this game.</summary>
     public bool ShowEmpty => loaded && !IsLoading && Error is null && Items.Count == 0;
 
-    public string EmptyText => $"No mods for {owner.Profile.DisplayName} are listed on openmods yet.";
+    public string EmptyText => L.F($"No mods for {owner.GameDisplayName} are listed on openmods yet.");
 
     /// <summary>Mods are listed, but none matches the search.</summary>
     public bool ShowNoMatch => Items.Count > 0 && ItemsView.IsEmpty;
@@ -102,11 +103,12 @@ public sealed partial class CatalogViewModel : ObservableObject
         if (loaded && Error is null && DateTimeOffset.Now - loadedAt < OpenMods.RefreshInterval)
         {
             if (force)
-                owner.ShowToast("The list is up to date. openmods refreshes it every 10 minutes.");
+                owner.ShowToast(L.T("The list is up to date. openmods refreshes it every 10 minutes."));
             return;
         }
         IsLoading = true;
-        Error = null;
+        failure = null;
+        OnPropertyChanged(nameof(Error));
         try
         {
             var list = await OpenMods.FetchAsync(http, gamesUrl, steamAppId);
@@ -117,7 +119,8 @@ public sealed partial class CatalogViewModel : ObservableObject
         catch (ModException ex)
         {
             Log.Warn(ex.Message);
-            Error = ex.Message;
+            failure = ex;
+            OnPropertyChanged(nameof(Error));
         }
         finally
         {
@@ -199,7 +202,7 @@ public sealed partial class CatalogViewModel : ObservableObject
 }
 
 /// <summary>One mod on the openmods page.</summary>
-public sealed partial class CatalogItemViewModel(MainViewModel owner, CatalogMod mod) : ObservableObject
+public sealed partial class CatalogItemViewModel(MainViewModel owner, CatalogMod mod) : LocalizedObservableObject
 {
     private enum CardAction
     {
@@ -217,17 +220,17 @@ public sealed partial class CatalogItemViewModel(MainViewModel owner, CatalogMod
 
     public string? Summary => mod.Summary;
 
-    public string AuthorText => $"by {mod.Author ?? "an unknown author"}";
+    public string AuthorText => L.F($"by {mod.Author ?? L.T("an unknown author")}");
 
     /// <summary>Set when openmods lists another author's project.</summary>
-    public string? ListedByText => mod.ListedBy is null ? null : $"listed by {mod.ListedBy}";
+    public string? ListedByText => mod.ListedBy is null ? null : L.F($"listed by {mod.ListedBy}");
 
     public IReadOnlyList<string> Tags => mod.Tags;
 
     public string MetaText => string.Join("  ·  ", new[]
     {
-        mod.Release is null ? "No release yet" : $"Version {mod.Release.Version}",
-        mod.Updated is { } updated ? "Updated " + updated.LocalDateTime.ToString("d MMM yyyy", CultureInfo.CurrentCulture) : null,
+        mod.Release is null ? L.T("No release yet") : L.F($"Version {mod.Release.Version}"),
+        mod.Updated is { } updated ? L.T("Updated ") + updated.LocalDateTime.ToString(L.T("d MMM yyyy"), CultureInfo.CurrentCulture) : null,
         mod.License,
     }.Where(part => part is not null));
 
@@ -275,7 +278,7 @@ public sealed partial class CatalogItemViewModel(MainViewModel owner, CatalogMod
             else if (owner.IsUe4ssInstalled)
                 Set(CardAction.None, null);
             else
-                Set(CardAction.InstallUe4ss, "Install UE4SS…");
+                Set(CardAction.InstallUe4ss, L.T("Install UE4SS…"));
             if (owner.IsUe4ssInstalled)
                 Status(owner.Ue4ssText, "good", "");
             return;
@@ -283,20 +286,20 @@ public sealed partial class CatalogItemViewModel(MainViewModel owner, CatalogMod
         if (mod.Release is null || mod.InstallFile is null)
         {
             Set(CardAction.None, null);
-            Status(mod.Release is null || mod.Release.Files.Count == 0 ? "No download yet" : "Several files: see the mod's page", "muted", "");
+            Status(mod.Release is null || mod.Release.Files.Count == 0 ? L.T("No download yet") : L.T("Several files: see the mod's page"), "muted", "");
             return;
         }
 
         var record = installed.FirstOrDefault(m => string.Equals(m.CatalogId, mod.Id, StringComparison.OrdinalIgnoreCase));
         if (record is null)
         {
-            Set(CardAction.Install, "Install");
+            Set(CardAction.Install, L.T("Install"));
             return;
         }
-        var text = record.Version is null ? "Installed" : $"Installed  ·  {record.Version}";
-        Status(record.Enabled ? text : $"{text}  ·  disabled", "good", "");
+        var text = record.Version is null ? L.T("Installed") : L.F($"Installed  ·  {record.Version}");
+        Status(record.Enabled ? text : L.F($"{text}  ·  disabled"), "good", "");
         if (ModVersion.IsUpdate(record.Version, mod.Release.Version))
-            Set(CardAction.Install, $"Update to {mod.Release.Version}");
+            Set(CardAction.Install, L.F($"Update to {mod.Release.Version}"));
         else
             Set(CardAction.None, null);
     }
