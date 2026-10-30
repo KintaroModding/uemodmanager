@@ -31,6 +31,9 @@ public sealed class AppSettings
 
     public bool CatalogSortDescending { get; set; }
 
+    /// <summary>Where the main window was when it last closed; null opens it centred at its default size.</summary>
+    public WindowPlacement? Window { get; set; }
+
     public static AppSettings Load(AppPaths paths)
     {
         try
@@ -46,3 +49,6 @@ public sealed class AppSettings
 
     public void Save(AppPaths paths) => JsonFile.Write(paths.SettingsFile, this);
 }
+
+/// <summary>A window's place and size in device-independent pixels; when maximized, the size it returns to.</summary>
+public sealed record WindowPlacement(double Left, double Top, double Width, double Height, bool Maximized);

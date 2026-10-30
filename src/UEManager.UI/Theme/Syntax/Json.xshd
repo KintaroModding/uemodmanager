@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<!--
+  Colours for a .json settings file in the settings editor, from the app's palette. Names and strings are
+  both rules, not spans: where both match, the first rule, the name before its colon, wins.
+-->
+<SyntaxDefinition name="JSON" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+  <Color name="Key" foreground="#E5485F" />
+  <Color name="String" foreground="#D2B07A" />
+  <Color name="Value" foreground="#86B793" />
+
+  <RuleSet>
+    <Rule color="Key">"(?:[^"\\]|\\.)*"(?=\s*:)</Rule>
+    <Rule color="String">"(?:[^"\\]|\\.)*"</Rule>
+    <Keywords color="Value">
+      <Word>true</Word>
+      <Word>false</Word>
+      <Word>null</Word>
+    </Keywords>
+    <Rule color="Value">-?\b\d+(\.\d+)?([eE][+-]?\d+)?\b</Rule>
+  </RuleSet>
+</SyntaxDefinition>

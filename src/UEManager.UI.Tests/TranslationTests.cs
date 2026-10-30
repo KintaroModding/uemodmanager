@@ -19,19 +19,17 @@ public class TranslationTests
     [Fact]
     public void Every_language_has_a_translation_of_every_text_and_of_no_other()
     {
-        var source = Source.Value;
-        var catalogOnly = source.Catalog.Except(source.Main).ToHashSet(StringComparer.Ordinal);
+        var source = Source.Value.Texts;
         var problems = new List<string>();
         foreach (var code in LanguageCodes())
         {
-            var main = Read(MainFile(code), problems);
-            var catalog = File.Exists(CatalogFile(code)) ? Read(CatalogFile(code), problems) : [];
-            if (!main.ContainsKey(Localizer.NameKey))
+            var file = Read(LanguageFile(code), problems);
+            if (!file.ContainsKey(Localizer.NameKey))
                 problems.Add($"{code}.json: no \"{Localizer.NameKey}\", the language's own name.");
-            problems.AddRange(source.Main.Where(t => !main.ContainsKey(t)).Select(t => $"{code}.json: no translation of {Show(t)}"));
-            problems.AddRange(catalogOnly.Where(t => !catalog.ContainsKey(t)).Select(t => $"Catalog {code}.json: no translation of {Show(t)}"));
-            problems.AddRange(main.Keys.Where(t => t != Localizer.NameKey && !source.Main.Contains(t)).Select(t => $"{code}.json: not used any more: {Show(t)}"));
-            problems.AddRange(catalog.Keys.Where(t => !catalogOnly.Contains(t)).Select(t => $"Catalog {code}.json: not used by the catalog: {Show(t)}"));
+            if (!file.ContainsKey(Localizer.EnglishNameKey))
+                problems.Add($"{code}.json: no \"{Localizer.EnglishNameKey}\", the language's name in English.");
+            problems.AddRange(source.Where(t => !file.ContainsKey(t)).Select(t => $"{code}.json: no translation of {Show(t)}"));
+            problems.AddRange(file.Keys.Where(t => !t.StartsWith('$') && !source.Contains(t)).Select(t => $"{code}.json: not used any more: {Show(t)}"));
         }
         Assert.True(problems.Count == 0, string.Join(Environment.NewLine, problems));
     }
@@ -40,9 +38,9 @@ public class TranslationTests
     public void Every_translation_keeps_the_values_of_its_text()
     {
         var problems = new List<string>();
-        foreach (var file in LanguageCodes().SelectMany(code => new[] { MainFile(code), CatalogFile(code) }).Where(File.Exists))
+        foreach (var file in LanguageCodes().Select(LanguageFile))
         {
-            foreach (var (english, text) in Read(file, problems).Where(entry => entry.Key != Localizer.NameKey))
+            foreach (var (english, text) in Read(file, problems).Where(entry => !entry.Key.StartsWith('$')))
             {
                 if (!Placeholders(english).SequenceEqual(Placeholders(text)))
                     problems.Add($"{Path.GetFileName(file)}: the values differ in {Show(english)}");
@@ -61,20 +59,19 @@ public class TranslationTests
     [InlineData("Starting {0}…")]                               // L.F($"…")
     [InlineData("Game start of {0:g}:  {1},  {2}.")]            // L.F($"…") with a format and holes holding calls
     [InlineData("{0} mods turned off")]                         // L.Plural(n, "…", "…")
+    [InlineData("Switch the app to {0}?")]                      // L.Both(language, "…")
     [InlineData("That mod is no longer installed.")]            // new ModException($"…") in Core
     [InlineData("Select at least one part to install.")]        // problems.Add($"…") in Core
     [InlineData("{0} has no .pak file. Unreal Engine 5 games usually need it next to the .utoc and .ucas files.")]
     [InlineData("Phantom Blade Zero")]                          // a game profile's displayName
-    public void The_scanner_reads_every_kind_of_text(string text) => Assert.Contains(text, Source.Value.Main);
+    public void The_scanner_reads_every_kind_of_text(string text) => Assert.Contains(text, Source.Value.Texts);
 
     private static IEnumerable<string> LanguageCodes() =>
         Directory.EnumerateFiles(Path.Combine(SourceTexts.Root, "UEManager.UI", "Localization"), "*.json")
             .Select(Path.GetFileNameWithoutExtension)
             .Select(code => code!);
 
-    private static string MainFile(string code) => Path.Combine(SourceTexts.Root, "UEManager.UI", "Localization", code + ".json");
-
-    private static string CatalogFile(string code) => Path.Combine(SourceTexts.Root, "UEManager.UI", "Catalog", "Localization", code + ".json");
+    private static string LanguageFile(string code) => Path.Combine(SourceTexts.Root, "UEManager.UI", "Localization", code + ".json");
 
     /// <summary>A language file's entries; a text that is in it twice is a problem, as only one of them would count.</summary>
     private static Dictionary<string, string> Read(string file, List<string> problems)
@@ -114,17 +111,14 @@ public class TranslationTests
 }
 
 /// <summary>
-/// The texts the app translates, read from the source as the code writes them: L.T("…"), L.F($"…") and
-/// L.Plural(n, "…", "…") in the UI; new ModException($"…"), problems.Add($"…") and warnings.Add($"…") in Core;
+/// The texts the app translates, read from the source as the code writes them: L.T("…"), L.F($"…"),
+/// L.Plural(n, "…", "…") and L.Both(language, "…") in the UI; new ModException($"…"), problems.Add($"…") and warnings.Add($"…") in Core;
 /// {ui:Loc '…'} in the XAML; and the names, taglines and UE4SS notes of the game profiles. An interpolated
-/// string counts as its format, "Starting {0}…", as the app looks it up. Texts used only in a Catalog folder
-/// belong to the catalog's language files.
+/// string counts as its format, "Starting {0}…", as the app looks it up.
 /// </summary>
 internal sealed class SourceTexts
 {
-    public HashSet<string> Main { get; } = new(StringComparer.Ordinal);
-
-    public HashSet<string> Catalog { get; } = new(StringComparer.Ordinal);
+    public HashSet<string> Texts { get; } = new(StringComparer.Ordinal);
 
     /// <summary>The src folder of the repository.</summary>
     public static string Root { get; } = FindRoot();
@@ -132,18 +126,14 @@ internal sealed class SourceTexts
     public static SourceTexts Read()
     {
         var texts = new SourceTexts();
-        texts.ReadCode(Path.Combine(Root, "UEManager.UI"), ["L.T(", "L.F(", "L.Plural("]);
+        texts.ReadCode(Path.Combine(Root, "UEManager.UI"), ["L.T(", "L.F(", "L.Plural(", "L.Both("]);
         texts.ReadCode(Path.Combine(Root, "UEManager.Core"), ["ModException(", "problems.Add(", "warnings.Add("]);
         texts.ReadXaml(Path.Combine(Root, "UEManager.UI"));
         texts.ReadProfiles(Path.Combine(Root, "UEManager.Core", "Games", "Profiles"));
         return texts;
     }
 
-    private void Add(string text, string file)
-    {
-        var inCatalog = file.Split(Path.DirectorySeparatorChar).Contains("Catalog");
-        (inCatalog ? Catalog : Main).Add(text);
-    }
+    private void Add(string text) => Texts.Add(text);
 
     private static IEnumerable<string> Files(string folder, string pattern) =>
         Directory.EnumerateFiles(folder, pattern, SearchOption.AllDirectories)
@@ -165,11 +155,15 @@ internal sealed class SourceTexts
                     {
                         SkipArgument(code, ref i);
                         if (Literal(code, ref i) is { } one)
-                            Add(one, file);
+                            Add(one);
+                        SkipArgument(code, ref i);
+                    }
+                    else if (marker == "L.Both(")
+                    {
                         SkipArgument(code, ref i);
                     }
                     if (Literal(code, ref i) is { } text)
-                        Add(text, file);
+                        Add(text);
                 }
             }
         }
@@ -186,7 +180,7 @@ internal sealed class SourceTexts
             foreach (Match match in Loc.Matches(xaml))
             {
                 var text = match.Groups[1].Success ? match.Groups[1].Value : match.Groups[2].Value.Trim();
-                Add(Regex.Replace(text, @"\\(.)", "$1"), file);
+                Add(Regex.Replace(text, @"\\(.)", "$1"));
             }
         }
     }
@@ -200,7 +194,7 @@ internal sealed class SourceTexts
             foreach (var key in new[] { "displayName", "tagline", "ue4ssNote" })
             {
                 if (profile.RootElement.TryGetProperty(key, out var value) && value.GetString() is { Length: > 0 } text)
-                    Add(text, file);
+                    Add(text);
             }
         }
     }

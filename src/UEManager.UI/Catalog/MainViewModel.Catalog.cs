@@ -3,21 +3,25 @@ using UEManager.Core;
 using UEManager.Core.Catalog;
 using UEManager.Core.Mods;
 using UEManager.UI.Catalog;
+using UEManager.UI.Services;
 
 namespace UEManager.UI.ViewModels;
 
 /// <summary>
-/// The openmods page's part of the main view model. Only a build with the catalog compiles it in;
-/// without it, the partial methods it implements stay empty, so they vanish from the build.
+/// The openmods page's part of the main view model. While the catalog is switched off
+/// (<see cref="AppInfo.IsCatalogOn"/>), it makes no catalog, so the page never goes online.
 /// </summary>
 public sealed partial class MainViewModel
 {
     public CatalogViewModel? Catalog { get; private set; }
 
-    partial void CreateCatalog(string? catalogUrl) =>
-        Catalog = new CatalogViewModel(this, Http, catalogUrl ?? OpenMods.GamesListUrl, Profile.SteamAppId, isTest: catalogUrl is not null,
-            Enum.TryParse<CatalogSortField>(settings.CatalogSort, out var sort) ? sort : CatalogSortField.Updated,
-            settings.CatalogSort is null || settings.CatalogSortDescending);
+    partial void CreateCatalog(string? catalogUrl)
+    {
+        if (AppInfo.IsCatalogOn)
+            Catalog = new CatalogViewModel(this, Http, catalogUrl ?? OpenMods.GamesListUrl, Profile.SteamAppId, isTest: catalogUrl is not null,
+                Enum.TryParse<CatalogSortField>(settings.CatalogSort, out var sort) ? sort : CatalogSortField.Updated,
+                settings.CatalogSort is null || settings.CatalogSortDescending);
+    }
 
     partial void OnModsChanged() => Catalog?.UpdateInstalled(manager?.Mods ?? []);
 

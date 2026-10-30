@@ -422,6 +422,38 @@
 
     <!-- A table column header that sorts the list. Tag holds the glyph: a red arrow on the sorted
          column, a grey dash (E738) on a column that can be sorted but is not. -->
+    <!-- A name that opens more about it, such as a mod's name in the Mods list: underlined on hover. -->
+    <Style x:Key="Button.Name" TargetType="Button">
+        <Setter Property="Foreground" Value="{StaticResource Brush.Text}" />
+        <Setter Property="FontSize" Value="14" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Cursor" Value="Hand" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <TextBlock x:Name="Text" Background="Transparent" FontSize="{TemplateBinding FontSize}" FontWeight="{TemplateBinding FontWeight}" TextTrimming="CharacterEllipsis"
+                               Foreground="{TemplateBinding Foreground}" Text="{Binding Content, RelativeSource={RelativeSource TemplatedParent}}" />
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="Text" Property="TextDecorations" Value="Underline" />
+                        </Trigger>
+                        <Trigger Property="IsKeyboardFocused" Value="True">
+                            <Setter TargetName="Text" Property="TextDecorations" Value="Underline" />
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- A short text that leads somewhere, such as from a mod to its errors in the UE4SS log. -->
+    <Style x:Key="Button.Link" TargetType="Button" BasedOn="{StaticResource Button.Name}">
+        <Setter Property="FontSize" Value="12" />
+        <Setter Property="FontWeight" Value="Normal" />
+    </Style>
+
     <Style x:Key="Button.SortHeader" TargetType="Button">
         <Setter Property="Foreground" Value="{StaticResource Brush.TextDim}" />
         <Setter Property="Cursor" Value="Hand" />

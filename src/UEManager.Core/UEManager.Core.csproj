@@ -32,9 +32,4 @@
     <InternalsVisibleTo Include="UEManager.Core.Tests" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(Catalog)' != 'true'">
-    <!-- Built without the optional catalog: its code is left out (see Directory.Build.props). -->
-    <Compile Remove="Catalog\**" />
-  </ItemGroup>
-
 </Project>

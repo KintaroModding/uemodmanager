@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<!--
+  Colours for settings written as lines of Name=Value or Name: Value in the settings editor, from the app's
+  palette: .ini, .cfg, .txt, .toml and .yaml. Lines that start with ; or # are comments.
+-->
+<SyntaxDefinition name="Settings" xmlns="http://icsharpcode.net/sharpdevelop/syntaxdefinition/2008">
+  <Color name="Comment" foreground="#7C746A" fontStyle="italic" />
+  <Color name="Section" foreground="#E5485F" fontWeight="bold" />
+  <Color name="Key" foreground="#E5485F" />
+  <Color name="String" foreground="#D2B07A" />
+  <Color name="Value" foreground="#86B793" />
+
+  <RuleSet ignoreCase="true">
+    <Span color="Comment">
+      <Begin>^\s*[;#]</Begin>
+    </Span>
+    <Rule color="Section">^\s*\[[^\]\r\n]*\]</Rule>
+    <Rule color="Key">^\s*[^\s;#\[=:][^=:\r\n]*?(?=\s*[=:])</Rule>
+    <Span color="String">
+      <Begin>"</Begin>
+      <End>"</End>
+    </Span>
+    <Keywords color="Value">
+      <Word>true</Word>
+      <Word>false</Word>
+      <Word>yes</Word>
+      <Word>no</Word>
+      <Word>on</Word>
+      <Word>off</Word>
+    </Keywords>
+    <Rule color="Value">-?\b\d+(\.\d+)?\b</Rule>
+  </RuleSet>
+</SyntaxDefinition>

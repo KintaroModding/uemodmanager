@@ -15,4 +15,12 @@ public partial class Ue4ssView : UserControl
     }
 
     private void ScrollToEnd() => (LogLines.Template.FindName("LogScroll", LogLines) as ScrollViewer)?.ScrollToEnd();
+
+    /// <summary>Ctrl+F: the log's search box, with its text selected to type over.</summary>
+    internal void FocusSearch()
+    {
+        SearchBox.BringIntoView();
+        SearchBox.Focus();
+        SearchBox.SelectAll();
+    }
 }

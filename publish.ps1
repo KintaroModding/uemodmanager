@@ -1,10 +1,8 @@
-# Builds one GitHub release: the app with and without the optional catalog (the openmods page).
-#   dist\uemm-openmods\UEModManager.exe   with the catalog
-#   dist\uemm\UEModManager.exe            without it
-#   dist\release\*.zip                    one zip each, ready to upload
-# Each exe is a single file, framework dependent (needs the .NET 8 Desktop Runtime). Each publish
-# checks its exe (CheckPublishedExe in UEManager.UI.csproj): without the catalog, the exe must not
-# contain the word "openmods" anywhere.
+# Builds one GitHub release:
+#   dist\uemm\UEModManager.exe   the app
+#   dist\release\*.zip          its zip, ready to upload
+# The exe is a single file, framework dependent (needs the .NET 8 Desktop Runtime). The publish
+# checks it (CheckPublishedExe in UEManager.UI.csproj).
 param(
     [string]$Configuration = "Release",
     [string]$GameProfile = "phantom-blade-zero"
@@ -23,16 +21,14 @@ $release = Join-Path $dist "release"
 if (Test-Path $release) { Remove-Item $release -Recurse -Force }
 New-Item -ItemType Directory -Force $release | Out-Null
 
-# The zip names are part of the update check: each build finds its own zip in a release by this name.
-foreach ($build in @{ Name = "uemm-openmods"; Catalog = "true" }, @{ Name = "uemm"; Catalog = "false" }) {
-    $out = Join-Path $dist $build.Name
-    # The app keeps its data in a Data folder next to the exe when it is run from here: never delete that.
-    if (Test-Path $out) { Get-ChildItem $out -Exclude "Data" | Remove-Item -Recurse -Force }
-    dotnet publish $project -c $Configuration -o $out "-p:Catalog=$($build.Catalog)" "-p:GameProfile=$GameProfile" "-p:DebugType=none"
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+# The zip name is part of the update check: the app finds its zip in a release by this name.
+$out = Join-Path $dist "uemm"
+# The app keeps its data in a Data folder next to the exe when it is run from here: never delete that.
+if (Test-Path $out) { Get-ChildItem $out -Exclude "Data" | Remove-Item -Recurse -Force }
+dotnet publish $project -c $Configuration -o $out "-p:GameProfile=$GameProfile" "-p:DebugType=none"
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-    Compress-Archive -Path (Join-Path $out "UEModManager.exe") -DestinationPath (Join-Path $release "$($build.Name)_${GameProfile}_$version.zip")
-}
+Compress-Archive -Path (Join-Path $out "UEModManager.exe") -DestinationPath (Join-Path $release "uemm_${GameProfile}_$version.zip")
 
-Write-Host "Published to $dist; both exes passed their check."
+Write-Host "Published to $dist; the exe passed its check."
 Get-ChildItem $release | ForEach-Object { Write-Host "  $($_.Name)" }

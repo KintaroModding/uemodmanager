@@ -30,11 +30,30 @@ public class LocalizerTests
         Assert.Equal(expected, L.Current.Closest(CultureInfo.GetCultureInfo(windows)));
 
     [Fact]
-    public void A_saved_language_wins_while_the_app_has_it()
+    public void A_saved_language_wins_while_the_app_has_it_else_English()
     {
         Assert.Equal("zh-CN", L.Current.Resolve("zh-CN"));
         Assert.Equal("en", L.Current.Resolve("en"));
-        Assert.Equal(L.Current.Resolve(null), L.Current.Resolve("xx-unknown"));
+        Assert.Equal("en", L.Current.Resolve(null));
+        Assert.Equal("en", L.Current.Resolve("xx-unknown"));
+    }
+
+    [Theory]
+    [InlineData("zh-CN", "zh-CN")]
+    [InlineData("en-US,zh-TW", "zh-CN")]
+    [InlineData("en-US,de-DE,en-GB", null)]
+    public void Offers_the_language_of_Windows_when_the_app_has_one_besides_English(string windows, string? offered) =>
+        Assert.Equal(offered, L.Current.Offer(windows.Split(',').Select(CultureInfo.GetCultureInfo))?.Code);
+
+    [Fact]
+    public void The_offer_is_in_that_language_and_in_English()
+    {
+        var chinese = L.Current.Languages.Single(language => language.Code == "zh-CN");
+
+        Assert.Equal("Simplified Chinese", chinese.EnglishName);
+        Assert.Equal("语言", L.In("zh-CN", "Language"));
+        Assert.Equal("Language", L.In("xx-unknown", "Language"));
+        Assert.Equal("是否将程序切换为简体中文？\nSwitch the app to Simplified Chinese?", L.Both(chinese, "Switch the app to {0}?"));
     }
 
     [Fact]

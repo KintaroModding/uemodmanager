@@ -21,5 +21,18 @@ public class AppSettingsTests
 
         Assert.Equal("zh-CN", AppSettings.Load(paths).Language);
         Assert.True(AppSettings.Load(paths).BackUpSavesOnLaunch);
+        Assert.Null(AppSettings.Load(paths).Window);
+    }
+
+    [Fact]
+    public void The_window_place_survives_a_restart()
+    {
+        using var folder = new TestFolder();
+        var paths = new AppPaths(folder.Combine("Data"));
+        var settings = new AppSettings { Window = new WindowPlacement(120.5, 40, 1400, 900, true) };
+
+        settings.Save(paths);
+
+        Assert.Equal(new WindowPlacement(120.5, 40, 1400, 900, true), AppSettings.Load(paths).Window);
     }
 }

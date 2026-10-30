@@ -143,8 +143,8 @@ public partial class App : Application
             _ = viewModel.InstallAsync(downloads);
     }
 
-    // Hooks for the optional catalog, implemented in Catalog\App.Catalog.cs. A build without the
-    // catalog leaves that folder out, so the hooks stay empty and their calls vanish.
+    // Hooks for the catalog, implemented in Catalog\App.Catalog.cs. They do nothing while the
+    // catalog is switched off (AppInfo.IsCatalogOn).
     partial void ReadCatalogArgument(string[] args, ref string? catalogUrl);
 
     partial void AddCatalogResources();

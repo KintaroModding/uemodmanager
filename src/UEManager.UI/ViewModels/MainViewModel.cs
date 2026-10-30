@@ -15,16 +15,26 @@ using UEManager.UI.Services;
 
 namespace UEManager.UI.ViewModels;
 
-public sealed record ToastMessage(string Text, bool IsError)
+/// <param name="ActionText">A button in the toast, such as "Show log"; null for none.</param>
+public sealed record ToastMessage(string Text, bool IsError, string? ActionText = null)
 {
     public string Tone => IsError ? "bad" : "good";
 }
+
+/// <summary>A save backup in Settings: its file, and when it was made and how big it is.</summary>
+public sealed record SaveBackupItem(string Path, string Text);
 
 public sealed partial class MainViewModel : LocalizedObservableObject
 {
     private readonly AppPaths paths;
     private readonly AppSettings settings;
     private readonly DispatcherTimer toastTimer = new();
+    private Action? toastAction;
+
+    /// <summary>Looks every few seconds whether the game runs, to read UE4SS's log once it closed.</summary>
+    private readonly DispatcherTimer gameWatch = new() { Interval = TimeSpan.FromSeconds(5) };
+    private DateTime? gameRunningSince;
+    private bool watching;
 
     /// <summary>
     /// The app's only connection: the UE4SS manifest and the update check at start, the openmods
@@ -39,7 +49,7 @@ public sealed partial class MainViewModel : LocalizedObservableObject
     /// <summary>The build before a game update the player has not confirmed yet; null when there is none.</summary>
     private string? previousBuild;
 
-    /// <param name="catalogUrl">Another openmods games list, such as a test copy; used by a build with the catalog only.</param>
+    /// <param name="catalogUrl">Another openmods games list, such as a test copy; used only while the catalog is switched on.</param>
     /// <param name="updateUrl">Another release list for the update check, such as a test copy.</param>
     public MainViewModel(GameProfile profile, AppPaths paths, ArtSet art, string? catalogUrl = null, string? updateUrl = null)
     {
@@ -56,15 +66,119 @@ public sealed partial class MainViewModel : LocalizedObservableObject
         sortField = Enum.TryParse<ModSortField>(settings.ModsSort, out var field) ? field : ModSortField.Name;
         sortDescending = settings.ModsSortDescending;
         ApplySort();
-        toastTimer.Tick += (_, _) =>
-        {
-            toastTimer.Stop();
-            Toast = null;
-        };
+        toastTimer.Tick += (_, _) => DismissToast();
+        gameWatch.Tick += async (_, _) => await WatchGameAsync();
     }
 
-    // Hooks for the optional catalog, implemented in Catalog\MainViewModel.Catalog.cs. A build without
-    // the catalog leaves that folder out, so the hooks stay empty and their calls vanish.
+    /// <summary>
+    /// One look at the game: when it ran and runs no more, however it was started, UE4SS's log of that game start
+    /// is read, and errors that name a mod the manager installed are reported, with the way to the log.
+    /// </summary>
+    private async Task WatchGameAsync()
+    {
+        if (watching || Game is not { } game)
+            return;
+        watching = true;
+        try
+        {
+            var running = await Task.Run(() => GameProcess.IsRunning(game));
+            if (running)
+                gameRunningSince ??= DateTime.Now;
+            else if (gameRunningSince is { } since)
+            {
+                gameRunningSince = null;
+                await ReportUe4ssErrorsAsync(game, since);
+            }
+        }
+        finally
+        {
+            watching = false;
+        }
+    }
+
+    private async Task ReportUe4ssErrorsAsync(GameInstall game, DateTime since)
+    {
+        if (await ReadUe4ssErrorsAsync(game) is not { } read)
+            return;
+        var (log, named) = read;
+        // A log older than this game start comes from another one: UE4SS did not run this time.
+        if (log.WrittenAt < since.AddMinutes(-1) || named.Count == 0)
+            return;
+        var mods = string.Join(", ", manager!.Mods.Where(m => Ue4ssFolders(m).Any(named.Contains)).Select(m => m.Name));
+        Log.Info($"After the game closed, UE4SS's log names these mods in errors: {mods}.");
+        ShowToast(L.F($"The game closed, and UE4SS reported errors in these mods: {mods}."), isError: true,
+            L.T("Show log"), () => SelectedPage = "Ue4ss");
+        if (SelectedPage == "Ue4ss")
+            await RefreshUe4ssLogAsync();
+    }
+
+    /// <summary>
+    /// The UE4SS mod folders that errors named in UE4SS's log of the last game start, and when UE4SS last wrote
+    /// that log; null before the log was read, or without one.
+    /// </summary>
+    private (IReadOnlySet<string> Folders, DateTime WrittenAt)? ue4ssErrors;
+
+    /// <summary>
+    /// Reads UE4SS's log for errors that name a UE4SS mod the manager installed, and marks those mods in the list.
+    /// UE4SS's own mods, such as BPModLoaderMod, are not ours to mark.
+    /// </summary>
+    /// <returns>The log and the folders its errors name; null without a log, or when it could not be read.</returns>
+    private async Task<(Ue4ssLog Log, IReadOnlySet<string> Named)?> ReadUe4ssErrorsAsync(GameInstall game)
+    {
+        if (manager is null || Ue4ssRuntime.Detect(game) is not { Installed: true } runtime)
+            return null;
+        var folders = manager.Mods.SelectMany(Ue4ssFolders).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        if (folders.Count == 0)
+            return null;
+        Ue4ssLog? log;
+        IReadOnlySet<string> named;
+        try
+        {
+            (log, named) = await Task.Run(() =>
+            {
+                var read = Ue4ssLog.Read(runtime.LogPath);
+                return (read, (IReadOnlySet<string>)(read?.ModsNamedInErrors(folders) ?? []).ToHashSet(StringComparer.OrdinalIgnoreCase));
+            });
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Log.Warn($"UE4SS.log could not be read for the mods' errors: {ex.Message}");
+            return null;
+        }
+        // Another game was chosen meanwhile.
+        if (log is null || Game != game)
+            return null;
+        var marked = ue4ssErrors is { Folders.Count: > 0 };
+        ue4ssErrors = (named, log.WrittenAt);
+        if (marked || named.Count > 0)
+            RefreshMods();
+        return (log, named);
+    }
+
+    /// <summary>The folders a mod placed in UE4SS's Mods folder; none for a pak mod.</summary>
+    private static IEnumerable<string> Ue4ssFolders(ModRecord mod) => mod.Files
+        .Where(f => f.Target == DeployTarget.Ue4ssMods)
+        .Select(f => f.FileName.Split('/')[0])
+        .Distinct(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Whether UE4SS reported errors in this enabled mod at the last game start. A mod installed or updated after
+    /// that start is not marked: the errors came from what it replaced.
+    /// </summary>
+    internal bool HadUe4ssErrors(ModRecord mod) =>
+        mod.Enabled && ue4ssErrors is { } errors && mod.InstalledAt.LocalDateTime <= errors.WrittenAt
+        && Ue4ssFolders(mod).Any(errors.Folders.Contains);
+
+    /// <summary>The UE4SS page, with the log searched for the mod's folder, so its errors show with the lines around them.</summary>
+    internal void ShowUe4ssErrors(ModRecord mod)
+    {
+        Ue4ssLogPanel.SearchText = Ue4ssFolders(mod).FirstOrDefault(folder => ue4ssErrors?.Folders.Contains(folder) == true) ?? "";
+        Ue4ssLogPanel.OnlyProblems = false;
+        SelectedPage = "Ue4ss";
+    }
+
+    // Hooks for the catalog, implemented in Catalog\MainViewModel.Catalog.cs. While the catalog is
+    // switched off (AppInfo.IsCatalogOn), there is no catalog view model, so they do nothing.
     partial void CreateCatalog(string? catalogUrl);
 
     /// <summary>The installed mods or UE4SS changed.</summary>
@@ -144,6 +258,15 @@ public sealed partial class MainViewModel : LocalizedObservableObject
 
     [ObservableProperty]
     private HelpReportViewModel? helpDialog;
+
+    [ObservableProperty]
+    private SettingsEditorViewModel? settingsEditor;
+
+    [ObservableProperty]
+    private ModDetailsViewModel? modDetails;
+
+    [ObservableProperty]
+    private ModSetsViewModel? modSets;
 
     [ObservableProperty]
     private ResetModdingViewModel? resetDialog;
@@ -242,6 +365,11 @@ public sealed partial class MainViewModel : LocalizedObservableObject
             OnPropertyChanged();
         }
     }
+
+    /// <summary>The save backups, newest first, for Restore in Settings.</summary>
+    public IReadOnlyList<SaveBackupItem> SaveBackupList => SaveBackups.List(paths.SaveBackupDir(Profile.Id))
+        .Select(path => new SaveBackupItem(path, $"{File.GetLastWriteTime(path):G}  ·  {Format.Size(new FileInfo(path).Length)}"))
+        .ToList();
 
     public string SaveBackupsText
     {
@@ -350,6 +478,40 @@ public sealed partial class MainViewModel : LocalizedObservableObject
 
     public bool HasUnmanaged => UnmanagedCount > 0;
 
+    /// <summary>How many mods a test without mods turned off; 0 when no such test is on.</summary>
+    public int TestOffCount => manager?.OffForTest.Count ?? 0;
+
+    public bool IsTestingWithoutMods => TestOffCount > 0;
+
+    public bool CanTestWithoutMods => !IsTestingWithoutMods && Mods.Any(m => m.Enabled);
+
+    public string TestText => L.Plural(TestOffCount,
+        "Testing without mods: {0} mod is turned off.", "Testing without mods: {0} mods are turned off.");
+
+    /// <summary>Turns every mod off and remembers which ones, to see whether the game runs without them.</summary>
+    [RelayCommand]
+    private async Task TestWithoutMods()
+    {
+        if (!EnsureGame())
+            return;
+        var count = 0;
+        if (await RunAsync(L.T("Turning mods off…"), async () => count = await Task.Run(manager!.TurnOffForTest)))
+            ShowToast(L.Plural(count, "{0} mod is off. Start the game to test it without mods.", "{0} mods are off. Start the game to test it without mods."));
+        RefreshMods();
+    }
+
+    /// <summary>Turns the mods a test without mods turned off on again.</summary>
+    [RelayCommand]
+    private async Task TurnModsBackOn()
+    {
+        if (!EnsureGame())
+            return;
+        var count = 0;
+        if (await RunAsync(L.T("Turning mods back on…"), async () => count = await Task.Run(manager!.TurnBackOn)))
+            ShowToast(L.Plural(count, "{0} mod is on again.", "{0} mods are on again."));
+        RefreshMods();
+    }
+
     /// <summary>The game is known but UE4SS is not in it, so the install guide is offered.</summary>
     public bool IsUe4ssMissing => ue4ss is { Installed: false };
 
@@ -358,14 +520,36 @@ public sealed partial class MainViewModel : LocalizedObservableObject
 
     public async Task InitializeAsync(IReadOnlyList<string> downloads)
     {
+        if (settings.Language is null && L.Current.Offer() is { } offered)
+            await OfferLanguageAsync(offered);
         ModManager.ClearStaging(paths);
         GameInstall? found = null;
         await RunAsync(L.T("Looking for the game…"), async () => found = await Task.Run(FindGame));
         await SetGameAsync(found);
+        gameWatch.Start();
         _ = CheckUe4ssManifestAsync();
         _ = Update.CheckAsync();
         if (downloads.Count > 0)
             await InstallAsync(downloads);
+    }
+
+    /// <summary>
+    /// Asks a player who chose no language yet whether to switch to the language of Windows. The question is in
+    /// that language and in English; Yes and No stay English, which everyone reads. Either answer is saved, so
+    /// the question comes once.
+    /// </summary>
+    internal async Task OfferLanguageAsync(LanguageOption offered)
+    {
+        var accepted = await AskAsync(L.Both(offered, "Language", "  ·  "),
+            L.Both(offered, "Switch the app to {0}?") + "\n\n" + L.Both(offered, "You can change this later in Settings ▸ Language."),
+            "Yes", "No");
+        if (accepted)
+        {
+            SelectedLanguage = offered.Code;
+            return;
+        }
+        settings.Language = L.English;
+        SaveSettings();
     }
 
     /// <summary>Installs downloads one after another, each through the review dialog.</summary>
@@ -432,11 +616,74 @@ public sealed partial class MainViewModel : LocalizedObservableObject
         RefreshMods();
     }
 
-    /// <summary>Opens the mod's settings files in the game with the app set for their type, or Notepad.</summary>
+    /// <summary>Opens the mod's settings files in the game in the app's own settings editor.</summary>
     internal void EditSettings(ModItemViewModel item)
     {
-        foreach (var file in item.DeployedSettingsFiles)
-            TryOpen(file);
+        if (item.DeployedSettingsFiles is { Count: > 0 } files)
+            SettingsEditor = new SettingsEditorViewModel(this, item.Name, files);
+    }
+
+    internal void CloseSettingsEditor() => SettingsEditor = null;
+
+    /// <summary>Shows a mod's details: where it came from, and each file with its place in the game and its state.</summary>
+    internal void ShowModDetails(ModRecord mod)
+    {
+        if (manager is null || Game is null)
+            return;
+        var files = mod.Files.Select(file =>
+        {
+            var path = file.DeployedPath ?? Path.Combine(manager.TargetFolder(file.Target), file.FileName.Replace('/', Path.DirectorySeparatorChar));
+            var (state, tone) = ModDetailsViewModel.StateOf(mod, file);
+            return new ModFileItem(Path.GetRelativePath(Game.RootPath, path), path, Format.Size(file.Size), state, tone);
+        }).ToList();
+        ModDetails = new ModDetailsViewModel(this, mod, files);
+    }
+
+    internal void CloseModDetails() => ModDetails = null;
+
+    /// <summary>Opens the player's mod sets.</summary>
+    [RelayCommand]
+    private void ShowModSets()
+    {
+        if (!EnsureGame())
+            return;
+        ModSets = new ModSetsViewModel(this);
+        ModSets.Load(manager!.Sets, manager.Mods);
+    }
+
+    internal void CloseModSets() => ModSets = null;
+
+    /// <summary>Saves the mods that are on now as a set, in place of a set with the same name.</summary>
+    /// <returns>Whether the set was saved.</returns>
+    internal async Task<bool> SaveModSetAsync(string name)
+    {
+        ModSet? set = null;
+        var saved = await RunAsync(L.T("Saving the set…"), async () => set = await Task.Run(() => manager!.SaveSet(name)));
+        if (saved)
+            ShowToast(L.F($"Set \"{set!.Name}\" saved."));
+        ModSets?.Load(manager!.Sets, manager.Mods);
+        return saved;
+    }
+
+    /// <summary>Turns on exactly the mods of a set and closes the sets.</summary>
+    internal async Task ApplyModSetAsync(string name)
+    {
+        (int On, int Off) changed = default;
+        if (await RunAsync(L.F($"Turning on the set \"{name}\"…"), async () => changed = await Task.Run(() => manager!.ApplySet(name))))
+        {
+            ModSets = null;
+            ShowToast(changed is (0, 0)
+                ? L.F($"Set \"{name}\" was already in use.")
+                : L.F($"Set \"{name}\" is in use. Turned on: {changed.On}. Turned off: {changed.Off}."));
+        }
+        RefreshMods();
+        ModSets?.Load(manager!.Sets, manager.Mods);
+    }
+
+    internal async Task DeleteModSetAsync(string name)
+    {
+        await RunAsync(L.T("Deleting the set…"), () => Task.Run(() => manager!.DeleteSet(name)));
+        ModSets?.Load(manager!.Sets, manager.Mods);
     }
 
     internal async Task ResetSettingsAsync(ModItemViewModel item)
@@ -686,6 +933,14 @@ public sealed partial class MainViewModel : LocalizedObservableObject
         return Ue4ssLogPanel.LoadAsync(ue4ss);
     }
 
+    /// <summary>F5: checks the mods' files in the game again, and on the UE4SS page reads its log again.</summary>
+    internal async Task ReloadAsync()
+    {
+        RefreshMods();
+        if (SelectedPage == "Ue4ss")
+            await RefreshUe4ssLogAsync();
+    }
+
     partial void OnSelectedPageChanged(string? oldValue, string newValue)
     {
         if (newValue == "Ue4ss")
@@ -857,6 +1112,30 @@ public sealed partial class MainViewModel : LocalizedObservableObject
                 async () => backup = await Task.Run(() => SaveBackups.Create(saves, paths.SaveBackupDir(Profile.Id), DateTime.Now))))
             ShowToast(L.F($"Saves backed up to {backup}."));
         OnPropertyChanged(nameof(SaveBackupsText));
+        OnPropertyChanged(nameof(SaveBackupList));
+    }
+
+    /// <summary>Puts a save backup back, after a question; the saves of now are backed up first.</summary>
+    [RelayCommand]
+    private async Task RestoreSaveBackup(string backup)
+    {
+        if (!EnsureGame() || SaveFolder is not { } saves)
+            return;
+        if (GameProcess.IsRunning(Game!))
+        {
+            ShowToast(L.F($"{GameDisplayName} is running. Close the game first, then try again."), isError: true);
+            return;
+        }
+        var made = File.GetLastWriteTime(backup);
+        if (!await AskAsync(L.T("Restore saves"),
+                L.F($"Put back the saves of {made:G}? Your saves of now are backed up first, so you can go back to them.\n\nIf Steam then asks about a conflict with its cloud saves, choose the files on this PC."),
+                L.T("Restore saves")))
+            return;
+        if (await RunAsync(L.T("Restoring your saves…"),
+                () => Task.Run(() => SaveBackups.Restore(backup, saves, paths.SaveBackupDir(Profile.Id), DateTime.Now))))
+            ShowToast(L.F($"The saves of {made:G} are back."));
+        OnPropertyChanged(nameof(SaveBackupsText));
+        OnPropertyChanged(nameof(SaveBackupList));
     }
 
     [RelayCommand]
@@ -952,6 +1231,16 @@ public sealed partial class MainViewModel : LocalizedObservableObject
     {
         toastTimer.Stop();
         Toast = null;
+        toastAction = null;
+    }
+
+    /// <summary>The toast's button, such as Show log.</summary>
+    [RelayCommand]
+    private void ToastAction()
+    {
+        var action = toastAction;
+        DismissToast();
+        action?.Invoke();
     }
 
     partial void OnSearchTextChanged(string value)
@@ -1046,7 +1335,10 @@ public sealed partial class MainViewModel : LocalizedObservableObject
             ? $"{Profile.DisplayName} was not found."
             : $"{Profile.DisplayName} at '{Game.RootPath}' ({Game.Store}); mods folder '{Game.ModsPath}'.");
         CheckGameBuild();
+        ue4ssErrors = null;
         RefreshMods();
+        if (Game is { } game)
+            _ = ReadUe4ssErrorsAsync(game);
     }
 
     /// <summary>
@@ -1152,7 +1444,8 @@ public sealed partial class MainViewModel : LocalizedObservableObject
 
     /// <summary>A dialog, the busy screen or the drop target covers the window.</summary>
     internal bool HasOverlay => IsBusy || IsDragOver || InstallDialog is not null || Ue4ssGuide is not null
-        || Confirm is not null || HelpDialog is not null || ResetDialog is not null || Update.IsDialogOpen || IsPreReleaseDialogOpen;
+        || Confirm is not null || HelpDialog is not null || ResetDialog is not null || SettingsEditor is not null || ModDetails is not null
+        || ModSets is not null || Update.IsDialogOpen || IsPreReleaseDialogOpen;
 
     /// <summary>The newest app version the banner at start announced; see <see cref="AppSettings.AnnouncedUpdate"/>.</summary>
     internal string? AnnouncedUpdate
@@ -1165,11 +1458,13 @@ public sealed partial class MainViewModel : LocalizedObservableObject
         }
     }
 
-    internal void ShowToast(string text, bool isError = false)
+    /// <param name="actionText">A button in the toast, which runs <paramref name="action"/>; the toast then stays longer.</param>
+    internal void ShowToast(string text, bool isError = false, string? actionText = null, Action? action = null)
     {
-        Toast = new ToastMessage(text, isError);
+        Toast = new ToastMessage(text, isError, action is null ? null : actionText);
+        toastAction = action;
         toastTimer.Stop();
-        toastTimer.Interval = TimeSpan.FromSeconds(isError ? 12 : 6);
+        toastTimer.Interval = TimeSpan.FromSeconds(action is not null ? 30 : isError ? 12 : 6);
         toastTimer.Start();
     }
 
@@ -1182,6 +1477,23 @@ public sealed partial class MainViewModel : LocalizedObservableObject
         catch (Exception ex) when (ex is System.ComponentModel.Win32Exception or IOException)
         {
             ShowToast(L.F($"'{path}' could not be opened: {ex.Message}"), isError: true);
+        }
+    }
+
+    /// <summary>Where the window was when it last closed; see <see cref="AppSettings.Window"/>.</summary>
+    internal WindowPlacement? WindowPlacement => settings.Window;
+
+    /// <summary>Remembers where the window is as the app closes. A failure is only logged: no one would see a note.</summary>
+    internal void RememberWindow(WindowPlacement placement)
+    {
+        settings.Window = placement;
+        try
+        {
+            settings.Save(paths);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Log.Warn($"The window's place could not be saved: {ex.Message}");
         }
     }
 

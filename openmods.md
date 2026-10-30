@@ -10,7 +10,6 @@ A mod manager for Unreal Engine games. The first supported game is **Phantom Bla
 - Enables, disables, updates and uninstalls mods. It keeps its own copy of every mod and records a checksum for every
   file it places. Files it did not place are never overwritten or removed.
 - Installs and updates UE4SS for the game, and shows the UE4SS log with its errors and warnings.
-- The **openmods** page lists the game's mods from openmods: install or update one with a click.
 - Changes nothing while the game runs, and keeps the settings you changed in a mod's `config.lua` across updates.
 - Can back up your saves each time it starts the game.
 - **Reset modding** takes the game back to its original files in one step, so you can start clean.
@@ -23,9 +22,8 @@ A mod manager for Unreal Engine games. The first supported game is **Phantom Bla
 ## How to install
 
 1. Install the [.NET 8 Desktop Runtime (x64)](https://dotnet.microsoft.com/download/dotnet/8.0) if you do not have it.
-2. Download `uemm-openmods_phantom-blade-zero_<version>.zip` from the latest
+2. Download `uemm_phantom-blade-zero_<version>.zip` from the latest
    [release](https://github.com/KintaroModding/uemodmanager/releases/latest).
-   (`uemm_phantom-blade-zero_<version>.zip` is the same app without the openmods page.)
 3. Unzip it into a folder you can write to, for example `Documents\UE MM`, not `C:\Program Files`.
 4. Start `UEModManager.exe`. It finds the game through Steam or the Epic Games Launcher; otherwise choose the game
    folder in Settings.
@@ -43,7 +41,6 @@ folder.
   before anything reaches the game.
 - **Mods:** turn mods on and off, update or uninstall them, and edit or reset a mod's settings.
 - **UE4SS:** install or update UE4SS, open its folder, and read its log.
-- **openmods:** browse the game's mods on openmods and install one with a click.
 - **Settings:** the game folder, and the manager's data, logs and backups. **Reset modding…** removes every mod and
   UE4SS from the game; you choose whether the mods also leave the manager. **Report a problem…** makes a report for
   the help channel on Discord.
@@ -67,13 +64,8 @@ feature band, pinned in `global.json`), from the repository root in PowerShell:
 ./publish.ps1
 ```
 
-It runs the tests and builds both release files into `dist/release/`:
-
-- `uemm-openmods_phantom-blade-zero_<version>.zip` (the app with the optional catalog, the openmods page)
-- `uemm_phantom-blade-zero_<version>.zip` (the same app built with `-p:Catalog=false`)
-
-Each zip holds one `UEModManager.exe`, a single file that needs the .NET 8 Desktop Runtime. To build only the app
-with the catalog:
+It runs the tests and builds the release file `dist/release/uemm_phantom-blade-zero_<version>.zip`. The zip holds
+one `UEModManager.exe`, a single file that needs the .NET 8 Desktop Runtime. To build only the app:
 
 ```powershell
 dotnet publish src/UEManager.UI/UEManager.UI.csproj -c Release -o dist/app
@@ -82,8 +74,9 @@ dotnet publish src/UEManager.UI/UEManager.UI.csproj -c Release -o dist/app
 ## Credits
 
 - KintaroModding: creator and maintainer. Every contributor is named in `CONTRIBUTORS.md` and on the app's About page.
-- [CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet) and
-  [SharpCompress](https://github.com/adamhathcock/sharpcompress), both MIT.
+- [CommunityToolkit.Mvvm](https://github.com/CommunityToolkit/dotnet),
+  [SharpCompress](https://github.com/adamhathcock/sharpcompress) and
+  [AvalonEdit](https://github.com/icsharpcode/AvalonEdit), all MIT.
 - [UE4SS](https://github.com/UE4SS-RE/RE-UE4SS), which the app installs for the game.
 
 License: GNU General Public License, version 3, with additional terms in `NOTICE.md`.

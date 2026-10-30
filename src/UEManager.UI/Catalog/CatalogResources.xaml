@@ -4,7 +4,7 @@
                     xmlns:catalog="clr-namespace:UEManager.UI.Catalog">
 
     <!-- The openmods entry in the navigation and the page itself. MainWindow shows both through
-         DynamicResource, so a build without the catalog, which leaves this folder out, simply has neither. -->
+         DynamicResource; the app adds this file only while the catalog is switched on, else it has neither. -->
     <ui:PageConverter x:Key="CatalogPageConverter" />
 
     <RadioButton x:Key="CatalogNavItem" x:Shared="False" Style="{DynamicResource NavItem}" Content="openmods" ui:Icon.Glyph="&#xE774;"

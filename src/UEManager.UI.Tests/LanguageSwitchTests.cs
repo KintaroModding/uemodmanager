@@ -13,9 +13,7 @@ using UEManager.Core.Storage;
 using UEManager.UI.Services;
 using UEManager.UI.ViewModels;
 using Xunit;
-#if CATALOG
 using UEManager.UI.Catalog;
-#endif
 
 namespace UEManager.UI.Tests;
 
@@ -59,12 +57,10 @@ public class LanguageSwitchTests
                 {
                     Source = new Uri($"/UEModManager;component/{resource}", UriKind.Relative),
                 });
-#if CATALOG
             app.Resources.MergedDictionaries.Add(new ResourceDictionary
             {
                 Source = new Uri("/UEModManager;component/Catalog/CatalogResources.xaml", UriKind.Relative),
             });
-#endif
             Localizer.Current.SetLanguage("en");
             var paths = new AppPaths(folder);
             paths.EnsureWritable();
@@ -116,14 +112,12 @@ public class LanguageSwitchTests
             stage("checking an unavailable release");
             WaitFor(update.CheckAsync());
             Assert.Equal("尚无发布版本。", update.StatusHint);
-#if CATALOG
             var catalog = new CatalogViewModel(model, http, "https://example.invalid/catalog", null, true,
                 CatalogSortField.Name, false);
             stage("loading an unavailable catalog");
             WaitFor(catalog.LoadAsync());
             Assert.StartsWith("测试列表：", catalog.TestCatalogText);
             Assert.StartsWith("无法加载 openmods 列表：", catalog.Error);
-#endif
             stage("switching back to English");
             selector.SelectedValue = "en";
             FlushBindings();
@@ -133,10 +127,8 @@ public class LanguageSwitchTests
             Assert.True(model.ModsView.IsEmpty);
             Assert.Contains(Descendants(surface).OfType<TextBlock>(), t => t.Text == "Settings");
             Assert.Equal("No release is published yet.", update.StatusHint);
-#if CATALOG
             Assert.StartsWith("Test list:", catalog.TestCatalogText);
             Assert.StartsWith("The openmods list could not be loaded:", catalog.Error);
-#endif
         }
         finally
         {

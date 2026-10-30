@@ -12,7 +12,7 @@ namespace UEManager.UI.Services;
 /// <summary>
 /// One running app per data folder. Two would each keep their own copy of the mod list and
 /// overwrite each other's changes, so a second start hands its downloads to the first one and
-/// ends. Builds with and without the catalog count as one app when they share a data folder.
+/// ends.
 /// </summary>
 internal sealed class SingleInstance : IDisposable
 {

@@ -144,9 +144,9 @@ public static class PackageScanner
         }
 
         // A settings file in one of the game's mods folders, such as SpeakerHighlight.json next to its pak in
-        // ~mods, goes with a package there: the mod reads it at that place. Readmes outside such a folder stay out.
+        // ~mods, goes with a package there: the mod reads it at that place. Readmes stay out, also in such a folder.
         var packaged = drafts.Where(d => d.Ue4ssRoot is null).ToList();
-        foreach (var file in files.Where(f => FileSystem.HasExtension(f, SettingsFiles.PakSettingsExtensions)
+        foreach (var file in files.Where(f => SettingsFiles.IsPakSettings(f)
                      && IsModsFolder(Path.GetDirectoryName(f)!) && !ue4ssRoots.Any(r => IsInside(f, r))))
         {
             var name = Path.GetFileNameWithoutExtension(file);

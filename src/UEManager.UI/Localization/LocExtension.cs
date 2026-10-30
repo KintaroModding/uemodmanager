@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Globalization;
 using System.Windows.Data;
 using System.Windows.Markup;
+using System.Windows.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using UEManager.UI.Services;
 
@@ -39,10 +40,19 @@ public sealed class LocExtension(string text) : MarkupExtension
 /// </summary>
 public abstract class LocalizedObservableObject : ObservableObject
 {
+    /// <summary>The thread the view model lives on, which its views and collections belong to.</summary>
+    private readonly Dispatcher dispatcher = Dispatcher.CurrentDispatcher;
+
     protected LocalizedObservableObject() =>
         PropertyChangedEventManager.AddHandler(Localizer.Current, OnLanguageChanged, nameof(Localizer.Language));
 
-    private void OnLanguageChanged(object? sender, PropertyChangedEventArgs e) => RefreshLanguage();
+    private void OnLanguageChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (dispatcher.CheckAccess())
+            RefreshLanguage();
+        else
+            dispatcher.BeginInvoke(RefreshLanguage);
+    }
 
     /// <summary>Tells the views that every text may have changed.</summary>
     protected virtual void RefreshLanguage() => OnPropertyChanged(string.Empty);

@@ -73,7 +73,7 @@
             <StackPanel>
                 <TextBlock Style="{StaticResource Text.Title}" Text="{ui:Loc 'Save backups'}" />
                 <TextBlock Margin="0,6,0,18" Style="{StaticResource Text.Body}"
-                           Text="{ui:Loc 'A broken mod can break a save. When you turn it on below, Launch game first zips your save folder, and the manager keeps the last 5 backups. To go back to one, close the game, unzip it and copy its files over the save folder.'}" />
+                           Text="{ui:Loc 'A broken mod can break a save. When you turn it on below, Launch game first zips your save folder, and the manager keeps the last 5 backups. To go back to one, close the game and click Restore next to it.'}" />
                 <DockPanel Style="{StaticResource Field}">
                     <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc 'Save folder', Tracked=True}" />
                     <StackPanel>
@@ -84,7 +84,23 @@
                 </DockPanel>
                 <DockPanel Style="{StaticResource Field}">
                     <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc 'Backups', Tracked=True}" />
-                    <TextBlock Style="{StaticResource Text.Small}" Foreground="{StaticResource Brush.Text}" Text="{Binding SaveBackupsText}" />
+                    <StackPanel>
+                        <TextBlock Style="{StaticResource Text.Small}" Foreground="{StaticResource Brush.Text}" Text="{Binding SaveBackupsText}" />
+                        <!-- Each backup, newest first, with Restore. -->
+                        <ItemsControl Margin="0,6,0,0" ItemsSource="{Binding SaveBackupList}" Focusable="False">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <DockPanel Margin="0,4,0,0" LastChildFill="False">
+                                        <TextBlock DockPanel.Dock="Left" Width="260" VerticalAlignment="Center" Style="{StaticResource Text.Small}"
+                                                   Text="{Binding Text}" />
+                                        <Button DockPanel.Dock="Left" Content="{ui:Loc 'Restore…'}" ui:Icon.Glyph="&#xE777;"
+                                                Command="{Binding DataContext.RestoreSaveBackupCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                                CommandParameter="{Binding Path}" />
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
                 </DockPanel>
                 <CheckBox Margin="0,6,0,14" Content="{ui:Loc 'Back up my saves each time I start the game here'}"
                           IsChecked="{Binding BackUpSavesOnLaunch}" />

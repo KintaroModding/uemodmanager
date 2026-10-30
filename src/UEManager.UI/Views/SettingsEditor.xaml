@@ -1,0 +1,68 @@
+<UserControl x:Class="UEManager.UI.Views.SettingsEditor"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:avalon="http://icsharpcode.net/sharpdevelop/avalonedit"
+             xmlns:ui="clr-namespace:UEManager.UI"
+             xmlns:vm="clr-namespace:UEManager.UI.ViewModels"
+             mc:Ignorable="d"
+             d:DataContext="{d:DesignInstance Type=vm:SettingsEditorViewModel}">
+    <UserControl.InputBindings>
+        <KeyBinding Key="S" Modifiers="Control" Command="{Binding SaveCommand}" />
+        <KeyBinding Key="Escape" Command="{Binding EscapeCommand}" />
+    </UserControl.InputBindings>
+
+    <Border Style="{StaticResource Dialog}" Width="900">
+        <DockPanel>
+            <StackPanel DockPanel.Dock="Top">
+                <TextBlock Style="{StaticResource Text.Overline}" Text="{ui:Loc 'Settings', Tracked=True}" />
+                <DockPanel Margin="0,8,0,0">
+                    <!-- A mod with several settings files: one at a time. -->
+                    <ComboBox DockPanel.Dock="Right" Width="260" VerticalAlignment="Center" Style="{StaticResource LanguageSelector}"
+                              ItemsSource="{Binding Files}" SelectedItem="{Binding SelectedFile}" IsEnabled="{Binding CanSwitchFile}"
+                              Visibility="{Binding HasSeveralFiles, Converter={StaticResource Visible}}"
+                              ToolTip="{ui:Loc 'Save your changes first, then choose another file.'}" ToolTipService.ShowOnDisabled="True" />
+                    <TextBlock Style="{StaticResource Text.Title}" TextTrimming="CharacterEllipsis" Text="{Binding ModName}" />
+                </DockPanel>
+                <TextBlock Margin="0,6,0,14" Style="{StaticResource Text.Body}" TextWrapping="Wrap" Text="{Binding Hint}" />
+            </StackPanel>
+
+            <Grid DockPanel.Dock="Bottom" Margin="0,18,0,0">
+                <DockPanel Visibility="{Binding IsAsking, Converter={StaticResource Hidden}}">
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                        <Button Content="{ui:Loc 'Close'}" Command="{Binding CloseCommand}" />
+                        <Button Margin="8,0,0,0" Style="{StaticResource Button.Primary}" Content="{ui:Loc 'Save'}" ui:Icon.Glyph="&#xE74E;"
+                                Command="{Binding SaveCommand}" ToolTip="Ctrl+S" />
+                    </StackPanel>
+                    <Grid VerticalAlignment="Center" Margin="0,0,16,0">
+                        <TextBlock Style="{StaticResource Text.Small}" TextWrapping="Wrap" Foreground="{StaticResource Brush.Success}"
+                                   Text="{Binding SavedText}" Visibility="{Binding SavedText, Converter={StaticResource VisibleIfSet}}" />
+                        <TextBlock Style="{StaticResource Text.Small}" TextWrapping="Wrap" Foreground="{StaticResource Brush.Danger}"
+                                   Text="{Binding Error}" Visibility="{Binding Error, Converter={StaticResource VisibleIfSet}}" />
+                    </Grid>
+                </DockPanel>
+                <!-- Close with unsaved changes asks here, in place of the buttons. -->
+                <DockPanel Visibility="{Binding IsAsking, Converter={StaticResource Visible}}">
+                    <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+                        <Button Content="{ui:Loc 'Keep editing'}" Command="{Binding KeepEditingCommand}" />
+                        <Button Margin="8,0,0,0" Content="{ui:Loc 'Don\'t save'}" Command="{Binding DiscardCommand}" />
+                        <Button x:Name="AskSave" Margin="8,0,0,0" Style="{StaticResource Button.Primary}" Content="{ui:Loc 'Save'}"
+                                ui:Icon.Glyph="&#xE74E;" Command="{Binding SaveAndCloseCommand}" />
+                    </StackPanel>
+                    <TextBlock VerticalAlignment="Center" Margin="0,0,16,0" Style="{StaticResource Text.Body}" TextWrapping="Wrap"
+                               Foreground="{StaticResource Brush.Warning}" Text="{Binding AskText}" />
+                </DockPanel>
+            </Grid>
+
+            <Border Height="440" BorderThickness="1" CornerRadius="2"
+                    Background="{StaticResource Brush.Field}" BorderBrush="{StaticResource Brush.Line}">
+                <avalon:TextEditor x:Name="Editor" Document="{Binding Document}" SyntaxHighlighting="{Binding Highlighting}"
+                                   IsReadOnly="{Binding IsReadOnly}" ShowLineNumbers="True" Padding="8,6"
+                                   FontFamily="Cascadia Mono, Consolas" FontSize="13" Background="Transparent"
+                                   Foreground="{StaticResource Brush.Text}" LineNumbersForeground="{StaticResource Brush.TextDim}"
+                                   HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" />
+            </Border>
+        </DockPanel>
+    </Border>
+</UserControl>

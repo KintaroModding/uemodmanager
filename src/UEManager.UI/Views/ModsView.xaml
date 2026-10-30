@@ -36,11 +36,33 @@
 
         <!-- Search -->
         <DockPanel Margin="0,26,0,12">
+            <Button DockPanel.Dock="Right" Margin="10,0,0,0" Content="{ui:Loc 'Test without mods'}" ui:Icon.Glyph="&#xE7E8;"
+                    Command="{Binding TestWithoutModsCommand}" IsEnabled="{Binding CanTestWithoutMods}" ToolTipService.ShowOnDisabled="True"
+                    ToolTip="{ui:Loc 'Turns every mod off and remembers which ones were on, to see whether the game runs without them. One click turns them back on.'}" />
+            <Button DockPanel.Dock="Right" Margin="10,0,0,0" Content="{ui:Loc 'Mod sets…'}" ui:Icon.Glyph="&#xE81E;"
+                    Command="{Binding ShowModSetsCommand}" ToolTip="{ui:Loc 'Save the mods that are on as a set, and turn on a set with one click'}" />
             <Border DockPanel.Dock="Right" Margin="10,0,0,0" Style="{StaticResource FieldBox}">
                 <TextBlock VerticalAlignment="Center" Style="{StaticResource Text.Small}" Text="{Binding ModsCountText}" />
             </Border>
-            <TextBox Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" Tag="{ui:Loc 'Filter: mod name, version, PAK / IoStore, or file name'}" />
+            <TextBox x:Name="SearchBox" Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}" ToolTip="Ctrl+F"
+                     Tag="{ui:Loc 'Filter: mod name, version, PAK / IoStore, or file name'}" />
         </DockPanel>
+
+        <!-- A test without mods is on -->
+        <Border Margin="0,0,0,12" Style="{StaticResource Card}" Padding="22,16"
+                Visibility="{Binding IsTestingWithoutMods, Converter={StaticResource Visible}}">
+            <DockPanel>
+                <Button DockPanel.Dock="Right" VerticalAlignment="Center" Style="{StaticResource Button.Primary}"
+                        Content="{ui:Loc 'Turn them back on'}" ui:Icon.Glyph="&#xE7A7;" Command="{Binding TurnModsBackOnCommand}" />
+                <TextBlock DockPanel.Dock="Left" Margin="0,0,16,0" Style="{StaticResource Text.Icon}" FontSize="18"
+                           Foreground="{StaticResource Brush.Warning}" Text="&#xE7E8;" />
+                <StackPanel VerticalAlignment="Center" Margin="0,0,16,0">
+                    <TextBlock FontWeight="SemiBold" TextWrapping="Wrap" Text="{Binding TestText}" />
+                    <TextBlock Margin="0,3,0,0" Style="{StaticResource Text.Small}" TextWrapping="Wrap"
+                               Text="{ui:Loc 'Start the game and see whether the problem stays. UE4SS itself and files you put into the game by hand stay in place.'}" />
+                </StackPanel>
+            </DockPanel>
+        </Border>
 
         <!-- Table -->
         <Border Style="{StaticResource Card}" Padding="0">
@@ -89,9 +111,13 @@
                                     </StackPanel>
 
                                     <StackPanel Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center">
-                                        <TextBlock FontSize="14" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"
-                                                   Text="{Binding Name}" ToolTip="{Binding FilesText}" />
+                                        <Button Style="{StaticResource Button.Name}" Content="{Binding Name}"
+                                                Command="{Binding ShowDetailsCommand}" ToolTip="{ui:Loc 'Show the details of this mod and every file it placed'}" />
                                         <TextBlock Margin="0,3,0,0" Style="{StaticResource Text.Small}" Text="{Binding Detail}" />
+                                        <Button Margin="0,4,0,0" Style="{StaticResource Button.Link}" Foreground="{StaticResource Brush.Danger}"
+                                                Content="{ui:Loc 'UE4SS reported errors at the last game start'}" Command="{Binding ShowUe4ssErrorsCommand}"
+                                                ToolTip="{ui:Loc 'Show the lines of the UE4SS log that name this mod'}"
+                                                Visibility="{Binding HasUe4ssErrors, Converter={StaticResource Visible}}" />
                                     </StackPanel>
 
                                     <Border Grid.Column="2" Style="{StaticResource Badge}">

@@ -31,13 +31,22 @@ public sealed class ModManager
     private readonly List<ModRecord> mods;
     private readonly Func<GameInstall, bool> isGameRunning;
 
+    /// <summary>The ids of the mods <see cref="TurnOffForTest"/> turned off, saved with the mod list.</summary>
+    private List<string> offForTest;
+
+    /// <summary>The player's mod sets, saved with the mod list. A change puts a new list in place, so the old one can be put back.</summary>
+    private List<ModSet> sets;
+
     /// <param name="isGameRunning">Whether the game runs now from an install. By default, the install's executables are looked for among the running processes.</param>
     public ModManager(GameInstall game, AppPaths paths, Func<GameInstall, bool>? isGameRunning = null)
     {
         Game = game;
         this.paths = paths;
         this.isGameRunning = isGameRunning ?? GameProcess.IsRunning;
-        mods = JsonFile.Read<ModState>(StateFile)?.Mods ?? [];
+        var state = JsonFile.Read<ModState>(StateFile);
+        mods = state?.Mods ?? [];
+        offForTest = state?.OffForTest ?? [];
+        sets = state?.Sets ?? [];
         FollowMovedInstall();
         OtherInstallRoot = FindOtherInstall();
     }
@@ -264,7 +273,14 @@ public sealed class ModManager
                 removal?.PutBack();
                 throw;
             }
-            Commit(removal, Undo);
+            var setsBefore = sets;
+            if (old is not null)
+                sets = WithModReplaced(sets, old.Id, record.Id);
+            Commit(removal, () =>
+            {
+                Undo();
+                sets = setsBefore;
+            });
 
             if (old is not null)
                 FileSystem.TryDeleteDirectory(LibraryFolderOf(old));
@@ -300,6 +316,182 @@ public sealed class ModManager
         }
     }
 
+    /// <summary>
+    /// The mods that <see cref="TurnOffForTest"/> turned off and that are still installed and off; empty when no
+    /// such test is on.
+    /// </summary>
+    public IReadOnlyList<ModRecord> OffForTest
+    {
+        get
+        {
+            lock (gate)
+                return mods.Where(m => !m.Enabled && offForTest.Contains(m.Id)).ToList();
+        }
+    }
+
+    /// <summary>
+    /// Turns every enabled mod off, all or none, and remembers which ones, so <see cref="TurnBackOn"/> turns exactly
+    /// those on again: to see whether the game runs without mods. Files the manager did not place, and UE4SS
+    /// itself, stay in the game.
+    /// </summary>
+    /// <returns>How many mods were turned off.</returns>
+    public int TurnOffForTest()
+    {
+        lock (gate)
+        {
+            var on = mods.Where(m => m.Enabled).Select(m => m.Id).ToList();
+            if (on.Count == 0)
+                return 0;
+            EnsureCanChange();
+            Apply(new HashSet<string>(), [.. offForTest.Union(on)]);
+            Log.Info($"Turned {on.Count} mod(s) off to test the game without mods.");
+            return on.Count;
+        }
+    }
+
+    /// <summary>
+    /// Turns the mods <see cref="TurnOffForTest"/> turned off on again, all or none, and ends the test. Mods the
+    /// player turned on meanwhile stay on.
+    /// </summary>
+    /// <returns>How many mods were turned on.</returns>
+    public int TurnBackOn()
+    {
+        lock (gate)
+        {
+            if (offForTest.Count == 0)
+                return 0;
+            EnsureCanChange();
+            var wanted = mods.Where(m => m.Enabled || offForTest.Contains(m.Id)).Select(m => m.Id).ToHashSet();
+            var count = mods.Count(m => !m.Enabled && wanted.Contains(m.Id));
+            Apply(wanted, []);
+            Log.Info($"Turned {count} mod(s) back on after the test without mods.");
+            return count;
+        }
+    }
+
+    public IReadOnlyList<ModSet> Sets
+    {
+        get
+        {
+            lock (gate)
+                return sets.ToList();
+        }
+    }
+
+    /// <summary>
+    /// Saves the mods that are on now as a set, in place of a set with the same name. While a test without mods is
+    /// on, the mods it turned off count as on: they are the player's own choice.
+    /// </summary>
+    public ModSet SaveSet(string name)
+    {
+        lock (gate)
+        {
+            name = name.Trim();
+            if (name.Length == 0)
+                throw new ModException($"Give the set a name.");
+            var set = new ModSet(name, [.. mods.Where(m => m.Enabled || offForTest.Contains(m.Id)).Select(m => m.Id)]);
+            var before = sets;
+            var changed = sets.ToList();
+            var index = changed.FindIndex(s => s.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            if (index < 0)
+                changed.Add(set);
+            else
+                changed[index] = set;
+            sets = changed;
+            Commit(undo: () => sets = before);
+            Log.Info($"Saved the mod set \"{name}\" with {set.ModIds.Count} mod(s).");
+            return set;
+        }
+    }
+
+    /// <summary>
+    /// Makes exactly the mods of a set enabled, all or none, and ends a test without mods: the other mods are turned
+    /// off.
+    /// </summary>
+    /// <returns>How many mods were turned on and how many off.</returns>
+    public (int On, int Off) ApplySet(string name)
+    {
+        lock (gate)
+        {
+            var set = FindSet(name);
+            var wanted = set.ModIds.ToHashSet();
+            var on = mods.Count(m => !m.Enabled && wanted.Contains(m.Id));
+            var off = mods.Count(m => m.Enabled && !wanted.Contains(m.Id));
+            if (on + off > 0)
+                EnsureCanChange();
+            if (on + off > 0 || offForTest.Count > 0)
+                Apply(wanted, []);
+            Log.Info($"Applied the mod set \"{set.Name}\": {on} mod(s) turned on, {off} off.");
+            return (on, off);
+        }
+    }
+
+    public void DeleteSet(string name)
+    {
+        lock (gate)
+        {
+            var set = FindSet(name);
+            var before = sets;
+            sets = [.. sets.Where(s => !ReferenceEquals(s, set))];
+            Commit(undo: () => sets = before);
+            Log.Info($"Deleted the mod set \"{set.Name}\".");
+        }
+    }
+
+    private ModSet FindSet(string name) =>
+        sets.FirstOrDefault(s => s.Name.Equals(name.Trim(), StringComparison.OrdinalIgnoreCase))
+        ?? throw new ModException($"There is no mod set named \"{name}\".");
+
+    /// <summary>The sets with a mod's id replaced by the id of its update, or taken out when <paramref name="newId"/> is null.</summary>
+    private static List<ModSet> WithModReplaced(List<ModSet> sets, string id, string? newId) =>
+        [.. sets.Select(set => !set.ModIds.Contains(id) ? set : set with
+        {
+            ModIds = newId is null ? [.. set.ModIds.Where(m => m != id)] : [.. set.ModIds.Select(m => m == id ? newId : m)],
+        })];
+
+    /// <summary>
+    /// Makes exactly the mods with these ids enabled, all or none: the mods to turn off are checked and moved aside
+    /// first, then the others are copied in, and the list is saved last. When a step fails, everything goes back.
+    /// </summary>
+    /// <param name="offAfter">The mods a test without mods turned off, as saved with the change.</param>
+    private void Apply(IReadOnlySet<string> wanted, List<string> offAfter)
+    {
+        var off = mods.Where(m => m.Enabled && !wanted.Contains(m.Id)).ToList();
+        var on = mods.Where(m => !m.Enabled && wanted.Contains(m.Id)).ToList();
+        var enabledAfter = mods.Where(m => wanted.Contains(m.Id)).ToList();
+        foreach (var mod in on)
+        {
+            var clash = enabledAfter.FirstOrDefault(other => other != mod
+                && other.Files.Any(f => mod.Files.Any(g => IsSameFile(f, g.Target, g.FileName))));
+            if (clash is not null)
+                throw new ModException($"\"{mod.Name}\" uses the same files as \"{clash.Name}\". Disable that mod first.");
+        }
+
+        var removal = off.Count > 0 ? Undeploy(off) : null;
+        var deployed = new List<ModRecord>();
+        try
+        {
+            foreach (var mod in on)
+            {
+                Deploy(mod);
+                deployed.Add(mod);
+            }
+        }
+        catch
+        {
+            deployed.ForEach(RemoveDeployedFiles);
+            removal?.PutBack();
+            throw;
+        }
+        var before = offForTest;
+        offForTest = offAfter;
+        Commit(removal, () =>
+        {
+            deployed.ForEach(RemoveDeployedFiles);
+            offForTest = before;
+        });
+    }
+
     /// <summary>Removes a mod from the game and from the library.</summary>
     /// <returns>The folder the player's changed settings were backed up to, or null when there were none.</returns>
     public string? Uninstall(string id)
@@ -321,9 +513,12 @@ public sealed class ModManager
             }
             var position = mods.IndexOf(mod);
             mods.Remove(mod);
+            var setsBefore = sets;
+            sets = WithModReplaced(sets, mod.Id, null);
             Commit(removal, () =>
             {
                 mods.Insert(position, mod);
+                sets = setsBefore;
                 if (backup is not null)
                     FileSystem.TryDeleteDirectory(backup);
             });
@@ -1257,5 +1452,5 @@ public sealed class ModManager
         new FileInfo(path).Length == file.Size
         && string.Equals(FileSystem.Sha256(path), file.Sha256, StringComparison.OrdinalIgnoreCase);
 
-    private void Save() => JsonFile.Write(StateFile, new ModState { Mods = mods });
+    private void Save() => JsonFile.Write(StateFile, new ModState { Mods = mods, OffForTest = offForTest, Sets = sets });
 }

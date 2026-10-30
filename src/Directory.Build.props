@@ -4,7 +4,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>12</LangVersion>
-    <Version>1.1.1</Version>
+    <Version>1.2.0</Version>
     <!-- A pre-release shows a yellow "Pre-release" box below About that explains what it means. -->
     <PreRelease>false</PreRelease>
     <Authors>KintaroModding</Authors>
@@ -13,23 +13,13 @@
     <!-- Symbols live inside the assemblies, so a release is the exe and nothing else. -->
     <DebugType>embedded</DebugType>
 
-    <!-- The optional catalog: the openmods page, which lists the game's mods from openmods.nexus.
-         On by default; -p:Catalog=false builds the app without the Catalog folders of Core and UI, so
-         that exe holds no catalog code, text or address (each publish checks that). -->
-    <Catalog Condition="'$(Catalog)' == ''">true</Catalog>
-    <DefineConstants Condition="'$(Catalog)' == 'true'">$(DefineConstants);CATALOG</DefineConstants>
-
-    <!-- Builds with and without the catalog keep their own build state, obj\catalog or obj\base, so one
-         never starts from the other's generated XAML files. Nothing in obj is ever compiled as a source
-         file. A publish still checks its exe (UEManager.UI.csproj, CheckPublishedExe). -->
-    <BaseIntermediateOutputPath Condition="'$(Catalog)' == 'true'">obj\catalog\</BaseIntermediateOutputPath>
-    <BaseIntermediateOutputPath Condition="'$(Catalog)' != 'true'">obj\base\</BaseIntermediateOutputPath>
-    <DefaultItemExcludes>$(DefaultItemExcludes);obj\**</DefaultItemExcludes>
+    <!-- The catalog: the openmods page, which lists the game's mods from openmods.nexus. Its code is
+         always built in; this switch shows the page and lets it go online. Off for now. -->
+    <Catalog>false</Catalog>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Changes the generated assembly info when the switch changes, so an incremental build never
-         keeps the other build's code. -->
+    <!-- The switches, as AppInfo reads them. -->
     <AssemblyMetadata Include="Catalog" Value="$(Catalog)" />
     <AssemblyMetadata Include="PreRelease" Value="$(PreRelease)" />
   </ItemGroup>

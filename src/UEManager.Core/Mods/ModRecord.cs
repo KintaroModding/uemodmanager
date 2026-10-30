@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
 
 namespace UEManager.Core.Mods;
 
@@ -93,16 +94,23 @@ public sealed class ModFileRecord
 /// mod keeps next to its pak, such as a .json in ~mods. A change to one never blocks a removal.
 /// Disabling keeps the player's version, an update asks whether to keep it, and uninstalling backs it up.
 /// </summary>
-public static class SettingsFiles
+public static partial class SettingsFiles
 {
-    /// <summary>Settings a pak mod may keep next to its pak. Not .txt: that is mostly a readme.</summary>
-    public static readonly string[] PakSettingsExtensions = [".json", ".ini", ".cfg", ".toml", ".yaml", ".yml"];
+    /// <summary>Settings a pak mod may keep next to its pak.</summary>
+    public static readonly string[] PakSettingsExtensions = [".json", ".ini", ".cfg", ".toml", ".yaml", ".yml", ".txt"];
+
+    /// <summary>
+    /// A file a pak mod may keep next to its pak as its settings, such as Highlight.json or BuffDuration.txt.
+    /// Readmes, licenses and change logs are not settings, and two mods' readme.txt would clash in ~mods.
+    /// </summary>
+    public static bool IsPakSettings(string path) =>
+        FileSystem.HasExtension(path, PakSettingsExtensions) && !DocumentName().IsMatch(Path.GetFileNameWithoutExtension(path));
 
     /// <param name="relativePath">The path below the target folder, such as "ModName/Scripts/config.lua".</param>
     public static bool Is(DeployTarget target, string relativePath)
     {
         if (target is DeployTarget.Mods or DeployTarget.LogicMods)
-            return FileSystem.HasExtension(relativePath, PakSettingsExtensions);
+            return IsPakSettings(relativePath);
         if (target != DeployTarget.Ue4ssMods)
             return false;
         var parts = relativePath.Split('/', '\\');
@@ -114,6 +122,10 @@ public static class SettingsFiles
     /// <summary>How the player knows the file: "Scripts/config.lua" for "ModName/Scripts/config.lua", else its name.</summary>
     public static string Name(string relativePath) =>
         relativePath.IndexOf('/') is var slash and >= 0 ? relativePath[(slash + 1)..] : relativePath;
+
+    /// <summary>Names that mark a document, not settings: readme, license, change log, credits, install notes.</summary>
+    [GeneratedRegex(@"^(read[ _-]?me|licen[cs]e|change[ _-]?log|changes|credits|install|notice|copying|authors)", RegexOptions.IgnoreCase)]
+    private static partial Regex DocumentName();
 }
 
 public sealed class ModState
@@ -121,7 +133,16 @@ public sealed class ModState
     public int Version { get; set; } = 1;
 
     public List<ModRecord> Mods { get; set; } = [];
+
+    /// <summary>The ids of the mods the player turned off to test the game without mods; empty when no test is on.</summary>
+    public List<string> OffForTest { get; set; } = [];
+
+    public List<ModSet> Sets { get; set; } = [];
 }
+
+/// <summary>A named choice of mods that the player turns on together, such as "Co-op" or "Hard mode".</summary>
+/// <param name="ModIds">The ids of the mods in the set. An update keeps a mod in its sets; an uninstall removes it.</param>
+public sealed record ModSet(string Name, IReadOnlyList<string> ModIds);
 
 public enum ModIntegrity
 {

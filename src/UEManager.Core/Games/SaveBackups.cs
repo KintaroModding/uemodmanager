@@ -1,10 +1,11 @@
 using System.IO.Compression;
+using UEManager.Core.Mods;
 
 namespace UEManager.Core.Games;
 
 /// <summary>
 /// Zips of the game's save folder, made before the game starts, because a broken mod can break a save.
-/// Only the newest few are kept. Restoring is the player's choice: unzip one over the save folder.
+/// Only the newest few are kept, and the player can put one back.
 /// </summary>
 public static class SaveBackups
 {
@@ -68,6 +69,52 @@ public static class SaveBackups
             FileSystem.TryDeleteFile(old);
         Log.Info($"Backed up the saves in '{saveFolder}' to '{backup}'.");
         return backup;
+    }
+
+    /// <summary>
+    /// Puts a backup back: the save folder then holds exactly the backup's files. The saves of now are backed up
+    /// first, so a restore can be undone. The backup is unpacked next to the save folder before anything changes,
+    /// and the old save folder moves aside until the new one is in place; when a step fails, it moves back.
+    /// </summary>
+    /// <returns>The backup of the saves before the restore, or null when there were none.</returns>
+    public static string? Restore(string backup, string saveFolder, string backupDir, DateTime now)
+    {
+        if (!File.Exists(backup))
+            throw new ModException($"The save backup is gone: {backup}");
+        var folder = Path.TrimEndingDirectorySeparator(Path.GetFullPath(saveFolder));
+        // Next to the save folder, so both moves stay on one drive; names of their own, so an interrupted
+        // restore never leaves anything another one would delete.
+        var staging = $"{folder}.uemm-restore-{now:yyyyMMddHHmmss}";
+        var aside = $"{folder}.uemm-old-{now:yyyyMMddHHmmss}";
+        try
+        {
+            ZipFile.ExtractToDirectory(backup, staging);
+            var before = HasSaves(folder) ? Create(folder, backupDir, now) : null;
+            if (Directory.Exists(folder))
+                Directory.Move(folder, aside);
+            try
+            {
+                Directory.Move(staging, folder);
+            }
+            catch
+            {
+                if (Directory.Exists(aside))
+                    Directory.Move(aside, folder);
+                throw;
+            }
+            FileSystem.TryDeleteDirectory(aside);
+            Log.Info($"Restored the saves in '{folder}' from '{backup}'.");
+            return before;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or InvalidDataException)
+        {
+            Log.Warn($"The saves could not be restored from '{backup}': {ex.Message}");
+            throw new ModException($"The saves could not be put back, so they stay as they are. Close the game, then try again. ({ex.Message})");
+        }
+        finally
+        {
+            FileSystem.TryDeleteDirectory(staging);
+        }
     }
 
     /// <summary>The backups, newest first.</summary>

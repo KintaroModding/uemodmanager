@@ -140,7 +140,7 @@
                                          IsChecked="{Binding SelectedPage, Converter={StaticResource Page}, ConverterParameter=Mods}" />
                             <RadioButton Style="{StaticResource NavItem}" Content="UE4SS" ui:Icon.Glyph="&#xE943;"
                                          IsChecked="{Binding SelectedPage, Converter={StaticResource Page}, ConverterParameter=Ue4ss}" />
-                            <!-- Filled by Catalog\CatalogResources.xaml in a build with the catalog only. -->
+                            <!-- Filled by Catalog\CatalogResources.xaml while the catalog is switched on. -->
                             <ContentControl Focusable="False" Content="{DynamicResource CatalogNavItem}" />
                             <RadioButton Style="{StaticResource NavItem}" Content="{ui:Loc 'Settings'}" ui:Icon.Glyph="&#xE713;"
                                          IsChecked="{Binding SelectedPage, Converter={StaticResource Page}, ConverterParameter=Settings}" />
@@ -195,8 +195,8 @@
                 <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
                     <Grid MaxWidth="1120" Margin="48,0,48,28">
                         <views:HomeView Visibility="{Binding SelectedPage, Converter={StaticResource Page}, ConverterParameter=Home}" />
-                        <views:ModsView Visibility="{Binding SelectedPage, Converter={StaticResource Page}, ConverterParameter=Mods}" />
-                        <views:Ue4ssView Visibility="{Binding SelectedPage, Converter={StaticResource Page}, ConverterParameter=Ue4ss}" />
+                        <views:ModsView x:Name="ModsPage" Visibility="{Binding SelectedPage, Converter={StaticResource Page}, ConverterParameter=Mods}" />
+                        <views:Ue4ssView x:Name="Ue4ssPage" Visibility="{Binding SelectedPage, Converter={StaticResource Page}, ConverterParameter=Ue4ss}" />
                         <ContentControl Focusable="False" Content="{DynamicResource CatalogPage}"
                                         Visibility="{Binding SelectedPage, Converter={StaticResource Page}, ConverterParameter=Catalog}" />
                         <views:SettingsView Visibility="{Binding SelectedPage, Converter={StaticResource Page}, ConverterParameter=Settings}" />
@@ -220,6 +220,10 @@
                 <Button DockPanel.Dock="Right" Style="{StaticResource Button.Icon}" Content="&#xE711;" FontFamily="{StaticResource Font.Icons}"
                         FontSize="10" Width="28" Height="28" Margin="6" VerticalAlignment="Top"
                         Command="{Binding DismissToastCommand}" ToolTip="{ui:Loc 'Dismiss'}" />
+                <!-- A toast may carry one action, such as Show log. -->
+                <Button DockPanel.Dock="Right" Margin="8,0,0,0" VerticalAlignment="Center" Content="{Binding Toast.ActionText}"
+                        Command="{Binding ToastActionCommand}"
+                        Visibility="{Binding Toast.ActionText, Converter={StaticResource VisibleIfSet}, FallbackValue=Collapsed}" />
                 <TextBlock Margin="16,12,4,12" TextWrapping="Wrap" VerticalAlignment="Center" LineHeight="19"
                            Text="{Binding Toast.Text}" />
             </DockPanel>
@@ -327,6 +331,24 @@
         <Grid Grid.Row="1" Background="{StaticResource Brush.Overlay}"
               Visibility="{Binding HelpDialog, Converter={StaticResource VisibleIfSet}}">
             <views:HelpReportDialog DataContext="{Binding HelpDialog}" Margin="40" />
+        </Grid>
+
+        <!-- ===== Mod details ===== -->
+        <Grid Grid.Row="1" Background="{StaticResource Brush.Overlay}"
+              Visibility="{Binding ModDetails, Converter={StaticResource VisibleIfSet}}">
+            <views:ModDetailsDialog DataContext="{Binding ModDetails}" Margin="40" />
+        </Grid>
+
+        <!-- ===== Mod sets ===== -->
+        <Grid Grid.Row="1" Background="{StaticResource Brush.Overlay}"
+              Visibility="{Binding ModSets, Converter={StaticResource VisibleIfSet}}">
+            <views:ModSetsDialog DataContext="{Binding ModSets}" Margin="40" />
+        </Grid>
+
+        <!-- ===== Settings editor ===== -->
+        <Grid Grid.Row="1" Background="{StaticResource Brush.Overlay}"
+              Visibility="{Binding SettingsEditor, Converter={StaticResource VisibleIfSet}}">
+            <views:SettingsEditor DataContext="{Binding SettingsEditor}" Margin="40" />
         </Grid>
 
         <!-- ===== Reset modding ===== -->

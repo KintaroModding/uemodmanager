@@ -73,7 +73,7 @@
             <StackPanel>
                 <TextBlock Style="{StaticResource Text.Title}" Text="{ui:Loc 'Open-source libraries'}" />
                 <TextBlock Margin="0,8,0,12" Style="{StaticResource Text.Body}"
-                           Text="{ui:Loc 'Archive support by SharpCompress, MVVM helpers by CommunityToolkit.Mvvm. Both use the MIT license, which asks for its text to ship with the app:'}" />
+                           Text="{ui:Loc 'Archive support by SharpCompress, MVVM helpers by CommunityToolkit.Mvvm, the settings editor by AvalonEdit. All three use the MIT license, which asks for its text to ship with the app:'}" />
                 <ItemsControl ItemsSource="{Binding Licenses}" ItemTemplate="{StaticResource LicenseText}" Focusable="False" />
             </StackPanel>
         </Border>

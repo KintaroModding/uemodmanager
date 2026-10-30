@@ -20,16 +20,34 @@ public sealed partial class Ue4ssLogViewModel(MainViewModel owner) : LocalizedOb
     private IReadOnlyList<string> errorMods = [];
     private string? readError;
 
+    /// <summary>Where the player cleared the view, and when; null when the whole log is shown.</summary>
+    private Ue4ssLogMark? mark;
+    private DateTime clearedAt;
+
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(ShownLines))]
+    [NotifyPropertyChangedFor(nameof(ShownLines), nameof(FoundText))]
     private bool onlyProblems;
 
+    /// <summary>Text the shown lines contain, such as a mod's name; it stays when the log is read again.</summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShownLines), nameof(IsSearching), nameof(FoundText))]
+    private string searchText = "";
+
     public bool HasLog => log is not null;
+
+    public bool IsSearching => !string.IsNullOrWhiteSpace(SearchText);
+
+    public string FoundText => L.F($"Lines found: {ShownLines.Count}");
+
+    /// <summary>The view shows only the lines written after the player cleared it.</summary>
+    public bool IsCleared => log is { AfterMark: true };
+
+    public bool CanClear => log is { Lines.Count: > 0 };
 
     public IReadOnlyList<Ue4ssLogLineItem> ShownLines => log is null
         ? []
         : log.Lines
-            .Where(l => !OnlyProblems || l.Level != Ue4ssLogLevel.Info)
+            .Where(l => Shows(l, OnlyProblems, SearchText))
             .Select(l => new Ue4ssLogLineItem(l.Text, l.Level switch
             {
                 Ue4ssLogLevel.Error => "bad",
@@ -38,14 +56,26 @@ public sealed partial class Ue4ssLogViewModel(MainViewModel owner) : LocalizedOb
             }))
             .ToList();
 
+    /// <summary>Whether a line shows: an error or warning when only those are wanted, and containing the search text, in any case.</summary>
+    internal static bool Shows(Ue4ssLogLine line, bool onlyProblems, string search) =>
+        (!onlyProblems || line.Level != Ue4ssLogLevel.Info)
+        && (string.IsNullOrWhiteSpace(search) || line.Text.Contains(search.Trim(), StringComparison.OrdinalIgnoreCase));
+
     public string SummaryText => (runtime, log) switch
     {
         ({ Installed: false } or null, _) => L.T("UE4SS is not installed, so there is no log."),
         _ when readError is not null => L.F($"The log could not be read: {readError}"),
         (_, null) => L.T("No log yet. UE4SS writes it each time the game starts."),
-        _ => L.F($"Game start of {log.WrittenAt:g}:  {L.Plural(log.ErrorCount, "{0} error", "{0} errors")},  {L.Plural(log.WarningCount, "{0} warning", "{0} warnings")}.")
-            + (log.Truncated ? "  " + L.F($"Showing the last {Ue4ssLog.MaxLines} lines.") : ""),
+        (_, { AfterMark: true, Lines.Count: 0 }) => L.F($"Cleared at {clearedAt:t}. Refresh shows what UE4SS writes after that."),
+        (_, { AfterMark: true }) => L.F($"Since {clearedAt:t}:  {Errors(log)},  {Warnings(log)}.") + Shortened(log),
+        _ => L.F($"Game start of {log.WrittenAt:g}:  {Errors(log)},  {Warnings(log)}.") + Shortened(log),
     };
+
+    private static string Errors(Ue4ssLog log) => L.Plural(log.ErrorCount, "{0} error", "{0} errors");
+
+    private static string Warnings(Ue4ssLog log) => L.Plural(log.WarningCount, "{0} warning", "{0} warnings");
+
+    private static string Shortened(Ue4ssLog log) => log.Truncated ? "  " + L.F($"Showing the last {Ue4ssLog.MaxLines} lines.") : "";
 
     public string SummaryTone => log is null ? "" : log.ErrorCount > 0 ? "bad" : log.WarningCount > 0 ? "warn" : "good";
 
@@ -64,9 +94,10 @@ public sealed partial class Ue4ssLogViewModel(MainViewModel owner) : LocalizedOb
         {
             try
             {
+                var after = mark;
                 (log, errorMods) = await Task.Run(() =>
                 {
-                    var read = Ue4ssLog.Read(current.LogPath);
+                    var read = Ue4ssLog.Read(current.LogPath, after);
                     return (read, read?.ModsNamedInErrors(current.ModFolders()) ?? []);
                 });
             }
@@ -76,11 +107,33 @@ public sealed partial class Ue4ssLogViewModel(MainViewModel owner) : LocalizedOb
                 readError = ex.Message;
             }
         }
+        // A new game start writes a new log, which shows whole again.
+        if (log is not { AfterMark: true })
+            mark = null;
         OnPropertyChanged(string.Empty);
     }
 
     [RelayCommand]
     private Task Refresh() => owner.RefreshUe4ssLogAsync();
+
+    /// <summary>Hides the lines so far; Refresh then shows only what UE4SS writes after. The file stays as it is.</summary>
+    [RelayCommand]
+    private Task Clear()
+    {
+        if (log is null)
+            return Task.CompletedTask;
+        mark = log.End;
+        clearedAt = DateTime.Now;
+        return LoadAsync(runtime);
+    }
+
+    /// <summary>Shows the whole log of this game start again.</summary>
+    [RelayCommand]
+    private Task ShowAll()
+    {
+        mark = null;
+        return LoadAsync(runtime);
+    }
 
     [RelayCommand]
     private void OpenLog()

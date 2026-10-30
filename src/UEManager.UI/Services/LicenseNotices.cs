@@ -26,6 +26,7 @@ internal static class LicenseNotices
         Read(() => "SharpCompress", LibraryPrefix + "SharpCompress.txt"),
         Read(() => "CommunityToolkit.Mvvm", LibraryPrefix + "CommunityToolkit.Mvvm.txt"),
         Read(() => L.T("CommunityToolkit.Mvvm: notices for code it includes"), LibraryPrefix + "CommunityToolkit.Mvvm.ThirdPartyNotices.txt"),
+        Read(() => "AvalonEdit", LibraryPrefix + "AvalonEdit.txt"),
     ];
 
     /// <summary>The app's own license and the additional terms that come with it.</summary>

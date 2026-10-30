@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using UEManager.Core.Games;
+using UEManager.Core.Mods;
 using UEManager.Core.Storage;
 
 namespace UEManager.Core.Tests;
@@ -59,6 +60,66 @@ public class SaveBackupTests : IDisposable
         Assert.NotEqual(first, second);
         Assert.True(File.Exists(first));
         Assert.True(File.Exists(second));
+    }
+
+    [Fact]
+    public void A_restore_puts_back_exactly_the_backups_saves_and_backs_up_the_ones_of_now()
+    {
+        folder.File(@"Saves\Slot1.sav", "slot one");
+        var backup = SaveBackups.Create(Saves, Backups, new DateTime(2026, 10, 27, 21, 0, 0));
+        folder.File(@"Saves\Slot1.sav", "slot one, broken by a mod");
+        folder.File(@"Saves\Slot2.sav", "slot two, made later");
+
+        var before = SaveBackups.Restore(backup, Saves, Backups, new DateTime(2026, 10, 28, 9, 0, 0));
+
+        Assert.Equal("slot one", File.ReadAllText(Path.Combine(Saves, "Slot1.sav")));
+        Assert.False(File.Exists(Path.Combine(Saves, "Slot2.sav")));
+        using (var zip = ZipFile.OpenRead(before!))
+            Assert.Equal(["Slot1.sav", "Slot2.sav"], zip.Entries.Select(e => e.FullName).Order());
+        Assert.Equal([Saves], Directory.GetDirectories(folder.Combine()).Where(d => d.StartsWith(Saves)));
+    }
+
+    [Fact]
+    public void The_oldest_of_five_backups_can_be_restored()
+    {
+        folder.File(@"Saves\Slot1.sav", "oldest");
+        var start = new DateTime(2026, 10, 27, 21, 0, 0);
+        var oldest = SaveBackups.Create(Saves, Backups, start);
+        File.SetLastWriteTimeUtc(oldest, start.ToUniversalTime());
+        for (var i = 1; i < SaveBackups.Keep; i++)
+        {
+            folder.File(@"Saves\Slot1.sav", $"newer {i}");
+            File.SetLastWriteTimeUtc(SaveBackups.Create(Saves, Backups, start.AddMinutes(i)), start.AddMinutes(i).ToUniversalTime());
+        }
+
+        SaveBackups.Restore(oldest, Saves, Backups, start.AddHours(1));
+
+        Assert.Equal("oldest", File.ReadAllText(Path.Combine(Saves, "Slot1.sav")));
+    }
+
+    [Fact]
+    public void A_restore_without_saves_yet_makes_the_save_folder()
+    {
+        folder.File(@"Other\Slot1.sav", "slot one");
+        var backup = SaveBackups.Create(folder.Combine("Other"), Backups, new DateTime(2026, 10, 27, 21, 0, 0));
+
+        Assert.Null(SaveBackups.Restore(backup, Saves, Backups, new DateTime(2026, 10, 28, 9, 0, 0)));
+
+        Assert.Equal("slot one", File.ReadAllText(Path.Combine(Saves, "Slot1.sav")));
+    }
+
+    [Fact]
+    public void A_save_in_use_stops_the_restore_and_the_saves_stay()
+    {
+        folder.File(@"Saves\Slot1.sav", "slot one");
+        var backup = SaveBackups.Create(Saves, Backups, new DateTime(2026, 10, 27, 21, 0, 0));
+        folder.File(@"Saves\Slot1.sav", "slot one, now");
+
+        using (File.Open(Path.Combine(Saves, "Slot1.sav"), FileMode.Open, FileAccess.Read, FileShare.None))
+            Assert.Throws<ModException>(() => SaveBackups.Restore(backup, Saves, Backups, new DateTime(2026, 10, 28, 9, 0, 0)));
+
+        Assert.Equal("slot one, now", File.ReadAllText(Path.Combine(Saves, "Slot1.sav")));
+        Assert.Equal([Saves], Directory.GetDirectories(folder.Combine()).Where(d => d.StartsWith(Saves)));
     }
 
     [Fact]

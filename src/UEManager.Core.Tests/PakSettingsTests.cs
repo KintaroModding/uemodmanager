@@ -58,6 +58,35 @@ public class PakSettingsTests : IDisposable
     }
 
     [Fact]
+    public void A_text_file_of_settings_is_installed_but_a_readme_next_to_it_is_not()
+    {
+        // As the Longer Buff Duration mod ships: its settings in a .txt, its readme beside it in ~mods.
+        folder.File(@"Downloads\Buffs\TestGame\Content\Paks\~mods\PBZBuffDuration_P.pak", "pak");
+        folder.File(@"Downloads\Buffs\TestGame\Content\Paks\~mods\PBZBuffDuration.txt", "Multiplier=2");
+        folder.File(@"Downloads\Buffs\TestGame\Content\Paks\~mods\README.txt", "how it works");
+        folder.File(@"Downloads\Buffs\TestGame\Content\Paks\~mods\License.txt", "MIT");
+
+        var mod = Install(folder.Combine("Downloads", "Buffs"));
+
+        Assert.Equal(["PBZBuffDuration_P.pak", "PBZBuffDuration.txt"], mod.Files.Select(f => f.FileName));
+        Assert.True(mod.Files.Single(f => f.FileName == "PBZBuffDuration.txt").IsSettingsFile);
+        Assert.False(File.Exists(Path.Combine(game.ModsPath, "README.txt")));
+    }
+
+    [Theory]
+    [InlineData("PBZBuffDuration.txt", true)]
+    [InlineData("settings.ini", true)]
+    [InlineData("README.txt", false)]
+    [InlineData("Read Me.txt", false)]
+    [InlineData("readme_en.txt", false)]
+    [InlineData("LICENSE.txt", false)]
+    [InlineData("Changelog.txt", false)]
+    [InlineData("Installation.txt", false)]
+    [InlineData("Witch_P.pak", false)]
+    public void Settings_are_told_from_documents_by_name(string name, bool settings) =>
+        Assert.Equal(settings, SettingsFiles.IsPakSettings(name));
+
+    [Fact]
     public void A_settings_file_outside_a_mods_folder_is_not_installed()
     {
         folder.File(@"Downloads\Flat\Flat_P.pak", "pak");

@@ -18,7 +18,14 @@ public sealed partial class ModItemViewModel : LocalizedObservableObject
         this.record = record;
         this.libraryFolder = libraryFolder;
         Integrity = ModManager.Integrity(record);
+        HasUe4ssErrors = owner.HadUe4ssErrors(record);
     }
+
+    /// <summary>UE4SS reported errors in this mod at the last game start.</summary>
+    public bool HasUe4ssErrors { get; }
+
+    [RelayCommand]
+    private void ShowUe4ssErrors() => owner.ShowUe4ssErrors(record);
 
     public string Id => record.Id;
 
@@ -42,9 +49,11 @@ public sealed partial class ModItemViewModel : LocalizedObservableObject
     /// <summary>The mod has a settings file the player may change, such as Scripts/config.lua.</summary>
     public bool HasSettings => record.Files.Any(f => f.IsSettingsFile);
 
-    /// <summary>The settings files in the game; none while the mod is disabled.</summary>
-    public IEnumerable<string> DeployedSettingsFiles =>
-        record.Files.Where(f => f.IsSettingsFile && f.DeployedPath is not null).Select(f => f.DeployedPath!);
+    /// <summary>The settings files in the game, for the settings editor; none while the mod is disabled.</summary>
+    public IReadOnlyList<SettingsFileItem> DeployedSettingsFiles =>
+        record.Files.Where(f => f.IsSettingsFile && f.DeployedPath is not null)
+            .Select(f => new SettingsFileItem(f.DeployedPath!, SettingsFiles.Name(f.FileName)))
+            .ToList();
 
     public string EditSettingsHint => Enabled
         ? L.Join(L.F($"Edit this mod's settings: {string.Join(", ", record.Files.Where(f => f.IsSettingsFile).Select(f => SettingsFiles.Name(f.FileName)))}."),
@@ -116,4 +125,7 @@ public sealed partial class ModItemViewModel : LocalizedObservableObject
 
     [RelayCommand]
     private void OpenFolder() => owner.OpenPath(libraryFolder);
+
+    [RelayCommand]
+    private void ShowDetails() => owner.ShowModDetails(record);
 }
