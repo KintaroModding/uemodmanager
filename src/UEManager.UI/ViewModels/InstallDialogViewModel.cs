@@ -182,7 +182,7 @@ public sealed partial class PackageOptionViewModel(PackageGroup package, Action<
     public string KindText => Format.Kind(package.TypeLabel);
 
     /// <summary>The files as they will be placed; a UE4SS mod's are shown inside its own folder, its shared libraries in full.</summary>
-    public string FilesText => string.Join("   ", package.Kind == PackageKind.Ue4ss
+    public string FilesText => string.Join("   ", package.Kind is PackageKind.Ue4ss or PackageKind.Ue4ssFolder
         ? package.RelativePaths.Select(p => p.StartsWith(package.Name + "/", StringComparison.OrdinalIgnoreCase) ? p[(package.Name.Length + 1)..] : p)
         : package.RelativePaths);
 

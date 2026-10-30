@@ -80,6 +80,15 @@ last of them is disabled. A library that was there before, such as one of
 UE4SS's own, is used but never removed. Another version of a library that an
 enabled mod uses is refused, since only one can be in the game.
 
+A download that places a folder without code in UE4SS's Mods folder
+(`ue4ss/Mods/<Name>/...`) installs it as it is, as a part of its own (type
+"UE4SS files"), without an `enabled.txt`, since UE4SS has nothing to start
+there. A Blueprint mod such as AutoSwitchWeapon ships such a folder with only a
+`modinfo.ini`: the mod writes its `<Name>.config.json` there, which ModConfigUI
+shows in the game's settings. Files the mod writes there stay when it is
+disabled or uninstalled. Files loose in the Mods folder, such as `mods.txt`,
+stay out: they are UE4SS's own.
+
 A download with several folders that hold the same files (options such as
 `x1.5/`, `x2/`, `x10/`) offers them as one choice, sorted by number; the chosen
 variant is recorded with the mod.

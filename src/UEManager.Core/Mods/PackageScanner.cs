@@ -10,6 +10,13 @@ public enum PackageKind
 
     /// <summary>A UE4SS mod folder: Lua scripts, C++ DLLs, or both.</summary>
     Ue4ss,
+
+    /// <summary>
+    /// A folder for UE4SS's Mods folder without code, as the download places it (ue4ss/Mods/Name/...): a mod keeps
+    /// files there that something else reads, such as the folder where a Blueprint mod writes the settings that
+    /// ModConfigUI shows. UE4SS does not start it, so it gets no enabled.txt.
+    /// </summary>
+    Ue4ssFolder,
 }
 
 /// <summary>
@@ -109,6 +116,13 @@ public sealed class PackageGroup
         return new PackageGroup(name, folder, placed.Select(f => f.File).ToList(), placed.Select(f => f.Place).ToList(),
             PackageKind.Ue4ss, DeployTarget.Ue4ssMods);
     }
+
+    internal static PackageGroup Ue4ssFolder(string name, string folder, string root, IReadOnlyList<string> files)
+    {
+        var ordered = files.Order(StringComparer.OrdinalIgnoreCase).ToList();
+        var relative = ordered.Select(f => name + "/" + Path.GetRelativePath(root, f).Replace('\\', '/')).ToList();
+        return new PackageGroup(name, folder, ordered, relative, PackageKind.Ue4ssFolder, DeployTarget.Ue4ssMods);
+    }
 }
 
 public sealed record ScanResult(
@@ -144,8 +158,21 @@ public static class PackageScanner
             drafts.Add(new Draft(name, folder, modFiles, modRoot, shared));
         }
 
+        // A folder in UE4SS's Mods folder without code goes as the download places it, such as the folder where a
+        // Blueprint mod writes the settings that ModConfigUI shows: the mod needs that folder to be there.
+        var codeFree = files
+            .Where(f => !ue4ssRoots.Any(r => IsInside(f, r)))
+            .Select(f => (File: f, Folder: Ue4ssModsEntry(root, f)))
+            .Where(f => f.Folder is not null)
+            .GroupBy(f => f.Folder!, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        foreach (var group in codeFree)
+            drafts.Add(new Draft(Path.GetFileName(group.Key), RelativeFolder(root, Path.GetDirectoryName(group.Key)!),
+                group.Select(f => f.File).ToList(), group.Key, CodeFree: true));
+
         var packageFiles = files
-            .Where(f => FileSystem.HasExtension(f, FileSystem.PackageExtensions) && !ue4ssRoots.Any(r => IsInside(f, r)))
+            .Where(f => FileSystem.HasExtension(f, FileSystem.PackageExtensions)
+                && !ue4ssRoots.Any(r => IsInside(f, r)) && !codeFree.Any(g => IsInside(f, g.Key)))
             .ToList();
         foreach (var group in packageFiles.GroupBy(
                      f => Path.Combine(Path.GetDirectoryName(f)!, Path.GetFileNameWithoutExtension(f)), StringComparer.OrdinalIgnoreCase))
@@ -179,7 +206,9 @@ public static class PackageScanner
                     : "";
                 return d.Ue4ssRoot is null
                     ? PackageGroup.Packaged(d.Name, folder, d.Files, IsLogicMod(d.Folder) ? DeployTarget.LogicMods : DeployTarget.Mods)
-                    : PackageGroup.Ue4ssMod(d.Name, folder, d.Ue4ssRoot, d.Files, d.SharedRoot);
+                    : d.CodeFree
+                        ? PackageGroup.Ue4ssFolder(d.Name, folder, d.Ue4ssRoot, d.Files)
+                        : PackageGroup.Ue4ssMod(d.Name, folder, d.Ue4ssRoot, d.Files, d.SharedRoot);
             })
             .OrderBy(p => p.Label, NaturalOrder.Instance)
             .ToList();
@@ -233,6 +262,23 @@ public static class PackageScanner
         return candidates.Where(c => !candidates.Any(other => other != c && IsInside(c, other))).ToList();
     }
 
+    /// <summary>
+    /// The folder in a UE4SS Mods folder, "ue4ss/Mods/Name", that holds a file of the download; null for other files,
+    /// for files loose in the Mods folder (UE4SS's own, such as mods.txt), and for UE4SS's shared folder.
+    /// </summary>
+    private static string? Ue4ssModsEntry(string root, string file)
+    {
+        var parts = Path.GetRelativePath(root, file).Split(Path.DirectorySeparatorChar);
+        for (var i = 0; i + 3 < parts.Length; i++)
+        {
+            if (parts[i].Equals("ue4ss", StringComparison.OrdinalIgnoreCase) && parts[i + 1].Equals("Mods", StringComparison.OrdinalIgnoreCase))
+                return parts[i + 2].Equals(SharedFiles.Folder, StringComparison.OrdinalIgnoreCase)
+                    ? null
+                    : Path.Combine(root, string.Join(Path.DirectorySeparatorChar, parts[..(i + 3)]));
+        }
+        return null;
+    }
+
     private static bool IsInside(string path, string folder) =>
         path.StartsWith(folder + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
 
@@ -273,5 +319,6 @@ public static class PackageScanner
         return string.Join('/', common.Take(length));
     }
 
-    private sealed record Draft(string Name, string Folder, List<string> Files, string? Ue4ssRoot, string? SharedRoot = null);
+    /// <param name="CodeFree">A folder for UE4SS's Mods folder without code; see <see cref="PackageKind.Ue4ssFolder"/>.</param>
+    private sealed record Draft(string Name, string Folder, List<string> Files, string? Ue4ssRoot, string? SharedRoot = null, bool CodeFree = false);
 }

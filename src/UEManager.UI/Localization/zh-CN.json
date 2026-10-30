@@ -402,6 +402,7 @@
   "Turns exactly the mods of this set on and all others off": "只启用此组合中的模组，并关闭其他所有模组",
   "Type": "类型",
   "UE MM is at the beginning of its development. This version most likely works. If something does not, an update with a fix follows quickly.\n\nEither way, expect frequent changes: features, screens and texts can still change from one version to the next.": "UE MM 尚处于开发初期。此版本应该可以正常使用。如果遇到问题，我们会尽快发布修复更新。\n\n开发期间会频繁更新，功能、界面和文案可能随版本变化。",
+  "UE4SS files": "UE4SS 文件",
   "UE4SS folder": "UE4SS 文件夹",
   "UE4SS found.": "已找到 UE4SS。",
   "UE4SS found: {0}.": "已找到 UE4SS：{0}。",

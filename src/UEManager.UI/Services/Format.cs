@@ -1,4 +1,5 @@
 using System.Globalization;
+using UEManager.Core.Mods;
 
 namespace UEManager.UI.Services;
 
@@ -12,8 +13,13 @@ internal static class Format
         _ => string.Format(CultureInfo.CurrentCulture, "{0:0.##} GB", bytes / (1024.0 * 1024 * 1024)),
     };
 
-    /// <summary>A mod's type for the player: Blueprint is translated; PAK, IoStore and UE4SS are names.</summary>
-    public static string Kind(string typeLabel) => typeLabel == "Blueprint" ? L.T("Blueprint") : typeLabel;
+    /// <summary>A mod's type for the player: Blueprint and UE4SS files are translated; PAK, IoStore and UE4SS are names.</summary>
+    public static string Kind(string typeLabel) => typeLabel switch
+    {
+        "Blueprint" => L.T("Blueprint"),
+        ModTypes.Ue4ssFiles => L.T("UE4SS files"),
+        _ => typeLabel,
+    };
 
     /// <summary>
     /// Wide letter spacing for labels, which WPF text cannot do by itself.
