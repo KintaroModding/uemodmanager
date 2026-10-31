@@ -106,7 +106,9 @@ variant is recorded with the mod.
   it undoes the change, so the game and the list always agree.
 - A deployed file that was changed outside the manager stops its removal,
   except a **settings file**, which the player is meant to edit: a UE4SS mod's
-  `Scripts/config.lua`, or a `.json`, `.ini`, `.cfg`, `.toml`, `.yaml` or
+  `Scripts/config` or `Scripts/settings` file (`.lua`, `.json`, `.ini`, `.cfg`,
+  `.toml`, `.yaml` or `.txt`, such as `Scripts/config.json`), or a `.json`,
+  `.ini`, `.cfg`, `.toml`, `.yaml` or
   `.txt` file that a download keeps next to its pak in a `~mods` or
   `LogicMods` folder (such as a mod that reads its color from `~mods`). Files
   named like a readme, license or change log are no settings, and neither are

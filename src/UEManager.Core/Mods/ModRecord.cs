@@ -113,8 +113,8 @@ public static class SharedFiles
 }
 
 /// <summary>
-/// Mod files the player is meant to edit: a UE4SS mod's Scripts/config.lua, and the settings a pak
-/// mod keeps next to its pak, such as a .json in ~mods. A change to one never blocks a removal.
+/// Mod files the player is meant to edit: a UE4SS mod's Scripts/config.lua or Scripts/config.json (and the like),
+/// and the settings a pak mod keeps next to its pak, such as a .json in ~mods. A change to one never blocks a removal.
 /// Disabling keeps the player's version, an update asks whether to keep it, and uninstalling backs it up.
 /// </summary>
 public static partial class SettingsFiles
@@ -129,6 +129,12 @@ public static partial class SettingsFiles
     public static bool IsPakSettings(string path) =>
         FileSystem.HasExtension(path, PakSettingsExtensions) && !DocumentName().IsMatch(Path.GetFileNameWithoutExtension(path));
 
+    /// <summary>The names a UE4SS mod gives its settings file in its Scripts folder.</summary>
+    private static readonly string[] Ue4ssSettingsNames = ["config", "settings"];
+
+    /// <summary>The formats of a UE4SS mod's settings file: Lua, as UE4SS's examples, or a data file the mod reads.</summary>
+    private static readonly string[] Ue4ssSettingsExtensions = [".lua", ".json", ".ini", ".cfg", ".toml", ".yaml", ".yml", ".txt"];
+
     /// <param name="relativePath">The path below the target folder, such as "ModName/Scripts/config.lua".</param>
     public static bool Is(DeployTarget target, string relativePath)
     {
@@ -136,10 +142,12 @@ public static partial class SettingsFiles
             return IsPakSettings(relativePath);
         if (target != DeployTarget.Ue4ssMods)
             return false;
+        // A UE4SS mod's settings: Scripts/config.lua, or Scripts/config.json and the like, which the mod reads itself.
         var parts = relativePath.Split('/', '\\');
         return parts.Length == 3
             && parts[1].Equals("Scripts", StringComparison.OrdinalIgnoreCase)
-            && parts[2].Equals("config.lua", StringComparison.OrdinalIgnoreCase);
+            && Ue4ssSettingsNames.Contains(Path.GetFileNameWithoutExtension(parts[2]), StringComparer.OrdinalIgnoreCase)
+            && FileSystem.HasExtension(parts[2], Ue4ssSettingsExtensions);
     }
 
     /// <summary>How the player knows the file: "Scripts/config.lua" for "ModName/Scripts/config.lua", else its name.</summary>

@@ -56,6 +56,46 @@ public class SettingsFileTests : IDisposable
         File.WriteAllText(Path.Combine(Win64, "dwmapi.dll"), "");
     }
 
+    [Theory]
+    [InlineData("Witch/Scripts/config.lua", true)]
+    [InlineData("Witch/Scripts/config.json", true)]
+    [InlineData("Witch/Scripts/Config.ini", true)]
+    [InlineData("Witch/Scripts/settings.json", true)]
+    [InlineData("Witch/Scripts/settings.lua", true)]
+    [InlineData("Witch/Scripts/main.lua", false)]
+    [InlineData("Witch/Scripts/config.dll", false)]
+    [InlineData("Witch/config.json", false)]
+    [InlineData("Witch/Scripts/lib/config.json", false)]
+    [InlineData("Witch/enabled.txt", false)]
+    public void A_UE4SS_mods_settings_file_is_config_or_settings_in_its_Scripts_folder(string path, bool expected) =>
+        Assert.Equal(expected, SettingsFiles.Is(DeployTarget.Ue4ssMods, path));
+
+    /// <summary>The layout of Better Guard And Dodge: a Lua mod that reads its settings from Scripts/config.json.</summary>
+    [Fact]
+    public void A_config_json_next_to_main_lua_can_be_edited_and_survives_disable_enable_and_update()
+    {
+        InstallUe4ss();
+        string Download(string version)
+        {
+            var root = $@"Downloads\Guard_{version}";
+            folder.File($@"{root}\BetterGuardAndDodge\enabled.txt", "1");
+            folder.File($@"{root}\BetterGuardAndDodge\Scripts\main.lua", "main " + version);
+            folder.File($@"{root}\BetterGuardAndDodge\Scripts\config.json", "{ \"GuardDuringDodge\": true }");
+            return folder.Combine(root);
+        }
+        var mod = Install(Download("1.0"));
+        var config = Path.Combine(Win64, "ue4ss", "Mods", "BetterGuardAndDodge", "Scripts", "config.json");
+        Assert.True(Assert.Single(mod.Files, f => f.FileName.EndsWith("config.json")).IsSettingsFile);
+
+        File.WriteAllText(config, "{ \"GuardDuringDodge\": false }");
+        manager.SetEnabled(mod.Id, false);
+        manager.SetEnabled(mod.Id, true);
+        Assert.Equal("{ \"GuardDuringDodge\": false }", File.ReadAllText(config));
+
+        Install(Download("1.1"), replace: true);
+        Assert.Equal("{ \"GuardDuringDodge\": false }", File.ReadAllText(config));
+    }
+
     [Fact]
     public void Changed_settings_are_no_problem_and_survive_disable_and_enable()
     {
