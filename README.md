@@ -20,7 +20,7 @@ How to install and use it, for players: [openmods.md](openmods.md).
 
 ## Interface language
 
-In **Settings → Language**, choose **English** or **简体中文**. The interface
+In **Settings → Language**, choose **English**, **简体中文** or **Tiếng Việt**. The interface
 changes at once, on the page you are on, and the choice is saved in
 `Data/settings.json`. Until you choose, the app is in English. When Windows
 uses a language the app has (its display language, format settings or install
@@ -165,13 +165,25 @@ At every start the app reads the profile's `ue4ssManifestUrl`
 (`KintaroModding/metadata`, `uemodmanager/manifest.json`):
 
 ```json
-{ "ue4ss": { "<game id>": { "version": "v…", "url": "https://…/….zip", "sha256": "…" } } }
+{ "ue4ss": { "<game id>": { "version": "v…", "url": "https://…/….zip", "sha256": "…",
+  "files": { "ue4ss/UE4SS.dll": ["<sha256>"], "dwmapi.dll": ["<sha256>"], … } } } }
 ```
 
 When the entry's version differs from the recorded one (or none is recorded,
 as for a UE4SS installed by hand), Home and the UE4SS page offer **Update to
 v…**. A new UE4SS build therefore ships by editing the manifest, without a new
 app build. Offline or failing, the check stays silent.
+
+The optional `files` lists the DLLs of the official builds (`UE4SS.dll` and the
+proxy, such as `dwmapi.dll`), by their place next to the game's exe, with the
+SHA-256s each has in any official release. The DLLs make the build; scripts and
+settings are the player's and the mods' to change, so the app compares only
+DLLs, also when the list names other files. When an installed DLL that the list
+names has none of them, Home shows a small orange **Unofficial UE4SS build** box; a click lists
+those files and offers **Install the official build**, which replaces UE4SS's
+files and keeps its settings and the mods. A DLL the player removed does not
+count. The help report says whether the build is official. Older app versions
+ignore `files`. `--ue4ss-manifest-url <url>` reads a test copy of the manifest.
 
 ### UE4SS page
 

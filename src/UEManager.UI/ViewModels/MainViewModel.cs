@@ -46,15 +46,27 @@ public sealed partial class MainViewModel : LocalizedObservableObject
     private string? installedUe4ssVersion;
     private Ue4ssRelease? latestUe4ss;
 
+    /// <summary>Where the UE4SS manifest is read: the game profile's, or a test copy given on the command line.</summary>
+    private readonly string? ue4ssManifestUrl;
+
+    /// <summary>
+    /// The installed UE4SS files that differ from every official build; empty for an official build, null while
+    /// unknown: no manifest list yet, or no UE4SS.
+    /// </summary>
+    private IReadOnlyList<string>? unofficialUe4ssFiles;
+
     /// <summary>The build before a game update the player has not confirmed yet; null when there is none.</summary>
     private string? previousBuild;
 
     /// <param name="catalogUrl">Another openmods games list, such as a test copy; used only while the catalog is switched on.</param>
     /// <param name="updateUrl">Another release list for the update check, such as a test copy.</param>
-    public MainViewModel(GameProfile profile, AppPaths paths, ArtSet art, string? catalogUrl = null, string? updateUrl = null)
+    /// <param name="ue4ssManifestUrl">Another UE4SS manifest, such as a test copy.</param>
+    public MainViewModel(GameProfile profile, AppPaths paths, ArtSet art, string? catalogUrl = null, string? updateUrl = null,
+        string? ue4ssManifestUrl = null)
     {
         Profile = profile;
         this.paths = paths;
+        this.ue4ssManifestUrl = ue4ssManifestUrl ?? profile.Ue4ssManifestUrl;
         Art = art;
         settings = AppSettings.Load(paths);
         CreateCatalog(catalogUrl);
@@ -782,13 +794,59 @@ public sealed partial class MainViewModel : LocalizedObservableObject
     /// <summary>Reads the online manifest once per start. Offline or failing, it stays quiet.</summary>
     private async Task CheckUe4ssManifestAsync()
     {
-        if (string.IsNullOrWhiteSpace(Profile.Ue4ssManifestUrl))
+        if (string.IsNullOrWhiteSpace(ue4ssManifestUrl))
             return;
-        latestUe4ss = await Ue4ssManifest.FetchAsync(Http, Profile.Ue4ssManifestUrl, Profile.Id);
+        latestUe4ss = await Ue4ssManifest.FetchAsync(Http, ue4ssManifestUrl, Profile.Id);
         if (latestUe4ss is null)
             return;
         OnModsChanged();
         OnPropertyChanged(string.Empty);
+        await CheckUe4ssBuildAsync();
+    }
+
+    /// <summary>The box on Home: UE4SS files differ from the official build.</summary>
+    public bool HasUnofficialUe4ss => IsUe4ssInstalled && unofficialUe4ssFiles is { Count: > 0 };
+
+    /// <summary>
+    /// Compares the installed UE4SS with the official builds the manifest lists, off the UI thread: UE4SS.dll alone
+    /// is several megabytes. Without the manifest's list, or without UE4SS, nothing is said.
+    /// </summary>
+    private async Task CheckUe4ssBuildAsync()
+    {
+        IReadOnlyList<string>? differing = null;
+        if (Game is { } game && latestUe4ss?.Files is { } official && Ue4ssRuntime.Detect(game).Installed)
+        {
+            try
+            {
+                differing = await Task.Run(() => Ue4ssBuild.DifferingFiles(game.BinariesPath, official));
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                Log.Warn($"The UE4SS files could not be compared with the official build: {ex.Message}");
+            }
+            // Another game was chosen meanwhile.
+            if (Game != game)
+                return;
+            if (differing is { Count: > 0 })
+                Log.Info($"UE4SS differs from the official build in: {string.Join(", ", differing)}.");
+        }
+        unofficialUe4ssFiles = differing;
+        OnPropertyChanged(nameof(HasUnofficialUe4ss));
+    }
+
+    /// <summary>The box on Home: which UE4SS files differ from the official build, and the way to the official one.</summary>
+    [RelayCommand]
+    private async Task ShowUnofficialUe4ss()
+    {
+        const int shown = 8;
+        var files = unofficialUe4ssFiles ?? [];
+        var list = string.Join("\n", files.Take(shown).Select(file => "•  " + file));
+        if (files.Count > shown)
+            list += "\n" + L.Plural(files.Count - shown, "…and {0} more file", "…and {0} more files");
+        if (await AskAsync(L.T("Unofficial UE4SS build"),
+                L.F($"These UE4SS files differ from the official build for {GameDisplayName}:\n\n{list}\n\nMods are made and tested with the official build, so some may not work with this one. Installing the official build replaces these files. Your UE4SS settings and your mods stay."),
+                L.T("Install the official build"), L.T("Close")))
+            await DownloadAndInstallUe4ssAsync();
     }
 
     [RelayCommand]
@@ -803,6 +861,7 @@ public sealed partial class MainViewModel : LocalizedObservableObject
             return;
         Ue4ssRemoveResult? result = null;
         await RunAsync(L.T("Removing UE4SS…"), async () => result = await Task.Run(() => manager!.RemoveUe4ss()));
+        unofficialUe4ssFiles = null;
         RefreshMods();
         if (result is not null)
             ShowToast(result.DisabledMods switch
@@ -878,6 +937,7 @@ public sealed partial class MainViewModel : LocalizedObservableObject
     {
         Ue4ssGuide = null;
         RefreshMods();
+        _ = CheckUe4ssBuildAsync();
         ShowToast(L.Join(
             result.Updated ? L.T("UE4SS updated.") : L.T("UE4SS installed."),
             result.RemovedFiles.Count == 0 ? null : L.Plural(result.RemovedFiles.Count, "{0} old file was removed.", "{0} old files were removed."),
@@ -949,6 +1009,7 @@ public sealed partial class MainViewModel : LocalizedObservableObject
     internal async Task ReloadAsync()
     {
         RefreshMods();
+        await CheckUe4ssBuildAsync();
         if (SelectedPage == "Ue4ss")
             await RefreshUe4ssLogAsync();
     }
@@ -1186,7 +1247,7 @@ public sealed partial class MainViewModel : LocalizedObservableObject
     {
         var current = manager;
         var facts = new HelpFacts(Profile, Game, Game is null ? null : Ue4ssRuntime.Detect(Game), installedUe4ssVersion,
-            current?.Mods ?? [], [], current?.OtherInstallRoot, paths.LogsDir);
+            current?.Mods ?? [], [], current?.OtherInstallRoot, paths.LogsDir, IsUe4ssInstalled ? unofficialUe4ssFiles : null);
         string? collected = null;
         await RunAsync(L.T("Collecting the facts…"), async () => collected = await Task.Run(() =>
             HelpReport.Collect(facts with { Unmanaged = current?.UnmanagedFiles() ?? [] })));
@@ -1348,9 +1409,13 @@ public sealed partial class MainViewModel : LocalizedObservableObject
             : $"{Profile.DisplayName} at '{Game.RootPath}' ({Game.Store}); mods folder '{Game.ModsPath}'.");
         CheckGameBuild();
         ue4ssErrors = null;
+        unofficialUe4ssFiles = null;
         RefreshMods();
         if (Game is { } game)
+        {
             _ = ReadUe4ssErrorsAsync(game);
+            _ = CheckUe4ssBuildAsync();
+        }
     }
 
     /// <summary>

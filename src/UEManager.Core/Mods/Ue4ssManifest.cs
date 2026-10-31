@@ -5,7 +5,11 @@ using System.Text.RegularExpressions;
 namespace UEManager.Core.Mods;
 
 /// <summary>A UE4SS release package: its version, where to download it, and its SHA-256.</summary>
-public sealed record Ue4ssRelease(string Version, string Url, string? Sha256)
+/// <param name="Files">
+/// The official builds' files, by their place next to the game's exe ("ue4ss/UE4SS.dll"), each with the SHA-256s
+/// it has in an official release; null when the manifest lists none. See <see cref="Ue4ssBuild"/>.
+/// </param>
+public sealed record Ue4ssRelease(string Version, string Url, string? Sha256, IReadOnlyDictionary<string, IReadOnlyList<string>>? Files = null)
 {
     public string FileName => Path.GetFileName(new Uri(Url).AbsolutePath);
 }
@@ -13,7 +17,9 @@ public sealed record Ue4ssRelease(string Version, string Url, string? Sha256)
 /// <summary>
 /// The metadata manifest that names the current UE4SS release per game, so a new
 /// UE4SS build reaches users without a new app build:
-/// <code>{ "ue4ss": { "&lt;game id&gt;": { "version": "...", "url": "https://...", "sha256": "..." } } }</code>
+/// <code>{ "ue4ss": { "&lt;game id&gt;": { "version": "...", "url": "https://...", "sha256": "...",
+///   "files": { "ue4ss/UE4SS.dll": ["&lt;sha256&gt;", ...], ... } } } }</code>
+/// "files" is optional; older app versions ignore it.
 /// </summary>
 public static partial class Ue4ssManifest
 {
@@ -31,7 +37,29 @@ public static partial class Ue4ssManifest
         var url = Text(entry, "url");
         if (string.IsNullOrWhiteSpace(version) || !Uri.TryCreate(url, UriKind.Absolute, out var uri) || uri.Scheme != Uri.UriSchemeHttps)
             return null;
-        return new Ue4ssRelease(version.Trim(), url!, Text(entry, "sha256"));
+        return new Ue4ssRelease(version.Trim(), url!, Text(entry, "sha256"), OfficialFiles(entry));
+    }
+
+    /// <summary>The "files" of an entry: each place with one SHA-256 or a list of them. Anything else is left out.</summary>
+    private static Dictionary<string, IReadOnlyList<string>>? OfficialFiles(JsonElement entry)
+    {
+        if (!entry.TryGetProperty("files", out var files) || files.ValueKind != JsonValueKind.Object)
+            return null;
+        var result = new Dictionary<string, IReadOnlyList<string>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var file in files.EnumerateObject())
+        {
+            var hashes = file.Value.ValueKind switch
+            {
+                JsonValueKind.String => [file.Value.GetString()!],
+                JsonValueKind.Array => file.Value.EnumerateArray().Where(h => h.ValueKind == JsonValueKind.String).Select(h => h.GetString()!).ToList(),
+                _ => new List<string>(),
+            };
+            var place = file.Name.Replace('\\', '/').TrimStart('/');
+            // A place outside the game's exe folder is never one of UE4SS's files.
+            if (hashes.Count > 0 && !place.Split('/').Contains(".."))
+                result[place] = hashes;
+        }
+        return result.Count > 0 ? result : null;
     }
 
     /// <summary>

@@ -733,7 +733,7 @@ public sealed class ModManager
                     files[name] = FileSystem.Sha256(file);
                     var destination = Path.GetFullPath(Path.Combine(win64, relative));
                     if (owned.Contains(destination)
-                        || (IsUe4ssUserFile(file) && File.Exists(destination) && !IsAsInstalled(destination, name, previous)))
+                        || (Ue4ssBuild.IsUserFile(file) && File.Exists(destination) && !IsAsInstalled(destination, name, previous)))
                     {
                         kept.Add(name);
                         continue;
@@ -1005,14 +1005,6 @@ public sealed class ModManager
             .Where(folder => File.Exists(Path.Combine(folder, "ue4ss", "UE4SS.dll")))
             .OrderBy(folder => folder.Length)
             .FirstOrDefault();
-
-    /// <summary>UE4SS's own settings and mod lists, which the user may have changed.</summary>
-    private static bool IsUe4ssUserFile(string file) =>
-        Path.GetFileName(file) is var name
-        && (name.Equals("UE4SS-settings.ini", StringComparison.OrdinalIgnoreCase)
-            || name.Equals("mods.txt", StringComparison.OrdinalIgnoreCase)
-            || name.Equals("mods.json", StringComparison.OrdinalIgnoreCase)
-            || name.Equals("load_order.txt", StringComparison.OrdinalIgnoreCase));
 
     /// <summary>Undoes a failed UE4SS install: new files are deleted, replaced ones restored.</summary>
     private static void RollBack(List<(string Destination, string? Backup)> journal)

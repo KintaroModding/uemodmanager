@@ -14,7 +14,7 @@ namespace UEManager.UI;
 public partial class App : Application
 {
     /// <summary>Command-line options that take a value; never taken for downloads.</summary>
-    private static readonly string[] ValueOptions = ["--data-dir", "--catalog", "--update-url"];
+    private static readonly string[] ValueOptions = ["--data-dir", "--catalog", "--update-url", "--ue4ss-manifest-url"];
 
     /// <summary>
     /// Given to the copy a restart starts, as after an update: the old one may still be ending, so it waits
@@ -107,7 +107,12 @@ public partial class App : Application
         if (updateUrl is not null)
             Log.Info($"Release list from the command line: '{updateUrl}'.");
 
-        var viewModel = new MainViewModel(profile, paths, ArtSet.Load(), catalogUrl, updateUrl);
+        // --ue4ss-manifest-url <url> reads another UE4SS manifest, such as a test copy of it.
+        var ue4ssManifestUrl = ArgumentAfter(e.Args, "--ue4ss-manifest-url");
+        if (ue4ssManifestUrl is not null)
+            Log.Info($"UE4SS manifest from the command line: '{ue4ssManifestUrl}'.");
+
+        var viewModel = new MainViewModel(profile, paths, ArtSet.Load(), catalogUrl, updateUrl, ue4ssManifestUrl);
         MainWindow = new MainWindow { DataContext = viewModel };
         MainWindow.Show();
         instance.Listen(downloads => Dispatcher.BeginInvoke(() => Receive(viewModel, downloads)));

@@ -16,7 +16,7 @@
     <Border Style="{StaticResource Dialog}" Width="900">
         <DockPanel>
             <StackPanel DockPanel.Dock="Top">
-                <TextBlock Style="{StaticResource Text.Overline}" Text="{ui:Loc 'Settings', Tracked=True}" />
+                <TextBlock Style="{StaticResource Text.Overline}" Text="{ui:Loc 'Mod settings', Tracked=True}" />
                 <DockPanel Margin="0,8,0,0">
                     <!-- A mod with several settings files: one at a time. -->
                     <ComboBox DockPanel.Dock="Right" Width="260" VerticalAlignment="Center" Style="{StaticResource LanguageSelector}"

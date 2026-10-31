@@ -14,6 +14,8 @@
         <GridLength x:Key="Col.Integrity">136</GridLength>
         <GridLength x:Key="Col.Date">104</GridLength>
         <GridLength x:Key="Col.Actions">176</GridLength>
+        <!-- What the table drops in a narrow window, so the mod's name keeps room; see ModsView.OnTableSizeChanged. -->
+        <Visibility x:Key="Mods.WideOnly">Visible</Visibility>
     </UserControl.Resources>
 
     <StackPanel>
@@ -65,24 +67,24 @@
         </Border>
 
         <!-- Table -->
-        <Border Style="{StaticResource Card}" Padding="0">
+        <Border x:Name="Table" Style="{StaticResource Card}" Padding="0" SizeChanged="OnTableSizeChanged">
             <StackPanel>
                 <Grid Margin="22,12">
                     <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="{StaticResource Col.Status}" />
+                        <ColumnDefinition Width="{DynamicResource Col.Status}" />
                         <ColumnDefinition Width="*" />
-                        <ColumnDefinition Width="{StaticResource Col.Type}" />
-                        <ColumnDefinition Width="{StaticResource Col.Integrity}" />
-                        <ColumnDefinition Width="{StaticResource Col.Date}" />
-                        <ColumnDefinition Width="{StaticResource Col.Actions}" />
+                        <ColumnDefinition Width="{DynamicResource Col.Type}" />
+                        <ColumnDefinition Width="{DynamicResource Col.Integrity}" />
+                        <ColumnDefinition Width="{DynamicResource Col.Date}" />
+                        <ColumnDefinition Width="{DynamicResource Col.Actions}" />
                     </Grid.ColumnDefinitions>
-                    <TextBlock Style="{StaticResource Text.Caption}" Text="{ui:Loc 'Status', Tracked=True}" />
+                    <TextBlock Style="{StaticResource Text.Caption}" Text="{ui:Loc 'Status', Tracked=True}" Visibility="{DynamicResource Mods.WideOnly}" />
                     <Button Grid.Column="1" Style="{StaticResource Button.SortHeader}" Content="{ui:Loc 'Mod', Tracked=True}"
                             Tag="{Binding NameSortGlyph}" ToolTip="{ui:Loc 'Sort by name'}"
                             Command="{Binding SortByCommand}" CommandParameter="{x:Static vm:ModSortField.Name}" />
                     <TextBlock Grid.Column="2" Style="{StaticResource Text.Caption}" Text="{ui:Loc 'Type', Tracked=True}" />
-                    <TextBlock Grid.Column="3" Style="{StaticResource Text.Caption}" Text="{ui:Loc 'Integrity', Tracked=True}" />
-                    <Button Grid.Column="4" Style="{StaticResource Button.SortHeader}" Content="{ui:Loc 'Installed', Tracked=True}"
+                    <TextBlock Grid.Column="3" Style="{StaticResource Text.Caption}" Text="{ui:Loc 'Integrity', Tracked=True}" Visibility="{DynamicResource Mods.WideOnly}" />
+                    <Button Grid.Column="4" Style="{StaticResource Button.SortHeader}" Content="{ui:Loc 'Installed', Tracked=True}" Visibility="{DynamicResource Mods.WideOnly}"
                             Tag="{Binding InstalledSortGlyph}" ToolTip="{ui:Loc 'Sort by installation date'}"
                             Command="{Binding SortByCommand}" CommandParameter="{x:Static vm:ModSortField.Installed}" />
                 </Grid>
@@ -95,19 +97,19 @@
                                     BorderBrush="{StaticResource Brush.Line}" BorderThickness="0,0,0,1">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="{StaticResource Col.Status}" />
+                                        <ColumnDefinition Width="{DynamicResource Col.Status}" />
                                         <ColumnDefinition Width="*" />
-                                        <ColumnDefinition Width="{StaticResource Col.Type}" />
-                                        <ColumnDefinition Width="{StaticResource Col.Integrity}" />
-                                        <ColumnDefinition Width="{StaticResource Col.Date}" />
-                                        <ColumnDefinition Width="{StaticResource Col.Actions}" />
+                                        <ColumnDefinition Width="{DynamicResource Col.Type}" />
+                                        <ColumnDefinition Width="{DynamicResource Col.Integrity}" />
+                                        <ColumnDefinition Width="{DynamicResource Col.Date}" />
+                                        <ColumnDefinition Width="{DynamicResource Col.Actions}" />
                                     </Grid.ColumnDefinitions>
 
                                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
                                         <CheckBox Style="{StaticResource Toggle}" IsChecked="{Binding Enabled, Mode=OneWay}"
                                                   Command="{Binding ToggleCommand}" ToolTip="{ui:Loc 'Enable or disable'}" />
                                         <TextBlock Margin="10,0,0,0" VerticalAlignment="Center" Style="{StaticResource Text.Small}"
-                                                   Text="{Binding EnabledText}" />
+                                                   Text="{Binding EnabledText}" Visibility="{DynamicResource Mods.WideOnly}" />
                                     </StackPanel>
 
                                     <StackPanel Grid.Column="1" Margin="0,0,16,0" VerticalAlignment="Center">
@@ -128,11 +130,11 @@
                                                 Background="Transparent" ToolTip="{Binding IntegrityHint}">
                                         <TextBlock Style="{StaticResource Text.Icon}" FontSize="12"
                                                    Foreground="{Binding IntegrityTone, Converter={StaticResource Tone}}" Text="{Binding IntegrityGlyph}" />
-                                        <TextBlock Margin="7,0,0,0" FontSize="12" VerticalAlignment="Center"
+                                        <TextBlock Margin="7,0,0,0" FontSize="12" VerticalAlignment="Center" Visibility="{DynamicResource Mods.WideOnly}"
                                                    Foreground="{Binding IntegrityTone, Converter={StaticResource Tone}}" Text="{Binding IntegrityText}" />
                                     </StackPanel>
 
-                                    <TextBlock Grid.Column="4" VerticalAlignment="Center" Style="{StaticResource Text.Small}"
+                                    <TextBlock Grid.Column="4" VerticalAlignment="Center" Style="{StaticResource Text.Small}" Visibility="{DynamicResource Mods.WideOnly}"
                                                Text="{Binding InstalledText}" ToolTip="{Binding InstalledFullText}" />
 
                                     <StackPanel Grid.Column="5" Orientation="Horizontal" HorizontalAlignment="Right">

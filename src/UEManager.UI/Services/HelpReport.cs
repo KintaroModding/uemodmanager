@@ -16,7 +16,8 @@ internal sealed record HelpFacts(
     IReadOnlyList<ModRecord> Mods,
     IReadOnlyList<string> Unmanaged,
     string? OtherInstall,
-    string LogsDir);
+    string LogsDir,
+    IReadOnlyList<string>? Ue4ssDiffering = null);
 
 /// <summary>
 /// A text for the Discord help channel: the player's own words, then the facts a helper asks for first.
@@ -52,6 +53,11 @@ internal static partial class HelpReport
             var ue4ss => $"UE4SS: installed, {ue4ss.Version ?? "version unknown"}"
                 + (facts.ManagedUe4ssVersion is { } managed ? $" (installed by the manager: {managed})" : " (installed by hand)"),
         });
+        // Compared with the official builds the UE4SS manifest lists; unknown without it.
+        if (facts.Ue4ssDiffering is { } differing)
+            text.AppendLine(differing.Count == 0
+                ? "UE4SS build: official"
+                : $"UE4SS build: not official, these files differ: {string.Join(", ", differing)}");
 
         text.AppendLine();
         text.AppendLine($"Mods: {facts.Mods.Count} installed, {facts.Mods.Count(m => m.Enabled)} enabled");

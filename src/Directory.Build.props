@@ -4,7 +4,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <LangVersion>12</LangVersion>
-    <Version>1.2.2</Version>
+    <Version>1.3.0</Version>
     <!-- A pre-release shows a yellow "Pre-release" box below About that explains what it means. -->
     <PreRelease>false</PreRelease>
     <Authors>KintaroModding</Authors>
