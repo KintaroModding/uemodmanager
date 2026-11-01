@@ -18,12 +18,15 @@ public class LocalizerTests
     {
         Assert.Equal(L.English, L.Current.Languages[0].Code);
         Assert.Contains(L.Current.Languages, language => language is { Code: "zh-CN", Name: "简体中文" });
+        Assert.Contains(L.Current.Languages, language => language is { Code: "zh-TW", Name: "繁體中文" });
     }
 
     [Theory]
     [InlineData("zh-CN", "zh-CN")]
     [InlineData("zh-SG", "zh-CN")]
-    [InlineData("zh-TW", "zh-CN")]
+    [InlineData("zh-TW", "zh-TW")]
+    [InlineData("zh-HK", "zh-TW")]
+    [InlineData("zh-Hant", "zh-TW")]
     [InlineData("en-GB", "en")]
     [InlineData("de-DE", "en")]
     public void Windows_gets_the_closest_language_the_app_has(string windows, string expected) =>
@@ -40,7 +43,7 @@ public class LocalizerTests
 
     [Theory]
     [InlineData("zh-CN", "zh-CN")]
-    [InlineData("en-US,zh-TW", "zh-CN")]
+    [InlineData("en-US,zh-TW", "zh-TW")]
     [InlineData("en-US,de-DE,en-GB", null)]
     public void Offers_the_language_of_Windows_when_the_app_has_one_besides_English(string windows, string? offered) =>
         Assert.Equal(offered, L.Current.Offer(windows.Split(',').Select(CultureInfo.GetCultureInfo))?.Code);
