@@ -439,6 +439,9 @@ public static class PackageScanner
     /// <summary>A file's path from the top of the download, with forward slashes.</summary>
     private static string RelativePath(string root, string file) => Path.GetRelativePath(root, file).Replace('\\', '/');
 
+    /// <summary>The folders below Saved that hold the player's saves, the game's logs and crash reports.</summary>
+    private static readonly string[] NotGameFiles = ["SaveGames", "Logs", "Crashes"];
+
     /// <summary>
     /// The path below the install folder of a file the download places in one of the game's own folders, such as
     /// "ProjectPBZ/Saved/Keys.sav" or "platform/steam/dxgi.dll"; null for any other file. The game reads the file
@@ -446,9 +449,6 @@ public static class PackageScanner
     /// installed over the game's own. A download may wrap its files in a folder of its own, so both are looked for at
     /// any depth.
     /// </summary>
-    /// <summary>The folders below Saved that hold the player's saves, the game's logs and crash reports.</summary>
-    private static readonly string[] NotGameFiles = ["SaveGames", "Logs", "Crashes"];
-
     private static string? GameFilePath(string relativePath, string? projectFolder, string? exeFolder)
     {
         var parts = relativePath.Split('/');

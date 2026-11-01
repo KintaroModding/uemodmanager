@@ -170,4 +170,26 @@ public class InstallRootTests : IDisposable
         var backup = Assert.Single(Directory.GetFiles(folder.Combine("Data", "games", "test-game", "backups"), "EnhancedInputUserSettings.sav", SearchOption.AllDirectories));
         Assert.Equal("the mod's keybindings, changed in the game", File.ReadAllText(backup));
     }
+
+    [Fact]
+    public void A_file_the_game_holds_is_reported_as_in_use_and_nothing_changes()
+    {
+        folder.File($@"Game\{SavedFile}", "the player's own keybindings");
+        var mod = Install(Download());
+
+        // A sync tool, a scanner or a game that is still shutting down can hold the file without sharing reads, so
+        // even hashing it fails. The removal has to stop with the manager's own message, not a raw IO error.
+        using (var held = new FileStream(InstalledFile, FileMode.Open, FileAccess.Read, FileShare.None))
+        {
+            var refusal = Assert.Throws<ModException>(() => manager.SetEnabled(mod.Id, false));
+            Assert.Contains("Nothing was removed from the game, because a file is in use", refusal.Message);
+        }
+
+        Assert.True(manager.Mods.Single(m => m.Id == mod.Id).Enabled);
+        Assert.Equal("the mod's keybindings", File.ReadAllText(InstalledFile));
+
+        manager.SetEnabled(mod.Id, false);
+
+        Assert.Equal("the player's own keybindings", File.ReadAllText(InstalledFile));
+    }
 }

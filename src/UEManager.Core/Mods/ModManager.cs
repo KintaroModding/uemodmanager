@@ -1256,23 +1256,34 @@ public sealed class ModManager
     /// Copies the game files of mods that the game or another tool changed since the mod placed them, such as key
     /// bindings or a ReShade.ini, into the backups folder: removing the mod takes them out of the game.
     /// </summary>
+    /// <exception cref="ModException">A file could not be read, as when the game or another tool holds it: nothing has left the game then.</exception>
     private void BackUpChangedGameFiles(IEnumerable<ModFileRecord> files, IReadOnlyList<ModRecord> group)
     {
-        foreach (var mod in group)
+        try
         {
-            var changed = mod.Files
-                .Where(f => f.IsGameFile && files.Contains(f) && f.DeployedPath is not null && File.Exists(f.DeployedPath) && !Matches(f.DeployedPath, f))
-                .ToList();
-            if (changed.Count == 0)
-                continue;
-            var folder = Path.Combine(paths.BackupDir(Game.Profile.Id), $"{DateTime.Now:yyyyMMdd-HHmmss} {FileSystem.SafeName(mod.Name, mod.Id)}");
-            foreach (var file in changed)
+            foreach (var mod in group)
             {
-                var target = Path.Combine(folder, Local(file.FileName));
-                Directory.CreateDirectory(Path.GetDirectoryName(target)!);
-                File.Copy(file.DeployedPath!, target, overwrite: true);
+                var changed = mod.Files
+                    .Where(f => f.IsGameFile && files.Contains(f) && f.DeployedPath is not null && File.Exists(f.DeployedPath) && !Matches(f.DeployedPath, f))
+                    .ToList();
+                if (changed.Count == 0)
+                    continue;
+                var folder = Path.Combine(paths.BackupDir(Game.Profile.Id), $"{DateTime.Now:yyyyMMdd-HHmmss} {FileSystem.SafeName(mod.Name, mod.Id)}");
+                foreach (var file in changed)
+                {
+                    var target = Path.Combine(folder, Local(file.FileName));
+                    Directory.CreateDirectory(Path.GetDirectoryName(target)!);
+                    File.Copy(file.DeployedPath!, target, overwrite: true);
+                }
+                Log.Info($"Backed up {changed.Count} game file(s) of \"{mod.Name}\" that changed in the game to '{folder}'.");
             }
-            Log.Info($"Backed up {changed.Count} game file(s) of \"{mod.Name}\" that changed in the game to '{folder}'.");
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            // Reading a file the game or another tool holds used to end here as a raw IO error, which the window can
+            // only show as "Something went wrong". Nothing has been moved yet, so this is the same refusal as a file
+            // that cannot be moved: the player closes whatever holds it and tries again.
+            throw new ModException($"Nothing was removed from the game, because a file is in use or protected. Close the game and try again. ({ex.Message})");
         }
     }
 
