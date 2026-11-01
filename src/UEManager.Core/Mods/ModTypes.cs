@@ -1,6 +1,6 @@
 namespace UEManager.Core.Mods;
 
-/// <summary>Short type names for the interface: PAK, IoStore, Blueprint, UE4SS Lua, UE4SS DLL, UE4SS files.</summary>
+/// <summary>Short type names for the interface: PAK, IoStore, Blueprint, UE4SS Lua, UE4SS DLL, UE4SS files, game files, exe files.</summary>
 public static class ModTypes
 {
     /// <summary>A folder for UE4SS's Mods folder without code (<see cref="PackageKind.Ue4ssFolder"/>), on its own.</summary>
@@ -9,12 +9,17 @@ public static class ModTypes
     /// <summary>A file the download places in one of the game's own folders, such as a keybinding preset.</summary>
     public const string GameFiles = "Game files";
 
+    /// <summary>Files that go next to the game's exe, such as a proxy DLL and its add-on.</summary>
+    public const string ExeFiles = "Exe files";
+
     /// <param name="files">Each file's deploy target and path below that target.</param>
     public static string Label(IEnumerable<(DeployTarget Target, string Path)> files)
     {
         var list = files.ToList();
         if (list.Count > 0 && list.All(f => f.Target == DeployTarget.InstallRoot))
             return GameFiles;
+        if (list.Count > 0 && list.All(f => f.Target == DeployTarget.ExeFolder))
+            return ExeFiles;
         var ue4ss = list.Where(f => f.Target == DeployTarget.Ue4ssMods).Select(f => "/" + f.Path.Replace('\\', '/')).ToList();
         var lua = ue4ss.Any(p => p.Contains("/Scripts/", StringComparison.OrdinalIgnoreCase));
         var native = ue4ss.Any(p => p.Contains("/dlls/", StringComparison.OrdinalIgnoreCase));

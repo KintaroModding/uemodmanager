@@ -64,6 +64,7 @@ after a change to an English text, update every language file too.
 | Blueprint | package files below a `LogicMods` folder | `<Project>/Content/Paks/LogicMods` |
 | UE4SS Lua / DLL | a folder with `Scripts/main.lua` or `dlls/*.dll` | UE4SS's `Mods` folder |
 | Game files | a file below the download's `<Project>/Saved` or `<Project>/Config` folder | the same path in the game |
+| Exe files | a `.dll`, `.addon64` or `.asi` file, with the files in its folder | the game's exe folder |
 
 A game file is one the game keeps and reads itself, such as the keybinding
 preset `ProjectPBZ/Saved/EnhancedInputUserSettings.sav` that some Phantom Blade
@@ -73,6 +74,17 @@ the install review says so, the manager saves the game's own copy into the mod's
 folder, and puts it back when the mod is disabled, updated or removed. The game
 writes these files while it runs, so their content is never compared, and their
 folders are never removed.
+
+Exe files are the other way round: a proxy DLL such as `dxgi.dll`, a ReShade
+add-on or an `.asi` loader has to be next to the game's executable when it
+starts, so content packages cannot stand in for them. A download that keeps such
+a loader loose (ReShade itself, RenoDX, OptiScaler, `version.dll` + `.asi`
+loaders) is installed as its whole folder next to the exe, or from the paths it
+carries when they name the exe folder (`platform/steam/dxgi.dll`). A file of the
+same name that the game or another tool had there is saved into the mod's folder
+and put back when the mod is disabled or removed, and the install review says so
+first. A file that belongs to UE4SS's own installation is refused: overwriting it
+would break UE4SS and every mod on it.
 
 UE4SS sits next to the game's exe, which most Unreal games keep in
 `<Project>/Binaries/Win64` and Phantom Blade Zero in `platform/<store>` (see

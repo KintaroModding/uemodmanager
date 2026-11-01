@@ -59,6 +59,13 @@ public enum DeployTarget
     /// saves it before the mod's copy takes its place, and puts it back when the mod is disabled or removed.
     /// </summary>
     InstallRoot,
+
+    /// <summary>
+    /// The game's exe folder, next to the executable it starts: where a proxy DLL such as dxgi.dll, a ReShade
+    /// add-on or an .asi loader goes, with the files that load with it. Like <see cref="InstallRoot"/>, a file
+    /// the game or another tool had there is saved first and put back when the mod leaves.
+    /// </summary>
+    ExeFolder,
 }
 
 public sealed class ModFileRecord
@@ -91,9 +98,12 @@ public sealed class ModFileRecord
     [JsonIgnore]
     public bool IsSettingsFile => SettingsFiles.Is(Target, FileName);
 
-    /// <summary>A file in one of the game's own folders, which the game reads and may write; see <see cref="DeployTarget.InstallRoot"/>.</summary>
+    /// <summary>
+    /// A file in one of the game's own folders, which the game or another tool may write; see
+    /// <see cref="DeployTarget.InstallRoot"/> and <see cref="DeployTarget.ExeFolder"/>.
+    /// </summary>
     [JsonIgnore]
-    public bool IsGameFile => Target == DeployTarget.InstallRoot;
+    public bool IsGameFile => Target is DeployTarget.InstallRoot or DeployTarget.ExeFolder;
 
     /// <summary>
     /// For a file that was in the game before the mod's copy took its place, the checksum of that file.

@@ -23,6 +23,12 @@ public enum PackageKind
     /// "Project/Saved/EnhancedInputUserSettings.sav": the game's own file, which the mod replaces.
     /// </summary>
     File,
+
+    /// <summary>
+    /// Files that share a folder in the download and go next to the game's exe as they are: a proxy DLL such as
+    /// dxgi.dll, a ReShade add-on, an .asi loader, and the files that load with them.
+    /// </summary>
+    ExeFiles,
 }
 
 /// <summary>
@@ -131,14 +137,37 @@ public sealed class PackageGroup
     }
 
     /// <summary>
-    /// A file the download places in one of the game's own folders, as it is: the file takes the place of
-    /// the game's own, which the manager saves and puts back when the mod leaves.
+    /// The files a download places in one folder of the game's own, as they are: each takes the place of the game's
+    /// own file, which the manager saves and puts back when the mod leaves.
     /// </summary>
-    /// <param name="relativePath">The file's path from the top of the download, such as "Project/Saved/Keys.sav".</param>
-    internal static PackageGroup GameFile(string name, string folder, string file, string relativePath)
+    /// <param name="files">Full paths of the staged files.</param>
+    /// <param name="relativePaths">Each file's path below the install folder, in the order of <paramref name="files"/>.</param>
+    internal static PackageGroup GameFiles(string name, string folder, IReadOnlyList<string> files, IReadOnlyList<string> relativePaths)
     {
-        var relative = relativePath.Replace('\\', '/');
-        return new PackageGroup(name, folder, [file], [relative], PackageKind.File, DeployTarget.InstallRoot);
+        var placed = files
+            .Select((file, i) => (File: file, Place: relativePaths[i].Replace('\\', '/')))
+            .OrderBy(f => f.Place, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        return new PackageGroup(name, folder, placed.Select(f => f.File).ToList(), placed.Select(f => f.Place).ToList(),
+            PackageKind.File, DeployTarget.InstallRoot);
+    }
+
+    /// <summary>
+    /// A set of files that share a folder in the download and go next to the game's exe as they are, such as
+    /// dxgi.dll with its ReShade add-on and ReShade.ini. The game's own file of the same name is saved first.
+    /// </summary>
+    /// <param name="folderInDownload">The folder the files share, relative to the top of the download.</param>
+    /// <param name="files">Full paths of the staged files.</param>
+    /// <param name="relativePaths">Each file's path below the folder, in the order of <paramref name="files"/>.</param>
+    internal static PackageGroup ExeFiles(string name, string folderInDownload, IReadOnlyList<string> files,
+        IReadOnlyList<string> relativePaths)
+    {
+        var placed = files
+            .Select((file, i) => (File: file, Place: relativePaths[i].Replace('\\', '/')))
+            .OrderBy(f => f.Place, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        return new PackageGroup(name, folderInDownload, placed.Select(f => f.File).ToList(),
+            placed.Select(f => f.Place).ToList(), PackageKind.ExeFiles, DeployTarget.ExeFolder);
     }
 }
 
@@ -154,13 +183,21 @@ public sealed record ScanResult(
 /// </summary>
 public static class PackageScanner
 {
+    /// <summary>The files that make a download a file mod next to the exe: a proxy DLL, a ReShade add-on, an .asi loader.</summary>
+    private static readonly string[] LoaderExtensions = [".dll", ".addon64", ".asi"];
+
     /// <param name="stagingDir">The unpacked download.</param>
     /// <param name="fallbackName">Folder name for a UE4SS mod whose files sit at the top of the download.</param>
     /// <param name="projectFolder">
     /// The game's Unreal project folder, such as "ProjectPBZ". A file the download places in one of the game's own
     /// folders under it, such as Saved or Config, is installed too; without the name, those files are ignored.
     /// </param>
-    public static ScanResult Scan(string stagingDir, string fallbackName = "Mod", string? projectFolder = null)
+    /// <param name="exeFolder">
+    /// The game's exe folder below the install folder, such as "platform/steam". A download whose paths name it keeps
+    /// those paths; a download that keeps proxy DLLs loose next to the exe is installed from its own folder layout.
+    /// </param>
+    public static ScanResult Scan(string stagingDir, string fallbackName = "Mod", string? projectFolder = null,
+        string? exeFolder = null)
     {
         var root = Path.TrimEndingDirectorySeparator(Path.GetFullPath(stagingDir));
         var files = Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories).ToList();
@@ -218,12 +255,13 @@ public static class PackageScanner
         }
 
         // A file the download places in one of the game's own folders, such as
-        // "ProjectPBZ/Saved/EnhancedInputUserSettings.sav": a keybinding preset or a settings file the game reads.
-        // Each file is its own part, and keeps the path it has below the install folder.
+        // "ProjectPBZ/Saved/EnhancedInputUserSettings.sav" or "platform/steam/dxgi.dll": a keybinding preset, a settings
+        // file the game reads, or a mod file next to the exe. Each file is its own part and keeps its path below the
+        // install folder.
         var claimed = drafts.SelectMany(d => d.Files).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var gameFiles = files
             .Where(f => !claimed.Contains(f) && !FileSystem.HasExtension(f, FileSystem.ArchiveExtensions) && !SettingsFiles.IsDocument(f))
-            .Select(f => (File: f, Path: GameFilePath(RelativePath(root, f), projectFolder)))
+            .Select(f => (File: f, Path: GameFilePath(RelativePath(root, f), projectFolder, exeFolder)))
             .Where(f => f.Path is not null)
             .Select(f => (f.File, Path: f.Path!))
             .ToList();
@@ -243,10 +281,46 @@ public static class PackageScanner
                         : PackageGroup.Ue4ssMod(d.Name, folder, d.Ue4ssRoot, d.Files, d.SharedRoot);
             })
             .ToList();
-        foreach (var (file, path) in gameFiles)
+        // The game files of one folder are one part: a lone file is known by its name, several by the folder they
+        // go to, such as the files a download places in the exe folder.
+        foreach (var group in gameFiles.GroupBy(g => Path.GetDirectoryName(g.Path)?.Replace('\\', '/') ?? "", StringComparer.OrdinalIgnoreCase))
         {
-            var folder = Path.GetDirectoryName(path)?.Replace('\\', '/') ?? "";
-            packages.Add(PackageGroup.GameFile(Path.GetFileName(file), folder, file, path));
+            var folderPath = group.Key;
+            var inFolder = group.OrderBy(g => g.Path, StringComparer.OrdinalIgnoreCase).ToList();
+            var (folder, name) = inFolder.Count == 1
+                ? (folderPath, Path.GetFileName(inFolder[0].Path))
+                : (Path.GetDirectoryName(folderPath)?.Replace('\\', '/') ?? "", Path.GetFileName(folderPath));
+            packages.Add(PackageGroup.GameFiles(name, folder, inFolder.Select(f => f.File).ToList(), inFolder.Select(f => f.Path).ToList()));
+        }
+
+        // A proxy DLL and the files that load with it, kept loose next to the game's exe: the folder that holds a
+        // loader goes next to the exe as it is, which is where ReShade and the add-ons find their own files.
+        var taken = claimed.Concat(gameFiles.Select(g => g.File)).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var loaderFolders = files
+            .Where(f => !taken.Contains(f) && !FileSystem.HasExtension(f, FileSystem.ArchiveExtensions)
+                && !SettingsFiles.IsDocument(f) && FileSystem.HasExtension(f, LoaderExtensions))
+            .Select(f => Path.GetDirectoryName(f)!)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+        // A loader folder inside another one is part of it. A folder that only holds a file the download already
+        // places by path is an alternate copy of it, such as an older fallback build: it stays out.
+        var named = gameFiles.Select(g => Path.GetFileName(g.File)).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var loose = loaderFolders
+            .Where(folder => !loaderFolders.Any(other => other != folder && IsInside(folder, other)))
+            .Where(folder => !files.Any(f => IsInside(f, folder) && named.Contains(Path.GetFileName(f))))
+            .ToList();
+        foreach (var folder in loose)
+        {
+            var group = files
+                .Where(f => IsInside(f, folder) && !taken.Contains(f)
+                    && !FileSystem.HasExtension(f, FileSystem.ArchiveExtensions) && !SettingsFiles.IsDocument(f))
+                .ToList();
+            if (group.Count == 0)
+                continue;
+            var atTop = string.Equals(folder, root, StringComparison.OrdinalIgnoreCase);
+            var name = atTop ? FileSystem.SafeName(fallbackName, "Mod") : Path.GetFileName(folder);
+            packages.Add(PackageGroup.ExeFiles(name, atTop ? "" : RelativeFolder(root, Path.GetDirectoryName(folder)!), group,
+                group.Select(f => Path.GetRelativePath(folder, f).Replace('\\', '/')).ToList()));
         }
         packages = packages.OrderBy(p => p.Label, NaturalOrder.Instance).ToList();
 
@@ -338,22 +412,37 @@ public static class PackageScanner
 
     /// <summary>
     /// The path below the install folder of a file the download places in one of the game's own folders, such as
-    /// "ProjectPBZ/Saved/Keys.sav"; null for any other file. The game reads the file there, and the mod replaces the
-    /// one the game keeps, so only Saved and Config count: nothing else of a download is installed over the game's own.
-    /// A download may wrap its files in a folder of its own, so the project folder is looked for at any depth.
+    /// "ProjectPBZ/Saved/Keys.sav" or "platform/steam/dxgi.dll"; null for any other file. The game reads the file
+    /// there, and the mod replaces the one the game keeps, so only those folders count: nothing else of a download is
+    /// installed over the game's own. A download may wrap its files in a folder of its own, so both are looked for at
+    /// any depth.
     /// </summary>
-    private static string? GameFilePath(string relativePath, string? projectFolder)
+    private static string? GameFilePath(string relativePath, string? projectFolder, string? exeFolder)
     {
-        if (string.IsNullOrWhiteSpace(projectFolder))
-            return null;
         var parts = relativePath.Split('/');
         for (var i = 0; i + 2 < parts.Length; i++)
         {
-            if (parts[i].Equals(projectFolder, StringComparison.OrdinalIgnoreCase)
+            if (!string.IsNullOrWhiteSpace(projectFolder) && parts[i].Equals(projectFolder, StringComparison.OrdinalIgnoreCase)
                 && (parts[i + 1].Equals("Saved", StringComparison.OrdinalIgnoreCase) || parts[i + 1].Equals("Config", StringComparison.OrdinalIgnoreCase)))
+                return string.Join('/', parts[i..]);
+            if (!string.IsNullOrWhiteSpace(exeFolder) && StartsAt(parts, i, exeFolder!))
                 return string.Join('/', parts[i..]);
         }
         return null;
+    }
+
+    /// <summary>Whether <paramref name="parts"/>, from <paramref name="start"/>, begins with the folders of <paramref name="folder"/>.</summary>
+    private static bool StartsAt(string[] parts, int start, string folder)
+    {
+        var expected = folder.Split(['/', '\\'], StringSplitOptions.RemoveEmptyEntries);
+        if (start + expected.Length >= parts.Length)
+            return false;
+        for (var i = 0; i < expected.Length; i++)
+        {
+            if (!parts[start + i].Equals(expected[i], StringComparison.OrdinalIgnoreCase))
+                return false;
+        }
+        return true;
     }
 
     /// <summary>The leading folders shared by every path, such as "Mod/Data" for "Mod/Data/A" and "Mod/Data/B".</summary>

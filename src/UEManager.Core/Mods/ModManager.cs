@@ -93,6 +93,8 @@ public sealed class ModManager
         DeployTarget.Ue4ssMods => Ue4ssRuntime.Detect(Game).ModsPath,
         // A game file keeps the path the download gives it, below the install folder.
         DeployTarget.InstallRoot => Game.RootPath,
+        // A proxy DLL and the files that load with it go next to the game's exe.
+        DeployTarget.ExeFolder => Game.BinariesPath,
         _ => Game.ModsPath,
     };
 
@@ -104,7 +106,8 @@ public sealed class ModManager
         {
             ArchiveStager.Stage(source, staging);
             var (name, version) = ModNaming.FromSource(source);
-            var scan = PackageScanner.Scan(staging, name, Game.ProjectFolder ?? Game.Profile.ProjectFolder);
+            var scan = PackageScanner.Scan(staging, name, Game.ProjectFolder ?? Game.Profile.ProjectFolder,
+                Path.GetRelativePath(Game.RootPath, Game.BinariesPath).Replace('\\', '/'));
             Log.Info($"Inspected '{source}': {scan.Packages.Count} part(s), {scan.IgnoredFileCount} other file(s).");
             return new InstallPreview(source, staging, scan, name, version);
         }
@@ -167,6 +170,8 @@ public sealed class ModManager
         lock (gate)
         {
             var owners = new List<ModRecord>();
+            // UE4SS's own files are not a mod's to replace: overwriting them would break UE4SS and every mod on it.
+            var ue4ss = ReadUe4ssRecord()?.Files;
             // Shared libraries say nothing about which mod this is: other mods may bring the same ones.
             foreach (var (target, path, _) in entries.Where(e => !SharedFiles.Is(e.Target, e.Path)).DistinctBy(e => (e.Target, e.Path.ToUpperInvariant())))
             {
@@ -176,10 +181,14 @@ public sealed class ModManager
                     if (!owners.Contains(owner))
                         owners.Add(owner);
                 }
-                else if (target == DeployTarget.InstallRoot)
+                else if (target == DeployTarget.ExeFolder && ue4ss is not null && ue4ss.ContainsKey(path))
                 {
-                    // The file belongs to the game or the player: replacing it is what the mod is for. The manager
-                    // saves it first, so nothing of the player's is lost.
+                    problems.Add($"{path} belongs to UE4SS, which the manager installed. Uninstall UE4SS first, or remove that file from the download.");
+                }
+                else if (target is DeployTarget.InstallRoot or DeployTarget.ExeFolder)
+                {
+                    // The file belongs to the game, the player or another tool: replacing it is what the mod is for.
+                    // The manager saves it first, so nothing of theirs is lost.
                     if (File.Exists(Path.Combine(TargetFolder(target), Local(path))))
                         warnings.Add($"{path} is in the game already. The manager keeps a copy of it and puts it back when the mod is disabled or removed.");
                 }
