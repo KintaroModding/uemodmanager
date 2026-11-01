@@ -13,11 +13,12 @@ internal static class Format
         _ => string.Format(CultureInfo.CurrentCulture, "{0:0.##} GB", bytes / (1024.0 * 1024 * 1024)),
     };
 
-    /// <summary>A mod's type for the player: Blueprint and UE4SS files are translated; PAK, IoStore and UE4SS are names.</summary>
+    /// <summary>A mod's type for the player: Blueprint, UE4SS files and game files are translated; PAK, IoStore and UE4SS are names.</summary>
     public static string Kind(string typeLabel) => typeLabel switch
     {
         "Blueprint" => L.T("Blueprint"),
         ModTypes.Ue4ssFiles => L.T("UE4SS files"),
+        ModTypes.GameFiles => L.T("Game files"),
         _ => typeLabel,
     };
 

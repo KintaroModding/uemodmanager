@@ -63,6 +63,16 @@ after a change to an English text, update every language file too.
 | PAK / IoStore | `.pak`, `.utoc` + `.ucas` | `<Project>/Content/Paks/~mods` |
 | Blueprint | package files below a `LogicMods` folder | `<Project>/Content/Paks/LogicMods` |
 | UE4SS Lua / DLL | a folder with `Scripts/main.lua` or `dlls/*.dll` | UE4SS's `Mods` folder |
+| Game files | a file below the download's `<Project>/Saved` or `<Project>/Config` folder | the same path in the game |
+
+A game file is one the game keeps and reads itself, such as the keybinding
+preset `ProjectPBZ/Saved/EnhancedInputUserSettings.sav` that some Phantom Blade
+Zero controller mods bring. Such a download is installed as one more part, with
+the path it has below the install folder. The game may have that file already:
+the install review says so, the manager saves the game's own copy into the mod's
+folder, and puts it back when the mod is disabled, updated or removed. The game
+writes these files while it runs, so their content is never compared, and their
+folders are never removed.
 
 UE4SS sits next to the game's exe, which most Unreal games keep in
 `<Project>/Binaries/Win64` and Phantom Blade Zero in `platform/<store>` (see

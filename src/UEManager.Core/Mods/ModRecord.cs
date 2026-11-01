@@ -52,6 +52,13 @@ public enum DeployTarget
 
     /// <summary>UE4SS's Mods folder, for Lua and C++ mods.</summary>
     Ue4ssMods,
+
+    /// <summary>
+    /// A path below the game's install folder as the download places it, such as
+    /// "Game/Saved/EnhancedInputUserSettings.sav". The file is the game's or the player's own: the manager
+    /// saves it before the mod's copy takes its place, and puts it back when the mod is disabled or removed.
+    /// </summary>
+    InstallRoot,
 }
 
 public sealed class ModFileRecord
@@ -83,6 +90,17 @@ public sealed class ModFileRecord
     /// <summary>A file the player is meant to edit; see <see cref="SettingsFiles"/>.</summary>
     [JsonIgnore]
     public bool IsSettingsFile => SettingsFiles.Is(Target, FileName);
+
+    /// <summary>A file in one of the game's own folders, which the game reads and may write; see <see cref="DeployTarget.InstallRoot"/>.</summary>
+    [JsonIgnore]
+    public bool IsGameFile => Target == DeployTarget.InstallRoot;
+
+    /// <summary>
+    /// For a file that was in the game before the mod's copy took its place, the checksum of that file.
+    /// The manager keeps a copy of it in the mod's library folder, and puts it back when the mod leaves.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public string? ReplacedSha256 { get; set; }
 
     /// <summary>A settings file whose manager copy holds the player's changes.</summary>
     [JsonIgnore]
@@ -127,7 +145,10 @@ public static partial class SettingsFiles
     /// Readmes, licenses and change logs are not settings, and two mods' readme.txt would clash in ~mods.
     /// </summary>
     public static bool IsPakSettings(string path) =>
-        FileSystem.HasExtension(path, PakSettingsExtensions) && !DocumentName().IsMatch(Path.GetFileNameWithoutExtension(path));
+        FileSystem.HasExtension(path, PakSettingsExtensions) && !IsDocument(path);
+
+    /// <summary>A document rather than a mod file: a readme, a license, a change log, install notes.</summary>
+    public static bool IsDocument(string path) => DocumentName().IsMatch(Path.GetFileNameWithoutExtension(path));
 
     /// <summary>The names a UE4SS mod gives its settings file in its Scripts folder.</summary>
     private static readonly string[] Ue4ssSettingsNames = ["config", "settings"];

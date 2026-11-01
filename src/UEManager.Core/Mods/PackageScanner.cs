@@ -17,6 +17,12 @@ public enum PackageKind
     /// ModConfigUI shows. UE4SS does not start it, so it gets no enabled.txt.
     /// </summary>
     Ue4ssFolder,
+
+    /// <summary>
+    /// A single file that goes below the install folder as the download places it, such as
+    /// "Project/Saved/EnhancedInputUserSettings.sav": the game's own file, which the mod replaces.
+    /// </summary>
+    File,
 }
 
 /// <summary>
@@ -123,6 +129,17 @@ public sealed class PackageGroup
         var relative = ordered.Select(f => name + "/" + Path.GetRelativePath(root, f).Replace('\\', '/')).ToList();
         return new PackageGroup(name, folder, ordered, relative, PackageKind.Ue4ssFolder, DeployTarget.Ue4ssMods);
     }
+
+    /// <summary>
+    /// A file the download places in one of the game's own folders, as it is: the file takes the place of
+    /// the game's own, which the manager saves and puts back when the mod leaves.
+    /// </summary>
+    /// <param name="relativePath">The file's path from the top of the download, such as "Project/Saved/Keys.sav".</param>
+    internal static PackageGroup GameFile(string name, string folder, string file, string relativePath)
+    {
+        var relative = relativePath.Replace('\\', '/');
+        return new PackageGroup(name, folder, [file], [relative], PackageKind.File, DeployTarget.InstallRoot);
+    }
 }
 
 public sealed record ScanResult(
@@ -139,7 +156,11 @@ public static class PackageScanner
 {
     /// <param name="stagingDir">The unpacked download.</param>
     /// <param name="fallbackName">Folder name for a UE4SS mod whose files sit at the top of the download.</param>
-    public static ScanResult Scan(string stagingDir, string fallbackName = "Mod")
+    /// <param name="projectFolder">
+    /// The game's Unreal project folder, such as "ProjectPBZ". A file the download places in one of the game's own
+    /// folders under it, such as Saved or Config, is installed too; without the name, those files are ignored.
+    /// </param>
+    public static ScanResult Scan(string stagingDir, string fallbackName = "Mod", string? projectFolder = null)
     {
         var root = Path.TrimEndingDirectorySeparator(Path.GetFullPath(stagingDir));
         var files = Directory.EnumerateFiles(root, "*", SearchOption.AllDirectories).ToList();
@@ -196,6 +217,17 @@ public static class PackageScanner
             owner?.Files.Add(file);
         }
 
+        // A file the download places in one of the game's own folders, such as
+        // "ProjectPBZ/Saved/EnhancedInputUserSettings.sav": a keybinding preset or a settings file the game reads.
+        // Each file is its own part, and keeps the path it has below the install folder.
+        var claimed = drafts.SelectMany(d => d.Files).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var gameFiles = files
+            .Where(f => !claimed.Contains(f) && !FileSystem.HasExtension(f, FileSystem.ArchiveExtensions) && !SettingsFiles.IsDocument(f))
+            .Select(f => (File: f, Path: GameFilePath(RelativePath(root, f), projectFolder)))
+            .Where(f => f.Path is not null)
+            .Select(f => (f.File, Path: f.Path!))
+            .ToList();
+
         // A folder every part sits in, such as the download's own top folder, says nothing.
         var common = CommonLeadingFolders(drafts.Select(d => d.Folder).ToList());
         var packages = drafts
@@ -210,8 +242,13 @@ public static class PackageScanner
                         ? PackageGroup.Ue4ssFolder(d.Name, folder, d.Ue4ssRoot, d.Files)
                         : PackageGroup.Ue4ssMod(d.Name, folder, d.Ue4ssRoot, d.Files, d.SharedRoot);
             })
-            .OrderBy(p => p.Label, NaturalOrder.Instance)
             .ToList();
+        foreach (var (file, path) in gameFiles)
+        {
+            var folder = Path.GetDirectoryName(path)?.Replace('\\', '/') ?? "";
+            packages.Add(PackageGroup.GameFile(Path.GetFileName(file), folder, file, path));
+        }
+        packages = packages.OrderBy(p => p.Label, NaturalOrder.Instance).ToList();
 
         // Folders that hold the same files are variants of one mod, of which the player installs one.
         var variantGroups = packages
@@ -296,6 +333,29 @@ public static class PackageScanner
         return relative == "." ? "" : relative.Replace('\\', '/');
     }
 
+    /// <summary>A file's path from the top of the download, with forward slashes.</summary>
+    private static string RelativePath(string root, string file) => Path.GetRelativePath(root, file).Replace('\\', '/');
+
+    /// <summary>
+    /// The path below the install folder of a file the download places in one of the game's own folders, such as
+    /// "ProjectPBZ/Saved/Keys.sav"; null for any other file. The game reads the file there, and the mod replaces the
+    /// one the game keeps, so only Saved and Config count: nothing else of a download is installed over the game's own.
+    /// A download may wrap its files in a folder of its own, so the project folder is looked for at any depth.
+    /// </summary>
+    private static string? GameFilePath(string relativePath, string? projectFolder)
+    {
+        if (string.IsNullOrWhiteSpace(projectFolder))
+            return null;
+        var parts = relativePath.Split('/');
+        for (var i = 0; i + 2 < parts.Length; i++)
+        {
+            if (parts[i].Equals(projectFolder, StringComparison.OrdinalIgnoreCase)
+                && (parts[i + 1].Equals("Saved", StringComparison.OrdinalIgnoreCase) || parts[i + 1].Equals("Config", StringComparison.OrdinalIgnoreCase)))
+                return string.Join('/', parts[i..]);
+        }
+        return null;
+    }
+
     /// <summary>The leading folders shared by every path, such as "Mod/Data" for "Mod/Data/A" and "Mod/Data/B".</summary>
     private static string CommonLeadingFolders(IReadOnlyList<string> folders)
     {
@@ -320,5 +380,6 @@ public static class PackageScanner
     }
 
     /// <param name="CodeFree">A folder for UE4SS's Mods folder without code; see <see cref="PackageKind.Ue4ssFolder"/>.</param>
-    private sealed record Draft(string Name, string Folder, List<string> Files, string? Ue4ssRoot, string? SharedRoot = null, bool CodeFree = false);
+    private sealed record Draft(string Name, string Folder, List<string> Files, string? Ue4ssRoot, string? SharedRoot = null,
+        bool CodeFree = false);
 }

@@ -91,6 +91,8 @@ public sealed class ModManager
     {
         DeployTarget.LogicMods => Game.LogicModsPath,
         DeployTarget.Ue4ssMods => Ue4ssRuntime.Detect(Game).ModsPath,
+        // A game file keeps the path the download gives it, below the install folder.
+        DeployTarget.InstallRoot => Game.RootPath,
         _ => Game.ModsPath,
     };
 
@@ -102,7 +104,7 @@ public sealed class ModManager
         {
             ArchiveStager.Stage(source, staging);
             var (name, version) = ModNaming.FromSource(source);
-            var scan = PackageScanner.Scan(staging, name);
+            var scan = PackageScanner.Scan(staging, name, Game.ProjectFolder ?? Game.Profile.ProjectFolder);
             Log.Info($"Inspected '{source}': {scan.Packages.Count} part(s), {scan.IgnoredFileCount} other file(s).");
             return new InstallPreview(source, staging, scan, name, version);
         }
@@ -173,6 +175,13 @@ public sealed class ModManager
                 {
                     if (!owners.Contains(owner))
                         owners.Add(owner);
+                }
+                else if (target == DeployTarget.InstallRoot)
+                {
+                    // The file belongs to the game or the player: replacing it is what the mod is for. The manager
+                    // saves it first, so nothing of the player's is lost.
+                    if (File.Exists(Path.Combine(TargetFolder(target), Local(path))))
+                        warnings.Add($"{path} is in the game already. The manager keeps a copy of it and puts it back when the mod is disabled or removed.");
                 }
                 else if (File.Exists(Path.Combine(TargetFolder(target), Local(path))))
                 {
@@ -1041,7 +1050,8 @@ public sealed class ModManager
             if (info is null || !info.Exists)
                 return ModIntegrity.FilesMissing;
             // A borrowed shared file belongs to whoever put it there, such as UE4SS, which may update it.
-            if (!file.IsSettingsFile && !file.Borrowed && info.Length != file.Size)
+            // A game file is written by the game itself, so only its presence is checked.
+            if (!file.IsSettingsFile && !file.Borrowed && !file.IsGameFile && info.Length != file.Size)
                 return ModIntegrity.FilesChanged;
         }
         return ModIntegrity.Intact;
@@ -1128,7 +1138,7 @@ public sealed class ModManager
             foreach (var file in outside)
             {
                 var here = Path.Combine(folders[file.Target], Local(file.FileName));
-                file.DeployedPath = File.Exists(here) && (file.IsSettingsFile || Matches(here, file)) ? here : null;
+                file.DeployedPath = File.Exists(here) && (file.IsSettingsFile || file.IsGameFile || Matches(here, file)) ? here : null;
             }
             followed++;
         }
@@ -1186,6 +1196,36 @@ public sealed class ModManager
     private string DefaultsPath(ModRecord mod, ModFileRecord file) =>
         Path.Combine(LibraryFolderOf(mod), ".defaults", file.Target.ToString(), Local(file.FileName));
 
+    /// <summary>The game's own version of a file a mod replaced, kept in the mod's library folder.</summary>
+    private string ReplacedPath(ModRecord mod, ModFileRecord file) =>
+        Path.Combine(LibraryFolderOf(mod), ".replaced", file.Target.ToString(), Local(file.FileName));
+
+    /// <summary>Saves the file the game had at this place, so the mod never destroys it.</summary>
+    private void KeepReplaced(ModRecord mod, ModFileRecord file, string place)
+    {
+        var saved = ReplacedPath(mod, file);
+        Directory.CreateDirectory(Path.GetDirectoryName(saved)!);
+        File.Copy(place, saved, overwrite: true);
+        file.ReplacedSha256 = FileSystem.Sha256(saved);
+    }
+
+    /// <summary>Puts the game's own file back where a mod replaced it; the saved copy stays in the library.</summary>
+    private void RestoreReplaced(ModRecord mod, ModFileRecord file, string place)
+    {
+        var saved = ReplacedPath(mod, file);
+        if (!File.Exists(saved))
+            return;
+        try
+        {
+            Directory.CreateDirectory(Path.GetDirectoryName(place)!);
+            File.Copy(saved, place, overwrite: true);
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+        {
+            Log.Warn($"The game's own {file.FileName} could not be put back: {ex.Message}");
+        }
+    }
+
     /// <summary>Copies a mod's library files into the game. On failure, every copied file is removed again.</summary>
     /// <param name="takeIdentical">A file already in the game with the same content as the library copy is taken over instead of refused.</param>
     /// <returns>The files that were taken over.</returns>
@@ -1203,7 +1243,7 @@ public sealed class ModManager
                 if (!File.Exists(source))
                     throw new ModException($"The manager's copy of {file.FileName} is missing. Reinstall \"{mod.Name}\".");
                 var destination = Path.Combine(folders[file.Target], Local(file.FileName));
-                if (takeIdentical && File.Exists(destination) && Matches(destination, file))
+                if (takeIdentical && !file.IsGameFile && File.Exists(destination) && Matches(destination, file))
                 {
                     file.DeployedPath = destination;
                     taken.Add(file);
@@ -1222,12 +1262,21 @@ public sealed class ModManager
                     continue;
                 }
                 file.Borrowed = false;
-                if (File.Exists(destination))
+                if (file.IsGameFile)
+                {
+                    // A file of the game's own folders: the mod's copy takes its place, and the game's file is
+                    // saved first, so the mod never destroys it.
+                    if (File.Exists(destination))
+                        KeepReplaced(mod, file, destination);
+                }
+                else if (File.Exists(destination))
+                {
                     throw new ModException($"{file.FileName} is already in {TargetName(file.Target)}, but it does not belong to \"{mod.Name}\". Move or delete it first.");
+                }
                 Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
                 temp = destination + ".uemm-tmp";
                 File.Copy(source, temp, overwrite: true);
-                File.Move(temp, destination);
+                File.Move(temp, destination, overwrite: true);
                 temp = null;
                 file.DeployedPath = destination;
             }
@@ -1259,8 +1308,9 @@ public sealed class ModManager
     {
         // Shared files that other mods still use, or that were there before, stay in the game.
         var files = group.SelectMany(m => m.Files).Where(f => !Keeps(group, f)).ToList();
+        // A game file is written by the game itself: its content says nothing about whether the player changed it.
         var changed = files
-            .Where(f => !f.IsSettingsFile && f.DeployedPath is not null && File.Exists(f.DeployedPath) && !Matches(f.DeployedPath, f))
+            .Where(f => !f.IsSettingsFile && !f.IsGameFile && f.DeployedPath is not null && File.Exists(f.DeployedPath) && !Matches(f.DeployedPath, f))
             .Select(f => f.FileName)
             .ToList();
         if (changed.Count > 0)
@@ -1272,8 +1322,18 @@ public sealed class ModManager
         var deployed = files.Where(f => f.DeployedPath is not null && File.Exists(f.DeployedPath)).Select(f => f.DeployedPath!)
             .Distinct(StringComparer.OrdinalIgnoreCase);
         var removal = new Removal(Park(deployed));
+        // The game's own files, which the mods replaced, come back to these places.
+        var replaced = group
+            .SelectMany(m => m.Files.Where(f => f.IsGameFile && f.ReplacedSha256 is not null && f.DeployedPath is not null)
+                .Select(f => (Mod: m, File: f, Place: f.DeployedPath!)))
+            .ToList();
         foreach (var mod in group)
             removal.Disable(mod);
+        foreach (var (mod, file, place) in replaced)
+        {
+            RestoreReplaced(mod, file, place);
+            removal.Restored(place);
+        }
         return removal;
     }
 
@@ -1306,6 +1366,7 @@ public sealed class ModManager
     {
         private readonly List<(ModFileRecord File, string Path)> deployed = [];
         private readonly List<ModRecord> disabled = [];
+        private readonly List<string> restored = [];
 
         /// <summary>Disables an enabled mod whose files are among the moved items, or inside a moved folder.</summary>
         public void Disable(ModRecord mod)
@@ -1319,6 +1380,9 @@ public sealed class ModManager
             disabled.Add(mod);
         }
 
+        /// <summary>The places where the game's own file came back in place of a mod's copy, for a change that is undone.</summary>
+        public void Restored(string place) => restored.Add(place);
+
         /// <summary>Deletes what was moved aside, and the mod folders that are empty then.</summary>
         public void Finish()
         {
@@ -1330,11 +1394,18 @@ public sealed class ModManager
                     FileSystem.TryDeleteFile(moved);
             }
             foreach (var (file, path) in deployed)
-                RemoveEmptyFolders(file, path);
+            {
+                // A game file's folders belong to the game, and stay.
+                if (!file.IsGameFile)
+                    RemoveEmptyFolders(file, path);
+            }
         }
 
         public void PutBack()
         {
+            // What came back of the game's own has to go before the mod's file can move back.
+            foreach (var place in restored)
+                FileSystem.TryDeleteFile(place);
             Unpark(parked);
             foreach (var (file, path) in deployed)
                 file.DeployedPath = path;
@@ -1455,7 +1526,10 @@ public sealed class ModManager
             if (!Keeps([mod], file))
             {
                 FileSystem.TryDeleteFile(file.DeployedPath!);
-                RemoveEmptyFolders(file, file.DeployedPath!);
+                if (file.IsGameFile)
+                    RestoreReplaced(mod, file, file.DeployedPath!);
+                else
+                    RemoveEmptyFolders(file, file.DeployedPath!);
             }
             file.DeployedPath = null;
         }
@@ -1503,9 +1577,12 @@ public sealed class ModManager
     private static string Local(string relativePath) => relativePath.Replace('/', Path.DirectorySeparatorChar);
 
     /// <summary>The folder's name for a message, such as "~mods": the same in every language.</summary>
-    private string TargetName(DeployTarget target) => target == DeployTarget.Ue4ssMods
-        ? Path.Combine("ue4ss", "Mods")
-        : Path.GetFileName(Path.TrimEndingDirectorySeparator(TargetFolder(target)));
+    private string TargetName(DeployTarget target) => target switch
+    {
+        DeployTarget.Ue4ssMods => Path.Combine("ue4ss", "Mods"),
+        DeployTarget.InstallRoot => "the game folder",
+        _ => Path.GetFileName(Path.TrimEndingDirectorySeparator(TargetFolder(target))),
+    };
 
     private static bool Matches(string path, ModFileRecord file) =>
         new FileInfo(path).Length == file.Size
