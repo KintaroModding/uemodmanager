@@ -215,7 +215,7 @@
   "Mods installed": "已安裝模組",
   "Mortal Shell II": "Mortal Shell II",
   "Most mods read them when the game starts.": "大多數模組會在遊戲啟動時讀取這些設定。",
-  "Most mods stay in the mods folder. This one places files directly in the game's folders, so it may conflict with other tools or loaders. The manager saves any file it replaces and puts it back when you turn the mod off or uninstall it.": "大多數模組只放在模組資料夾中。此模組會直接把檔案放入遊戲資料夾，因此可能與其他工具或載入器衝突。管理器會保存被取代的檔案，並在你停用或解除安裝此模組時將其還原。",
+  "Most mods stay in the mods folder. This one places files directly in the game's folders, so it may conflict with other tools or loaders. The manager saves any file it replaces and puts it back when you turn the mod off or uninstall it.": "大多數模組只放在模組資料夾中。此模組會直接把檔案放入遊戲資料夾，因此可能與其他工具或載入器衝突。管理器會儲存被取代的檔案，並在你停用或解除安裝此模組時將其還原。",
   "Move mods": "移動模組",
   "Move your mods": "移動模組",
   "Moved {0} mod to {1}.": "已將 {0} 個模組移動到 {1}。",
