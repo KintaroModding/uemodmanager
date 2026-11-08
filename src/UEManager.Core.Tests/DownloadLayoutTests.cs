@@ -388,4 +388,24 @@ public class DownloadLayoutTests : IDisposable
         Assert.Single(preview.Packages);
         Assert.Contains(check.Problems, p => p.ToString().StartsWith("This mod runs in PBZModLoader, which is not installed", StringComparison.Ordinal));
     }
+
+    [Fact]
+    public void A_settings_file_the_mod_makes_in_the_mods_folder_becomes_part_of_the_mod()
+    {
+        // The mod's own settings file, which the mod creates and reads while the game runs.
+        var settings = Path.Combine(game.ModsPath, "PBZAutoCollect.txt");
+        Directory.CreateDirectory(game.ModsPath);
+        File.WriteAllText(settings, "Enabled=On");
+        using var preview = Inspect(@"TestGame\Content\JavaScript\PBZAutoCollect\main.js");
+        var parts = preview.Packages.ToList();
+        var mod = manager.Install(preview, parts, "Auto Collect Loot", "1.7.2");
+
+        var file = Assert.Single(mod.Files, f => f.IsSettingsFile);
+        Assert.Equal("PBZAutoCollect.txt", file.FileName);
+        Assert.True(File.Exists(settings));
+        Assert.Empty(manager.UnmanagedFiles());
+
+        manager.Uninstall(mod.Id);
+        Assert.False(File.Exists(settings));
+    }
 }

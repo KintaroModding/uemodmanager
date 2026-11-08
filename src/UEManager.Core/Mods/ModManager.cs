@@ -48,6 +48,10 @@ public sealed class ModManager
         offForTest = state?.OffForTest ?? [];
         sets = state?.Sets ?? [];
         FollowMovedInstall();
+        // A mod's own settings file in the mods folder, which the mod creates while the game runs, is part of
+        // the mod: the manager backs it up on uninstall and leaves it out of the unmanaged files.
+        if (mods.Any(AdoptOwnSettings))
+            Save();
         OtherInstallRoot = FindOtherInstall();
     }
 
@@ -368,6 +372,7 @@ public sealed class ModManager
                         AddToLibrary(record, package.Target, $"{package.Name}/{Ue4ssEnabledMarker}", source: null);
                 }
                 Deploy(record);
+                AdoptOwnSettings(record);
                 if (old is not null)
                     mods.Remove(old);
                 mods.Insert(position, record);
@@ -1295,6 +1300,49 @@ public sealed class ModManager
             .Where(f => !owned.Contains(Path.GetFullPath(f)))
             .Select(f => Path.GetRelativePath(Game.ModsPath, f))
             .ToList();
+    }
+
+    /// <summary>
+    /// The name a mod gives its settings file in the mods folder, from the folder its own files sit in,
+    /// such as "PBZAutoCollect" for the Auto Collect Loot script. Null when its files sit loose in ~mods.
+    /// </summary>
+    private static string? OwnSettingsName(ModRecord mod) =>
+        mod.Files
+            .Select(f => f.FileName.Replace('\\', '/'))
+            .Where(f => f.Contains('/'))
+            .Select(f => f[..f.LastIndexOf('/')])
+            .Select(f => f[(f.LastIndexOf('/') + 1)..])
+            .FirstOrDefault(name => !string.IsNullOrWhiteSpace(name));
+
+    /// <summary>
+    /// The mod's own settings file in the mods folder, which the mod creates and reads while the game runs,
+    /// such as PBZAutoCollect.txt. Null when there is none.
+    /// </summary>
+    private string? OwnSettingsFile(ModRecord mod)
+    {
+        var name = OwnSettingsName(mod);
+        if (name is null || !Directory.Exists(Game.ModsPath))
+            return null;
+        return Directory.EnumerateFiles(Game.ModsPath, name + ".*", SearchOption.TopDirectoryOnly)
+            .FirstOrDefault(f => SettingsFiles.IsPakSettings(f));
+    }
+
+    /// <summary>
+    /// Takes the mod's own settings file in the mods folder into the mod, so the manager owns it: it is
+    /// backed up on uninstall and kept out of the list of files the manager did not install.
+    /// </summary>
+    private bool AdoptOwnSettings(ModRecord mod)
+    {
+        var path = OwnSettingsFile(mod);
+        if (path is null)
+            return false;
+        var relative = Path.GetFileName(path);
+        if (mod.Files.Any(f => f.Target == DeployTarget.Mods && string.Equals(f.FileName, relative, StringComparison.OrdinalIgnoreCase)))
+            return false;
+        AddToLibrary(mod, DeployTarget.Mods, relative, path);
+        mod.Files.Last().DeployedPath = path;
+        Log.Info($"Took the settings file {relative} of \"{mod.Name}\" into the mod.");
+        return true;
     }
 
     private ModRecord Find(string id) =>
