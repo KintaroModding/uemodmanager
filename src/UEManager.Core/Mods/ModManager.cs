@@ -257,6 +257,11 @@ public sealed class ModManager
                 var others = preview.Packages.Where(p => p.VariantOf is not null && !selected.Contains(p) && selected.Any(s => s.VariantOf == p.VariantOf)).ToList();
                 replaces = mods.FirstOrDefault(m => others.Any(o => IsSameMod(m, o.RelativePaths.Select(path => (o.Target, path)))));
             }
+            // A download whose Nexus mod number matches an installed mod is its update, even when the mod moved from a
+            // pak to a script and the file names changed: the old one goes, the new one takes its place.
+            var siteId = ModNaming.SiteModId(preview.SourceFileName);
+            if (replaces is null && siteId is not null)
+                replaces = mods.FirstOrDefault(m => ModNaming.SiteModId(m.SourceFileName) == siteId);
             if (replaces is not null)
                 editedSettings = EditedSettings(replaces);
 
@@ -2064,14 +2069,15 @@ public sealed class ModManager
     /// them, or another mod whose author chose the same name, such as another style of an outfit. Only the player can
     /// tell, so a download by hand asks. A download from the catalog knows which mod it updates.
     /// </summary>
-    public IReadOnlyList<SameNameMod> SameNameMods(IReadOnlyCollection<PackageGroup> selected, string? catalogId = null)
+    public IReadOnlyList<SameNameMod> SameNameMods(IReadOnlyCollection<PackageGroup> selected, string? catalogId = null, string? siteId = null)
     {
         var names = selected.Where(p => p.Target == DeployTarget.Mods).SelectMany(p => p.RelativePaths).ToHashSet(StringComparer.OrdinalIgnoreCase);
-        if (catalogId is not null || names.Count == 0)
+        if (catalogId is not null || (names.Count == 0 && siteId is null))
             return [];
         lock (gate)
         {
             var found = new List<SameNameMod>();
+            var taken = new HashSet<string>(StringComparer.Ordinal);
             foreach (var mod in mods)
             {
                 var file = mod.Files.FirstOrDefault(f => f.Target == DeployTarget.Mods && names.Contains(Path.GetFileName(f.FileName)));
@@ -2080,6 +2086,18 @@ public sealed class ModManager
                 var slash = file.FileName.LastIndexOf('/');
                 var folder = slash < 0 ? null : file.FileName[..slash];
                 found.Add(new SameNameMod(mod, folder, IsSameMod(mod, selected.SelectMany(p => p.RelativePaths.Select(path => (p.Target, InFolder(folder, p.Target, path)))))));
+                taken.Add(mod.Id);
+            }
+            // The same Nexus mod number means the same mod, even when a pak became a script and the file names
+            // changed: the download is that mod's update. One is enough, and the one whose files the download
+            // already replaces is the better target.
+            if (siteId is not null)
+            {
+                var update = mods.Where(m => ModNaming.SiteModId(m.SourceFileName) == siteId && !taken.Contains(m.Id))
+                    .OrderByDescending(m => selected.Any(p => p.RelativePaths.Any(path => m.Files.Any(f => IsSameFile(f, p.Target, path)))))
+                    .FirstOrDefault();
+                if (update is not null)
+                    found.Add(new SameNameMod(update, null, true));
             }
             return found;
         }

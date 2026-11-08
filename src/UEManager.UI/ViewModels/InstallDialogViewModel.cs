@@ -73,6 +73,9 @@ public sealed partial class InstallDialogViewModel : LocalizedObservableObject
 
     public string SourceFileName => preview.SourceFileName;
 
+    /// <summary>The download's number on the mod site, from its file name; null when the name has none.</summary>
+    private string? SiteId => ModNaming.SiteModId(preview.SourceFileName);
+
     public string Summary
     {
         get
@@ -214,7 +217,7 @@ public sealed partial class InstallDialogViewModel : LocalizedObservableObject
     /// <summary>The choice follows the ticked parts. Each mod that this may update is a place, an update first, as before; keeping both is the last.</summary>
     private void RefreshPlaces(IReadOnlyCollection<PackageGroup> selected)
     {
-        var found = manager.SameNameMods(selected, catalog?.Id);
+        var found = manager.SameNameMods(selected, catalog?.Id, SiteId);
         var key = string.Join('|', found.Select(f => $"{f.Mod.Id}:{f.CanUpdate}"));
         if (key == placesKey)
             return;
@@ -250,7 +253,7 @@ public sealed partial class InstallDialogViewModel : LocalizedObservableObject
         RefreshPlaces(chosen);
         var ownFolder = OwnFolder;
         KeepBothText = SelectedPlace is { KeepsBoth: true }
-            ? L.F($"This mod and {string.Join(", ", manager.SameNameMods(chosen, catalog?.Id).Select(f => f.Mod.Name))} may change the same things in the game. Then only one style or version shows, even with both turned on. Turn off the one you do not want. Only the mod's author can make both work together, with one combined mod.")
+            ? L.F($"This mod and {string.Join(", ", manager.SameNameMods(chosen, catalog?.Id, SiteId).Select(f => f.Mod.Name))} may change the same things in the game. Then only one style or version shows, even with both turned on. Turn off the one you do not want. Only the mod's author can make both work together, with one combined mod.")
             : null;
         check = manager.Check(preview, chosen, catalog?.Id, ownFolder);
         Problems.Clear();

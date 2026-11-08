@@ -196,4 +196,33 @@ public class SameNameModsTests : IDisposable
         Assert.Equal("Skin_P.pak", ModManager.InFolder("Blue", DeployTarget.LogicMods, "Skin_P.pak"));
         Assert.Equal("TestGame/Saved/Keys.sav", ModManager.InFolder("Blue", DeployTarget.InstallRoot, "TestGame/Saved/Keys.sav"));
     }
+
+    [Fact]
+    public void A_download_with_the_same_mod_number_is_the_installed_mods_update()
+    {
+        // The old mod: a pak, from a download that kept the site's file name.
+        const string oldName = "Auto Collect Loot 70 1.3.0 2026-10-31T03-18Z pZyhlgONj";
+        folder.File($@"Downloads\{oldName}\zzz_PBZAutoCollect_P.pak", "pak");
+        folder.File($@"Downloads\{oldName}\zzz_PBZAutoCollect_P.utoc", "utoc");
+        folder.File($@"Downloads\{oldName}\zzz_PBZAutoCollect_P.ucas", "ucas");
+        using (var oldPreview = manager.Inspect(folder.Combine("Downloads", oldName)))
+            manager.Install(oldPreview, oldPreview.Packages.ToList(), "Auto Collect Loot", "1.3.0");
+
+        // The new mod: a script with the same site number, but different file names.
+        const string newName = "Auto Collect Loot 70 1.7.2 2026-11-04T23-30Z hs0itkqF1";
+        folder.File($@"Downloads\{newName}\TestGame\Content\JavaScript\PBZModsMenu\Mods\PBZAutoCollect\main.js", "the mod");
+        using var preview = manager.Inspect(folder.Combine("Downloads", newName));
+
+        Assert.Equal("70", ModNaming.SiteModId(preview.SourceFileName));
+        Assert.Equal("70", ModNaming.SiteModId(manager.Mods.Single().SourceFileName));
+        Assert.Single(preview.Packages);
+        Assert.NotNull(manager.Mods.FirstOrDefault(m => ModNaming.SiteModId(m.SourceFileName) == "70"));
+        var check = manager.Check(preview, preview.Packages.ToList());
+        Assert.NotNull(check.Replaces);
+        Assert.Equal("Auto Collect Loot", check.Replaces!.Name);
+
+        var update = Assert.Single(manager.SameNameMods(preview.Packages.ToList(), siteId: "70"));
+        Assert.Equal("Auto Collect Loot", update.Mod.Name);
+        Assert.True(update.CanUpdate);
+    }
 }
