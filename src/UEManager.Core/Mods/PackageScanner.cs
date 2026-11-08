@@ -411,6 +411,40 @@ public static class PackageScanner
         MarkLoaderCopies(packages);
         MarkNeededLoaders(packages);
 
+        // A settings file in the game's mods folder (~mods), such as SpeakerHighlight.json, goes with the mod of
+        // the same name: the mod reads it there, while its own files sit in its loader's folder. Without a mod of
+        // that name in the download, it still goes into ~mods as a part of its own.
+        var modsFolder = string.IsNullOrWhiteSpace(projectFolder)
+            ? null
+            : Path.Combine(root, projectFolder, ContentFolder, PaksFolder, "~mods");
+        if (modsFolder is not null)
+        {
+            var inPackages = packages.SelectMany(p => p.Files).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            foreach (var file in files.Where(f => SettingsFiles.IsPakSettings(f) && IsInside(f, modsFolder) && !inPackages.Contains(f)).ToList())
+            {
+                var name = Path.GetFileNameWithoutExtension(file);
+                var owner = packages.FirstOrDefault(p => string.Equals(p.Name, name, StringComparison.OrdinalIgnoreCase))
+                    ?? packages.FirstOrDefault(p => (p.Folder.Split('/').LastOrDefault() ?? "").Contains(name, StringComparison.OrdinalIgnoreCase))
+                    ?? packages.FirstOrDefault(p => p.Label.Contains(name, StringComparison.OrdinalIgnoreCase));
+                if (owner is null)
+                {
+                    packages.Add(PackageGroup.GameFiles(name, Path.GetDirectoryName(RelativePath(root, file))?.Replace('\\', '/') ?? "",
+                        [file], [RelativePath(root, file)]));
+                    continue;
+                }
+                packages.Remove(owner);
+                var merged = PackageGroup.GameFiles(owner.Name, owner.Folder,
+                    owner.Files.Concat([file]).ToList(),
+                    owner.RelativePaths.Concat([RelativePath(root, file)]).ToList());
+                merged.NeedsLoader = owner.NeedsLoader;
+                merged.Variant = owner.Variant;
+                merged.VariantOf = owner.VariantOf;
+                merged.IsAlternate = owner.IsAlternate;
+                merged.IsUncertain = owner.IsUncertain;
+                packages.Add(merged);
+            }
+        }
+
         // Shared libraries can go with several UE4SS mods; they count once.
         var used = packages.SelectMany(p => p.Files).ToHashSet(StringComparer.OrdinalIgnoreCase);
         var ignored = files.Where(f => !used.Contains(f)).Select(f => RelativePath(root, f)).Order(NaturalOrder.Instance).ToList();
