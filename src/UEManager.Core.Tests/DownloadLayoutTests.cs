@@ -333,4 +333,33 @@ public class DownloadLayoutTests : IDisposable
         Assert.Contains("No mod files were found", problem);
         Assert.Contains("(TestGame, TestGame/Binaries/Win64)", problem);
     }
+
+    [Fact]
+    public void A_copy_for_ue4ss_and_one_for_the_mod_loader_are_one_choice()
+    {
+        using var preview = Inspect(
+            @"TestGame\Content\JavaScript\UE4SSQuestGuide\standalone.js",
+            @"TestGame\PBZModLoader\mods\pbz-quest-guide\main.js");
+
+        var ue4ss = preview.Packages.Single(p => p.RelativePaths[0].Contains("UE4SSQuestGuide"));
+        var loader = preview.Packages.Single(p => p.RelativePaths[0].Contains("pbz-quest-guide"));
+        Assert.True(ue4ss.IsAlternate);
+        Assert.True(loader.IsAlternate);
+        Assert.Equal(PackageScanner.ForUe4ss, ue4ss.Variant);
+        Assert.Equal(PackageScanner.ForModLoader, loader.Variant);
+    }
+
+    [Fact]
+    public void The_ue4ss_copy_is_chosen_when_ue4ss_is_the_only_loader()
+    {
+        folder.File(@"Game\TestGame\Binaries\Win64\UE4SS.dll", "");
+        using var preview = Inspect(
+            @"TestGame\Content\JavaScript\UE4SSQuestGuide\standalone.js",
+            @"TestGame\PBZModLoader\mods\pbz-quest-guide\main.js");
+
+        var chosen = manager.PreferredChoice(preview);
+
+        Assert.NotNull(chosen);
+        Assert.Contains("UE4SSQuestGuide", chosen!.Label);
+    }
 }

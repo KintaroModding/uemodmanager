@@ -502,6 +502,10 @@ public static class PackageScanner
 
     public const string ForModLoader = "PBZModLoader";
 
+    /// <summary>The branch of a download that runs on UE4SS itself, with its own JavaScript below the project's
+    /// Content/JavaScript folder, such as the Quest Guide's UE4SSQuestGuide copy.</summary>
+    public const string ForUe4ss = "UE4SS";
+
     /// <summary>Where a script mod goes for Mods Menu and for PBZModLoader, below the project folder.</summary>
     private const string ModsMenuFolder = "Content/JavaScript/PBZModsMenu";
 
@@ -608,9 +612,12 @@ public static class PackageScanner
     {
         var forMenu = packages.Where(p => IsBelowProject(p, ModsMenuFolder)).ToList();
         var forLoader = packages.Where(p => IsBelowProject(p, ModLoaderFolder)).ToList();
-        if (forMenu.Count == 0 || forLoader.Count == 0)
+        // A download may bring the same script for UE4SS too, below the project's Content/JavaScript folder, as the
+        // Quest Guide does with its UE4SSQuestGuide copy.
+        var forUe4ss = packages.Where(p => IsBelowProject(p, "Content/JavaScript") && !IsBelowProject(p, ModsMenuFolder)).ToList();
+        if (forLoader.Count == 0 || (forMenu.Count == 0 && forUe4ss.Count == 0))
             return;
-        foreach (var (copies, loader) in new[] { (forMenu, ForModsMenu), (forLoader, ForModLoader) })
+        foreach (var (copies, loader) in new[] { (forMenu, ForModsMenu), (forLoader, ForModLoader), (forUe4ss, ForUe4ss) })
         {
             foreach (var copy in copies)
             {

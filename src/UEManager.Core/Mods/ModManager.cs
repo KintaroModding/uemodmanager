@@ -2043,9 +2043,14 @@ public sealed class ModManager
     {
         if (preview.Packages.FirstOrDefault(p => p.IsAlternate && IsInstalled(p)) is { } made)
             return made;
-        // With both loaders in the game, the copy for PBZModLoader: only one copy may be in the game.
+        // With a loader in the game, its copy: only one copy may be in the game. PBZModLoader first, then Mods Menu,
+        // then the UE4SS branch; with none of them, PBZModLoader stays the default.
         var (menu, loader) = (IsModsMenuInstalled, IsModLoaderInstalled);
-        return preview.Packages.FirstOrDefault(p => p.IsAlternate && p.Variant == (menu && !loader ? PackageScanner.ForModsMenu : PackageScanner.ForModLoader));
+        var wanted = loader ? PackageScanner.ForModLoader
+            : menu ? PackageScanner.ForModsMenu
+            : IsUe4ssInstalled() ? PackageScanner.ForUe4ss
+            : PackageScanner.ForModLoader;
+        return preview.Packages.FirstOrDefault(p => p.IsAlternate && p.Variant == wanted);
     }
 
     /// <summary>Whether a mod in the list has this part's files: a choice of a download that the player made before.</summary>
