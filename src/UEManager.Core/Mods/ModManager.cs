@@ -1330,7 +1330,8 @@ public sealed class ModManager
     /// <summary>
     /// Takes the mod's own settings file in the mods folder into the mod, so the manager owns it: it is
     /// backed up on uninstall and kept out of the list of files the manager did not install. A file another
-    /// mod already owns is never taken, whatever its name says.
+    /// mod already owns is never taken, whatever its name says; nor is one for a mod that keeps files in the
+    /// mods folder itself, as its settings come with its download.
     /// </summary>
     private bool AdoptOwnSettings(ModRecord mod)
     {
@@ -1338,6 +1339,8 @@ public sealed class ModManager
         if (path is null)
             return false;
         var relative = Path.GetFileName(path);
+        if (mod.Files.Any(f => f.Target == DeployTarget.Mods))
+            return false;
         if (mods.Any(other => other.Files.Any(f => f.Target == DeployTarget.Mods
             && string.Equals(f.FileName, relative, StringComparison.OrdinalIgnoreCase))))
             return false;

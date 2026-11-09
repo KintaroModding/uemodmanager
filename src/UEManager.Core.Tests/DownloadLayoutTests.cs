@@ -448,4 +448,19 @@ public class DownloadLayoutTests : IDisposable
         Assert.DoesNotContain(mod.Files, f => f.FileName == "Foo.txt");
         Assert.Contains(manager.UnmanagedFiles(), f => f == "Foo.txt");
     }
+
+    [Fact]
+    public void A_mod_that_keeps_files_in_the_mods_folder_does_not_take_a_file_of_that_name()
+    {
+        var settings = Path.Combine(game.ModsPath, "Foo.txt");
+        Directory.CreateDirectory(game.ModsPath);
+        File.WriteAllText(settings, "settings");
+        // A pak in its own folder below the mods folder: the mod keeps files there, so its settings come with it.
+        using var preview = Inspect(@"TestGame\Content\Paks\~mods\Foo\Foo_P.pak");
+        var parts = preview.Packages.ToList();
+        var mod = manager.Install(preview, parts, "Foo", "1");
+
+        Assert.DoesNotContain(mod.Files, f => f.FileName == "Foo.txt");
+        Assert.Contains(manager.UnmanagedFiles(), f => f == "Foo.txt");
+    }
 }
