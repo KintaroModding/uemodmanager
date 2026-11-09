@@ -26,6 +26,13 @@ public class DownloadLayoutTests : IDisposable
         return manager.Inspect(folder.Combine("Downloads", "Mod"));
     }
 
+    private InstallPreview InspectAs(string name, params string[] files)
+    {
+        foreach (var file in files)
+            folder.File($@"Downloads\{name}\{file}", "content");
+        return manager.Inspect(folder.Combine("Downloads", name));
+    }
+
     private static IEnumerable<string> Placed(InstallPreview preview) => preview.Packages.SelectMany(p => p.RelativePaths);
 
     private IEnumerable<string> WarningsFor(InstallPreview preview) =>
@@ -407,5 +414,38 @@ public class DownloadLayoutTests : IDisposable
 
         manager.Uninstall(mod.Id);
         Assert.False(File.Exists(settings));
+    }
+
+    [Fact]
+    public void A_second_mod_of_the_same_folder_name_does_not_take_the_file_the_first_took()
+    {
+        var settings = Path.Combine(game.ModsPath, "Foo.txt");
+        Directory.CreateDirectory(game.ModsPath);
+        File.WriteAllText(settings, "settings");
+        using (var first = InspectAs("FooOne", @"TestGame\Content\JavaScript\Foo\main.js"))
+        {
+            var firstParts = first.Packages.ToList();
+            manager.Install(first, firstParts, "Foo One", "1");
+        }
+        using var second = InspectAs("FooTwo", @"TestGame\Content\JavaScript\Foo\other.js");
+        var parts = second.Packages.ToList();
+        var mod = manager.Install(second, parts, "Foo Two", "1", ownFolder: manager.NewModFolder("Foo Two"));
+
+        Assert.Contains(manager.Mods.First(m => m.Name == "Foo One").Files, f => f.FileName == "Foo.txt");
+        Assert.DoesNotContain(mod.Files, f => f.FileName == "Foo.txt");
+    }
+
+    [Fact]
+    public void A_mod_whose_files_sit_loose_in_the_mods_folder_has_no_name_to_take()
+    {
+        var settings = Path.Combine(game.ModsPath, "Foo.txt");
+        Directory.CreateDirectory(game.ModsPath);
+        File.WriteAllText(settings, "settings");
+        using var preview = Inspect(@"TestGame\Content\Paks\~mods\Foo_P.pak");
+        var parts = preview.Packages.ToList();
+        var mod = manager.Install(preview, parts, "Foo", "1");
+
+        Assert.DoesNotContain(mod.Files, f => f.FileName == "Foo.txt");
+        Assert.Contains(manager.UnmanagedFiles(), f => f == "Foo.txt");
     }
 }
