@@ -142,12 +142,12 @@ public sealed class ModPageUpdates
         cancellationToken.ThrowIfCancellationRequested();
         var failure = ApiFailure();
         if (failure != ModPageUpdateFailure.None) return failure;
-        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, deactivation.Token);
-        timeout.CancelAfter(requestTimeout);
+        // Waiting for the API slot is cancellable, but must not spend the HTTP request budget.
+        using var cancellation = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, deactivation.Token);
         try
         {
-            var reply = await ReadApiAsync("https://api.nexusmods.com/v1/users/validate.json", true, timeout.Token)
-                .WaitAsync(timeout.Token).ConfigureAwait(false);
+            var reply = await ReadApiAsync("https://api.nexusmods.com/v1/users/validate.json", true, cancellation.Token)
+                .WaitAsync(cancellation.Token).ConfigureAwait(false);
             return IsDeactivated() ? ModPageUpdateFailure.Unavailable : reply.Failure;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested && !IsDeactivated())
@@ -177,18 +177,20 @@ public sealed class ModPageUpdates
         var failure = ModPageUpdateFailure.None;
         try
         {
-            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(deactivation.Token);
-            timeout.CancelAfter(requestTimeout);
             if (useApi)
             {
                 var match = PageAddress.Match(url);
                 var apiUrl = $"https://api.nexusmods.com/v1/games/{match.Groups["game"].Value}/mods/{match.Groups["id"].Value}.json";
-                var reply = await ReadApiAsync(apiUrl, false, timeout.Token).WaitAsync(timeout.Token).ConfigureAwait(false);
+                var reply = await ReadApiAsync(apiUrl, false, deactivation.Token).ConfigureAwait(false);
                 version = reply.Version;
                 failure = reply.Failure;
             }
             else
+            {
+                using var budget = new CancellationTokenSource(requestTimeout, clock);
+                using var timeout = CancellationTokenSource.CreateLinkedTokenSource(deactivation.Token, budget.Token);
                 version = await ReadPageAsync(url, timeout.Token).WaitAsync(timeout.Token).ConfigureAwait(false);
+            }
         }
         catch (Exception ex) when (IsRequestFailure(ex))
         {
@@ -213,6 +215,10 @@ public sealed class ModPageUpdates
         await apiRequests.WaitAsync(cancellationToken).ConfigureAwait(false);
         try
         {
+            // Each dispatched request gets its full timeout, regardless of time spent in the queue.
+            using var budget = new CancellationTokenSource(requestTimeout, clock);
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, budget.Token);
+            cancellationToken = timeout.Token;
             request.Headers.Accept.ParseAdd("application/json");
             if (http.DefaultRequestHeaders.UserAgent.Count == 0) request.Headers.UserAgent.ParseAdd("UEManager/1.0");
             Task<HttpResponseMessage> pending;
@@ -247,7 +253,7 @@ public sealed class ModPageUpdates
                 return new(null, ModPageUpdateFailure.RateLimited);
             }
             if (response.StatusCode != HttpStatusCode.OK) return new(null, ModPageUpdateFailure.Unavailable);
-            var body = await ReadBodyAsync(response.Content, cancellationToken).ConfigureAwait(false);
+            var body = await ReadBodyAsync(response.Content, cancellationToken).WaitAsync(cancellationToken).ConfigureAwait(false);
             if (body is null) return new(null, ModPageUpdateFailure.Unavailable);
             using var json = JsonDocument.Parse(body, new JsonDocumentOptions { MaxDepth = 32 });
             var root = json.RootElement;
