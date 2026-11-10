@@ -2,7 +2,6 @@
   "$name": "繁體中文",
   "$englishName": "Traditional Chinese",
   "Checking for mod updates…": "正在檢查模組更新…",
-  "Update available: {0}": "有更新：{0}",
   "No newer page version": "頁面未顯示更新的版本",
   "Could not check for updates": "無法檢查更新",
   "Checks the public Nexus Mods page version, not individual files or variants. Login, site protection or an unknown version can prevent checking. Results are cached for 10 minutes. Open the mod page to check and download manually.": "檢查 Nexus Mods 公開頁面的版本，而非個別檔案或變體。登入要求、網站防護或未知版本可能導致無法檢查。結果快取 10 分鐘。請開啟模組頁面確認並手動下載。",

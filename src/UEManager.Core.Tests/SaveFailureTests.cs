@@ -110,10 +110,23 @@ public class SaveFailureTests : IDisposable
     public void A_short_hold_is_waited_out()
     {
         var mod = Install(Download("Sharp"));
-        var hold = HoldList();
-        _ = Task.Delay(200).ContinueWith(_ => hold.Dispose());
-
-        manager.SetEnabled(mod.Id, false);
+        using var hold = HoldList();
+        // Saving retries synchronously. A pool continuation can be starved by other
+        // blocking file-lock tests on small CI runners, outlasting the retry window.
+        var release = new Thread(() =>
+        {
+            Thread.Sleep(200);
+            hold.Dispose();
+        }) { IsBackground = true };
+        release.Start();
+        try
+        {
+            manager.SetEnabled(mod.Id, false);
+        }
+        finally
+        {
+            release.Join();
+        }
 
         Assert.False(File.Exists(Deployed("Sharp_P.pak")));
         Assert.False(AfterRestart(mod.Id).Enabled);
