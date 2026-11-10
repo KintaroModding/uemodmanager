@@ -65,6 +65,9 @@
                         <Button Style="{StaticResource Button.Name}" Content="{Binding Name}"
                                 Command="{Binding ShowDetailsCommand}" ToolTip="{ui:Loc 'Show the details of this mod and every file it placed'}" />
                         <TextBlock Margin="0,3,0,0" Style="{StaticResource Text.Small}" Text="{Binding Detail}" />
+                        <TextBlock Margin="0,3,0,0" Style="{StaticResource Text.Small}" Text="{Binding ModUpdateText}"
+                                   Foreground="{Binding ModUpdateTone, Converter={StaticResource Tone}}" ToolTip="{Binding ModUpdateHint}"
+                                   Visibility="{Binding ModUpdateText, Converter={StaticResource VisibleIfSet}}" />
                         <TextBlock Margin="0,3,0,0" Style="{StaticResource Text.Small}" Foreground="{StaticResource Brush.Info}" Text="{Binding TagsText}"
                                    ToolTip="{Binding TagsText}" Visibility="{Binding TagsText, Converter={StaticResource VisibleIfSet}}" />
                         <Button Margin="0,4,0,0" Style="{StaticResource Button.Link}" Foreground="{StaticResource Brush.Danger}"

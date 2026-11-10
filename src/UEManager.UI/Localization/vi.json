@@ -1,6 +1,11 @@
 {
   "$name": "Tiếng Việt",
   "$englishName": "Vietnamese",
+  "Checking for mod updates…": "Đang kiểm tra cập nhật mod…",
+  "Update available: {0}": "Có bản cập nhật: {0}",
+  "No newer page version": "Trang không có phiên bản mới hơn",
+  "Could not check for updates": "Không thể kiểm tra cập nhật",
+  "Checks the public Nexus Mods page version, not individual files or variants. Login, site protection or an unknown version can prevent checking. Results are cached for 10 minutes. Open the mod page to check and download manually.": "Kiểm tra phiên bản trên trang công khai Nexus Mods, không phải từng tệp hay biến thể. Yêu cầu đăng nhập, bảo vệ trang web hoặc phiên bản không xác định có thể ngăn việc kiểm tra. Kết quả được lưu đệm trong 10 phút. Mở trang mod để kiểm tra và tải xuống thủ công.",
   "\"{0}\" is UE4SS itself, not a mod. Install it into {1}? Your existing UE4SS settings are kept.": "\"{0}\" là chính UE4SS, không phải một mod. Cài nó vào {1}? Cấu hình UE4SS hiện có của bạn được giữ lại.",
   "\"{0}\" uses the same files as \"{1}\". Disable that mod first.": "\"{0}\" dùng cùng tệp với \"{1}\". Hãy tắt mod đó trước.",
   "\"{0}\" uses the same files. Disable or uninstall it first.": "\"{0}\" dùng cùng các tệp. Hãy tắt hoặc gỡ nó trước.",

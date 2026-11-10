@@ -244,6 +244,16 @@ as for a UE4SS installed by hand), Home and the UE4SS page offer **Update to
 v…**. A new UE4SS build therefore ships by editing the manifest, without a new
 app build. Offline or failing, the check stays silent.
 
+This is a maintainer-selected build for the game, not a search for the newest
+upstream UE4SS release; there is no stable/nightly channel selector. The app
+checks at startup but installs only after a user action. Close the game and
+choose **Update to v…** on Home or the UE4SS page (or install a downloaded
+archive). The existing update condition is a version-string difference, not
+an ordering comparison: a manually installed or numerically newer build can
+also be offered the manifest's version, potentially a downgrade. Review the
+target version first. The download verifies SHA-256 only when the manifest
+supplies it. This mod-page feature does not change that UE4SS behavior.
+
 The optional `files` lists the DLLs of the official builds (`UE4SS.dll` and the
 proxy, such as `dwmapi.dll`), by their place next to the game's exe, with the
 SHA-256s each has in any official release. The DLLs make the build; scripts and
@@ -498,6 +508,31 @@ Once a mod has a tag, buttons above the list show **All tags** and each tag with
 its count, and a click shows only the mods with that tag, one tag at a time. A row shows
 its tags, and the search finds them. An update keeps a mod's tags. They change no
 file of the mod. The mods on the card stand apart from the list and have no tags.
+
+## Installed mod update checks
+
+Opening **Mods**, installing/updating a mod while on that page, or pressing
+**Refresh / F5** checks the public Nexus Mods pages of rows with an **Open mod
+page** link. Checks run in the background (at most three at once); each page's
+result, including an unavailable page, is cached in memory for 10 minutes.
+Checks work even when the openmods catalog is switched off.
+
+A newer, comparable page version shows **Update available: &lt;version&gt;** below
+the mod name. Use **Open mod page** to review the release, download the right
+file/variant, and install it through the existing review dialog. Nothing is
+downloaded or replaced automatically. This compares the mod page's version,
+not each optional file or variant; it cannot guarantee that your chosen file
+has an update. Equal or older page versions show **No newer page version**.
+
+This is a best-effort, read-only check without a Nexus API key or browser
+cookies. Login-only pages, Cloudflare challenges, network failures, changed
+page markup, missing local versions, non-numeric versions, and unsupported
+sites show **Could not check for updates**, never a claim that the mod is up to
+date. Only dotted numeric versions (with an optional v prefix) are compared.
+Requests go directly to Nexus Mods, revealing the game/mod page IDs to that
+site; no local files, paths or credentials are uploaded. Redirects are not
+followed. Rows without a link, and the recommended mods on their separate
+card, do not use this checker.
 
 ## Sorting and showing the list
 

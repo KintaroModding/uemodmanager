@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Windows.Input;
 using CommunityToolkit.Mvvm.Input;
 using UEManager.Core.Mods;
+using UEManager.Core.Updates;
 using UEManager.UI.Services;
 
 namespace UEManager.UI.ViewModels;
@@ -9,7 +10,7 @@ namespace UEManager.UI.ViewModels;
 /// <summary>A button above the mod list that shows only the mods with one tag, or all mods.</summary>
 public sealed record TagFilterItem(string Label, bool IsActive, ICommand Select);
 
-/// <summary>One row in the mod list. Rows are rebuilt after every change, so they hold no state of their own.</summary>
+/// <summary>One row in the mod list, with the transient result of its page update check.</summary>
 public sealed partial class ModItemViewModel : LocalizedObservableObject
 {
     private readonly MainViewModel owner;
@@ -34,6 +35,47 @@ public sealed partial class ModItemViewModel : LocalizedObservableObject
 
     /// <summary>"No mod page" in the row: a mod of the list whose download's name has no mod number. The card's mods show neither.</summary>
     public bool ShowsNoModPage => !record.Recommended && ModPageUrl is null;
+
+    private ModPageUpdateResult? pageUpdate;
+    private int updateChecksInProgress;
+
+    public bool IsModUpdateAvailable => pageUpdate?.State == ModPageUpdateState.UpdateAvailable;
+
+    public string? ModUpdateText => ModPageUrl is null ? null
+        : updateChecksInProgress > 0 ? L.T("Checking for mod updates…")
+        : pageUpdate?.State switch
+        {
+            ModPageUpdateState.UpdateAvailable => L.F($"Update available: {pageUpdate.LatestVersion}"),
+            ModPageUpdateState.UpToDate => L.T("No newer page version"),
+            ModPageUpdateState.Unknown => L.T("Could not check for updates"),
+            _ => null,
+        };
+
+    public string ModUpdateTone => IsModUpdateAvailable ? "warn" : "muted";
+
+    public string ModUpdateHint => L.T("Checks the public Nexus Mods page version, not individual files or variants. Login, site protection or an unknown version can prevent checking. Results are cached for 10 minutes. Open the mod page to check and download manually.");
+
+    internal async Task CheckForUpdateAsync(ModPageUpdates updates, CancellationToken cancellationToken = default)
+    {
+        if (ModPageUrl is null)
+            return;
+        cancellationToken.ThrowIfCancellationRequested();
+        updateChecksInProgress++;
+        OnPropertyChanged(string.Empty);
+        try
+        {
+            // Keep the owner's concurrency slot until the shared request really finishes.
+            // Cancellation suppresses stale results, rather than releasing a slot while HTTP is still in flight.
+            var result = await updates.CheckAsync(ModPageUrl, record.Version);
+            cancellationToken.ThrowIfCancellationRequested();
+            pageUpdate = result;
+        }
+        finally
+        {
+            updateChecksInProgress--;
+            OnPropertyChanged(string.Empty);
+        }
+    }
 
     internal ModRecord Record => record;
 

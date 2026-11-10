@@ -1,0 +1,27 @@
+name: Build and test
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            10.0.x
+            8.0.x
+      - run: dotnet restore src/UEManager.slnx
+      - run: dotnet build src/UEManager.slnx --no-restore --configuration Release
+      - run: dotnet test src/UEManager.slnx --no-build --configuration Release --logger "trx;LogFileName=tests.trx"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: src/**/TestResults/*.trx

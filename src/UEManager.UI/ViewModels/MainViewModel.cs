@@ -38,8 +38,8 @@ public sealed partial class MainViewModel : LocalizedObservableObject
     private bool watching;
 
     /// <summary>
-    /// The app's only connection: the UE4SS manifest and the update check at start, the openmods
-    /// lists and covers when the openmods page opens, and the downloads the user starts.
+    /// The connection for the UE4SS manifest and app update check at start, the openmods
+    /// lists and covers, and downloads. Mod page update checks use a separate, non-redirecting client.
     /// </summary>
     private static readonly HttpClient Http = CreateHttpClient();
     private ModManager? manager;
@@ -1271,6 +1271,10 @@ public sealed partial class MainViewModel : LocalizedObservableObject
     {
         if (newValue == "Ue4ss")
             _ = RefreshUe4ssLogAsync();
+        if (newValue == "Mods")
+            _ = CheckModUpdatesAsync();
+        else
+            CancelModUpdateChecks();
     }
 
     [RelayCommand]
@@ -1795,6 +1799,7 @@ public sealed partial class MainViewModel : LocalizedObservableObject
         OnModsChanged();
         // Every summary on every page derives from the game and the mod list.
         OnPropertyChanged(string.Empty);
+        _ = CheckModUpdatesAsync();
     }
 
     internal bool EnsureGame()

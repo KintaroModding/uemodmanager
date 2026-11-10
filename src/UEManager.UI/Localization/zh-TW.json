@@ -1,6 +1,11 @@
 {
   "$name": "繁體中文",
   "$englishName": "Traditional Chinese",
+  "Checking for mod updates…": "正在檢查模組更新…",
+  "Update available: {0}": "有更新：{0}",
+  "No newer page version": "頁面未顯示更新的版本",
+  "Could not check for updates": "無法檢查更新",
+  "Checks the public Nexus Mods page version, not individual files or variants. Login, site protection or an unknown version can prevent checking. Results are cached for 10 minutes. Open the mod page to check and download manually.": "檢查 Nexus Mods 公開頁面的版本，而非個別檔案或變體。登入要求、網站防護或未知版本可能導致無法檢查。結果快取 10 分鐘。請開啟模組頁面確認並手動下載。",
   "\"{0}\" is UE4SS itself, not a mod. Install it into {1}? Your existing UE4SS settings are kept.": "「{0}」是 UE4SS 本身，並非模組。是否將它安裝到 {1}？現有 UE4SS 設定將會保留。",
   "\"{0}\" uses the same files as \"{1}\". Disable that mod first.": "「{0}」與「{1}」使用了相同檔案。請先停用該模組。",
   "\"{0}\" uses the same files. Disable or uninstall it first.": "「{0}」使用了相同檔案，請先停用或解除安裝它。",
