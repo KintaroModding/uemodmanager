@@ -8,7 +8,7 @@ public sealed partial class MainViewModel
 {
     // Unlike downloads, page checks must not follow a redirect to another host or a login page.
     private static readonly HttpClient ModPageHttp = CreateModPageHttpClient();
-    private readonly ModPageUpdates modPageUpdates = new(ModPageHttp);
+    private ModPageUpdates modPageUpdates = new(ModPageHttp);
     private readonly SemaphoreSlim modPageChecks = new(3);
     private CancellationTokenSource? modPageCheckCancellation;
 
@@ -27,6 +27,7 @@ public sealed partial class MainViewModel
             return;
         modPageCheckCancellation = new CancellationTokenSource();
         var cancellationToken = modPageCheckCancellation.Token;
+        var updates = modPageUpdates;
         var rows = Mods.Where(row => row.ModPageUrl is not null).ToArray();
         await Task.WhenAll(rows.Select(CheckRowAsync));
 
@@ -37,7 +38,7 @@ public sealed partial class MainViewModel
                 await modPageChecks.WaitAsync(cancellationToken);
                 try
                 {
-                    await row.CheckForUpdateAsync(modPageUpdates, cancellationToken);
+                    await row.CheckForUpdateAsync(updates, cancellationToken);
                 }
                 finally
                 {

@@ -47,13 +47,19 @@ public sealed partial class ModItemViewModel : LocalizedObservableObject
         {
             ModPageUpdateState.UpdateAvailable => L.F($"Update available: {pageUpdate.LatestVersion}"),
             ModPageUpdateState.UpToDate => L.T("No newer page version"),
-            ModPageUpdateState.Unknown => L.T("Could not check for updates"),
+            ModPageUpdateState.Unknown => pageUpdate.Failure switch
+            {
+                ModPageUpdateFailure.InvalidApiKey => L.T("Nexus Mods API key is invalid or expired. Replace it in Settings."),
+                ModPageUpdateFailure.AccessDenied => L.T("Nexus Mods API access was denied. Check your account permissions."),
+                ModPageUpdateFailure.RateLimited => L.T("Nexus Mods API rate limit reached. Try again later."),
+                _ => L.T("Could not check for updates"),
+            },
             _ => null,
         };
 
     public string ModUpdateTone => IsModUpdateAvailable ? "warn" : "muted";
 
-    public string ModUpdateHint => L.T("Checks the public Nexus Mods page version, not individual files or variants. Login, site protection or an unknown version can prevent checking. Results are cached for 10 minutes. Open the mod page to check and download manually.");
+    public string ModUpdateHint => L.T("Checks the mod version using the official Nexus Mods API when an API key is saved in Settings, otherwise the public page. This does not compare individual files or variants. Results are cached for 10 minutes. API permissions and rate limits still apply. Open the mod page to review and download manually.");
 
     internal async Task CheckForUpdateAsync(ModPageUpdates updates, CancellationToken cancellationToken = default)
     {

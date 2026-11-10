@@ -30,6 +30,7 @@ These terms apply to this program and to every work based on it.
 
 ## Libraries
 
-The program includes SharpCompress, CommunityToolkit.Mvvm and AvalonEdit under
+The program includes SharpCompress, CommunityToolkit.Mvvm, AvalonEdit and
+System.Security.Cryptography.ProtectedData under
 the MIT license. Their license texts are in src/UEManager.UI/Licenses and on the app's
 About page.

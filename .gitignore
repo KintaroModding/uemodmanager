@@ -7,3 +7,6 @@ TestResults/
 *.suo
 *_wpftmp.csproj
 dist-ms2/
+# Runtime API credentials must never be committed, even though encrypted.
+nexus-api-key.dat
+nexus-api-key.*.tmp

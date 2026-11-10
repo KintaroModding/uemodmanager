@@ -512,9 +512,10 @@ file of the mod. The mods on the card stand apart from the list and have no tags
 ## Installed mod update checks
 
 Opening **Mods**, installing/updating a mod while on that page, or pressing
-**Refresh / F5** checks the public Nexus Mods pages of rows with an **Open mod
-page** link. Checks run in the background (at most three at once); each page's
-result, including an unavailable page, is cached in memory for 10 minutes.
+**Refresh / F5** checks Nexus Mods versions for rows with an **Open mod page**
+link. Checks run in the background (at most three at once; authenticated API
+requests are serialized to respect failures and rate limits). Each mod's
+result, including an unavailable mod, is cached in memory for 10 minutes.
 Checks work even when the openmods catalog is switched off.
 
 A newer, comparable page version shows **Update available: &lt;version&gt;** below
@@ -524,15 +525,39 @@ downloaded or replaced automatically. This compares the mod page's version,
 not each optional file or variant; it cannot guarantee that your chosen file
 has an update. Equal or older page versions show **No newer page version**.
 
-This is a best-effort, read-only check without a Nexus API key or browser
-cookies. Login-only pages, Cloudflare challenges, network failures, changed
-page markup, missing local versions, non-numeric versions, and unsupported
-sites show **Could not check for updates**, never a claim that the mod is up to
-date. Only dotted numeric versions (with an optional v prefix) are compared.
-Requests go directly to Nexus Mods, revealing the game/mod page IDs to that
-site; no local files, paths or credentials are uploaded. Redirects are not
-followed. Rows without a link, and the recommended mods on their separate
-card, do not use this checker.
+### Nexus Mods API key
+
+In **Settings → Nexus Mods API key**, use **Get an API key** to open your
+[Nexus API Access page](https://www.nexusmods.com/users/myaccount?tab=api%20access).
+Paste your own personal key into the masked **New API key** field, then choose
+**Save and test API key**. **Test saved API key** validates the existing key;
+**Clear saved API key** removes it and restores public-page checks. Changing
+or clearing the key resets the version cache and suppresses old results.
+
+With a saved key, checks use the [official Nexus API](https://api.swaggerhub.com/apis/NexusMods/nexus-mods_public_api_params_in_form_data/1.0):
+GET /v1/games/{game}/mods/{id}.json for the version and
+GET /v1/users/validate.json for validation. The key is sent only in the apikey
+header to https://api.nexusmods.com, never to public pages, download servers,
+URLs or redirect targets. Authenticated failures never fall back to scraping.
+Invalid/expired keys, access denied and rate limits have distinct messages.
+HTTP 429 pauses API requests for Retry-After (60 seconds when unavailable).
+Account permissions and request limits still apply: the API avoids reliance
+on protected HTML pages, but does not grant access your account does not have.
+
+The key is encrypted with Windows CurrentUser DPAPI in
+Data/nexus-api-key.dat, not stored as plaintext in settings, logs or help
+reports. The password box is cleared after submission and never redisplays a
+saved key. When moving Data to another Windows account or PC, re-enter it.
+**Clear** and a full app-settings reset delete the stored credential. Never
+commit or share your key; revoke it on Nexus if exposed.
+
+Without a key, checks read public pages without browser cookies. Login-only
+pages, Cloudflare challenges and changed markup can prevent checking. Network
+failures, missing versions, non-numeric versions and unsupported sites remain
+unknown, never proof that a mod is up to date. Only dotted numeric versions
+(with an optional v prefix) are compared. Requests reveal game/mod IDs to
+Nexus, but upload no local files or paths. Redirects are not followed. Rows
+without a link and the recommended mods on their separate card are excluded.
 
 ## Sorting and showing the list
 

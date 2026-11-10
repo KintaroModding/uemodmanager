@@ -120,6 +120,19 @@ public class ModPageUpdateRowTests : IDisposable
         Assert.False(row.IsModUpdateAvailable);
     });
 
+    [Theory]
+    [InlineData(HttpStatusCode.Unauthorized, "Nexus Mods API key is invalid or expired. Replace it in Settings.")]
+    [InlineData(HttpStatusCode.Forbidden, "Nexus Mods API access was denied. Check your account permissions.")]
+    [InlineData(HttpStatusCode.TooManyRequests, "Nexus Mods API rate limit reached. Try again later.")]
+    public void Authenticated_rows_distinguish_key_permissions_and_quota_failures(HttpStatusCode status, string text) => UiThread.Run(() =>
+    {
+        using var http = new HttpClient(new PageHandler { Status = status });
+        var row = Row();
+        row.CheckForUpdateAsync(new ModPageUpdates(http, "synthetic-api-key")).GetAwaiter().GetResult();
+        Assert.False(row.IsModUpdateAvailable);
+        Assert.Equal(L.T(text), row.ModUpdateText);
+    });
+
     private sealed class DelayedPageHandler : HttpMessageHandler
     {
         public TaskCompletionSource<HttpResponseMessage> Answer { get; } = new(TaskCreationOptions.RunContinuationsAsynchronously);

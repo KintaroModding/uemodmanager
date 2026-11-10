@@ -62,8 +62,9 @@ public sealed partial class MainViewModel : LocalizedObservableObject
     /// <param name="catalogUrl">Another openmods games list, such as a test copy; used only while the catalog is switched on.</param>
     /// <param name="updateUrl">Another release list for the update check, such as a test copy.</param>
     /// <param name="ue4ssManifestUrl">Another UE4SS manifest, such as a test copy.</param>
+    /// <param name="nexusHttp">A non-redirecting client for Nexus checks, such as a fake HTTP handler in tests.</param>
     public MainViewModel(GameProfile profile, AppPaths paths, ArtSet art, string? catalogUrl = null, string? updateUrl = null,
-        string? ue4ssManifestUrl = null)
+        string? ue4ssManifestUrl = null, HttpClient? nexusHttp = null)
     {
         Profile = profile;
         this.paths = paths;
@@ -88,6 +89,7 @@ public sealed partial class MainViewModel : LocalizedObservableObject
         ApplySort();
         toastTimer.Tick += (_, _) => DismissToast();
         gameWatch.Tick += async (_, _) => await WatchGameAsync();
+        InitializeNexusApiKey(nexusHttp);
     }
 
     /// <summary>
@@ -1169,6 +1171,8 @@ public sealed partial class MainViewModel : LocalizedObservableObject
     {
         try
         {
+            // Clear live credentials before deleting settings or restarting: either later step may fail.
+            ClearStoredNexusApiKey();
             File.Delete(paths.SettingsFile);
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)

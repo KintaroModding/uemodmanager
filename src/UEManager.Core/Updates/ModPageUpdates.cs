@@ -7,10 +7,13 @@ namespace UEManager.Core.Updates;
 
 public enum ModPageUpdateState { Unknown, UpToDate, UpdateAvailable }
 
-public sealed record ModPageUpdateResult(ModPageUpdateState State, string? LatestVersion = null);
+public enum ModPageUpdateFailure { None, InvalidApiKey, AccessDenied, RateLimited, Unavailable }
 
-/// <summary>Best-effort public Nexus page checks, without an API key. Unknown is not a successful update check.</summary>
-/// <remarks>The supplied client must disable automatic redirects: only Nexus mod pages may be requested.</remarks>
+public sealed record ModPageUpdateResult(ModPageUpdateState State, string? LatestVersion = null,
+    ModPageUpdateFailure Failure = ModPageUpdateFailure.None);
+
+/// <summary>Official authenticated Nexus API checks, or best-effort public page checks without a key.</summary>
+/// <remarks>The supplied client must disable automatic redirects: requests are restricted to Nexus pages or the official API.</remarks>
 public sealed class ModPageUpdates
 {
     private const int MaxResponseBytes = 4 * 1024 * 1024;
@@ -33,16 +36,48 @@ public sealed class ModPageUpdates
     private readonly HttpClient http;
     private readonly TimeProvider clock;
     private readonly TimeSpan requestTimeout;
+    private readonly bool useApi;
+    private string? apiKey; // Assigned once, then released only when this instance is deactivated.
     private readonly object gate = new();
+    private readonly CancellationTokenSource deactivation = new();
+    private bool deactivated;
+    private readonly SemaphoreSlim apiRequests = new(1, 1);
     private readonly Dictionary<string, Lazy<Task<CachedVersion>>> cache = new(StringComparer.Ordinal);
+    private bool rejectedApiKey;
+    private DateTimeOffset rateLimitedUntil;
 
-    public ModPageUpdates(HttpClient http) : this(http, TimeProvider.System, TimeSpan.FromSeconds(12)) { }
+    public ModPageUpdates(HttpClient http, string? nexusApiKey = null)
+        : this(http, TimeProvider.System, TimeSpan.FromSeconds(12), nexusApiKey) { }
 
-    internal ModPageUpdates(HttpClient http, TimeProvider clock, TimeSpan requestTimeout)
+    internal ModPageUpdates(HttpClient http, TimeProvider clock, TimeSpan requestTimeout, string? nexusApiKey = null)
     {
         this.http = http;
         this.clock = clock;
         this.requestTimeout = requestTimeout;
+        useApi = nexusApiKey is not null;
+        // Reject controls before trimming, so a newline can never turn into an accepted header.
+        if (nexusApiKey is { Length: > 0 and <= 4096 } && nexusApiKey.All(c => c >= ' ' && c <= '~'))
+            apiKey = string.IsNullOrWhiteSpace(nexusApiKey) ? null : nexusApiKey.Trim();
+    }
+
+    /// <summary>Permanently retires this instance, cancels its requests and releases its stored key reference.</summary>
+    public void Deactivate()
+    {
+        lock (gate)
+        {
+            if (deactivated) return;
+            deactivated = true;
+            apiKey = null;
+            cache.Clear();
+        }
+        // Cancellation callbacks may need gate. Do not dispose the CTS/semaphore while waiters unwind.
+        try { deactivation.Cancel(); }
+        catch (AggregateException) { /* Never expose callback exceptions that could contain a request key. */ }
+    }
+
+    private bool IsDeactivated()
+    {
+        lock (gate) return deactivated;
     }
 
     /// <summary>Only numeric dotted versions are comparable. Cancelling a caller does not cancel a shared request.</summary>
@@ -50,12 +85,19 @@ public sealed class ModPageUpdates
         CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        if (IsDeactivated()) return new(ModPageUpdateState.Unknown, Failure: ModPageUpdateFailure.Unavailable);
         var url = NormalizeUrl(pageUrl);
         if (url is null) return new(ModPageUpdateState.Unknown);
+        if (useApi)
+        {
+            var failure = ApiFailure();
+            if (failure != ModPageUpdateFailure.None) return new(ModPageUpdateState.Unknown, Failure: failure);
+        }
 
         Lazy<Task<CachedVersion>> entry;
         lock (gate)
         {
+            if (deactivated) return new(ModPageUpdateState.Unknown, Failure: ModPageUpdateFailure.Unavailable);
             if (!cache.TryGetValue(url, out entry!)
                 || (entry.IsValueCreated && entry.Value.IsCompletedSuccessfully
                     && entry.Value.Result.Expires <= clock.GetUtcNow()))
@@ -65,6 +107,9 @@ public sealed class ModPageUpdates
             }
         }
         var remote = await entry.Value.WaitAsync(cancellationToken).ConfigureAwait(false);
+        if (IsDeactivated()) return new(ModPageUpdateState.Unknown, Failure: ModPageUpdateFailure.Unavailable);
+        if (remote.Failure != ModPageUpdateFailure.None)
+            return new(ModPageUpdateState.Unknown, Failure: remote.Failure);
         var localParts = VersionParts(installedVersion);
         var remoteParts = VersionParts(remote.Version);
         if (localParts is null || remoteParts is null)
@@ -91,20 +136,144 @@ public sealed class ModPageUpdates
         return $"https://www.nexusmods.com/{match.Groups["game"].Value.ToLowerInvariant()}/mods/{match.Groups["id"].Value}";
     }
 
+    /// <summary>Validates this instance's key without exposing API response bodies or account details.</summary>
+    public async Task<ModPageUpdateFailure> ValidateApiKeyAsync(CancellationToken cancellationToken = default)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        var failure = ApiFailure();
+        if (failure != ModPageUpdateFailure.None) return failure;
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, deactivation.Token);
+        timeout.CancelAfter(requestTimeout);
+        try
+        {
+            var reply = await ReadApiAsync("https://api.nexusmods.com/v1/users/validate.json", true, timeout.Token)
+                .WaitAsync(timeout.Token).ConfigureAwait(false);
+            return IsDeactivated() ? ModPageUpdateFailure.Unavailable : reply.Failure;
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested && !IsDeactivated())
+        {
+            // Do not propagate transport exceptions, which can contain sensitive request information.
+            throw new OperationCanceledException(cancellationToken);
+        }
+        catch (Exception ex) when (IsRequestFailure(ex))
+        {
+            return ModPageUpdateFailure.Unavailable;
+        }
+    }
+
+    private ModPageUpdateFailure ApiFailure()
+    {
+        lock (gate)
+        {
+            if (deactivated) return ModPageUpdateFailure.Unavailable;
+            if (apiKey is null || rejectedApiKey) return ModPageUpdateFailure.InvalidApiKey;
+            return rateLimitedUntil > clock.GetUtcNow() ? ModPageUpdateFailure.RateLimited : ModPageUpdateFailure.None;
+        }
+    }
+
     private async Task<CachedVersion> FetchAsync(string url)
     {
         string? version = null;
+        var failure = ModPageUpdateFailure.None;
         try
         {
-            using var timeout = new CancellationTokenSource(requestTimeout);
-            version = await ReadPageAsync(url, timeout.Token).WaitAsync(timeout.Token).ConfigureAwait(false);
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(deactivation.Token);
+            timeout.CancelAfter(requestTimeout);
+            if (useApi)
+            {
+                var match = PageAddress.Match(url);
+                var apiUrl = $"https://api.nexusmods.com/v1/games/{match.Groups["game"].Value}/mods/{match.Groups["id"].Value}.json";
+                var reply = await ReadApiAsync(apiUrl, false, timeout.Token).WaitAsync(timeout.Token).ConfigureAwait(false);
+                version = reply.Version;
+                failure = reply.Failure;
+            }
+            else
+                version = await ReadPageAsync(url, timeout.Token).WaitAsync(timeout.Token).ConfigureAwait(false);
         }
-        catch (Exception ex) when (ex is HttpRequestException or IOException or OperationCanceledException
-            or RegexMatchTimeoutException or JsonException)
+        catch (Exception ex) when (IsRequestFailure(ex))
         {
-            // Blocked pages, timeouts and changed markup are all unknown, and are cached too.
+            // Never expose transport exceptions or error bodies (which might echo the API key).
+            if (useApi) failure = ModPageUpdateFailure.Unavailable;
         }
-        return new(version, clock.GetUtcNow() + CacheLifetime);
+        if (IsDeactivated()) return new(null, clock.GetUtcNow(), ModPageUpdateFailure.Unavailable);
+        var expires = clock.GetUtcNow() + CacheLifetime;
+        // A rate-limit response must be retryable when its advertised cooldown ends, not ten minutes later.
+        if (failure == ModPageUpdateFailure.RateLimited)
+            lock (gate) expires = rateLimitedUntil;
+        return new(version, expires, failure);
+    }
+
+    private static bool IsRequestFailure(Exception ex) => ex is HttpRequestException or IOException
+        or OperationCanceledException or RegexMatchTimeoutException or JsonException or InvalidOperationException;
+
+    private async Task<ApiReply> ReadApiAsync(string url, bool validate, CancellationToken cancellationToken)
+    {
+        // Serialize API requests so queued mods cannot continue sending after a 401 or 429.
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+        await apiRequests.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            request.Headers.Accept.ParseAdd("application/json");
+            if (http.DefaultRequestHeaders.UserAgent.Count == 0) request.Headers.UserAgent.ParseAdd("UEManager/1.0");
+            Task<HttpResponseMessage> pending;
+            lock (gate)
+            {
+                var failure = ApiFailure();
+                if (failure != ModPageUpdateFailure.None) return new(null, failure);
+                cancellationToken.ThrowIfCancellationRequested();
+                request.Headers.Add("apikey", apiKey!);
+                // Linearize dispatch with Deactivate: no queued request can start after retirement.
+                pending = http.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            }
+            using var response = await pending.WaitAsync(cancellationToken).ConfigureAwait(false);
+            cancellationToken.ThrowIfCancellationRequested();
+            if (response.RequestMessage?.RequestUri is { } final && final.AbsoluteUri != url)
+                return new(null, ModPageUpdateFailure.Unavailable);
+            if (response.StatusCode == HttpStatusCode.Unauthorized)
+            {
+                lock (gate) rejectedApiKey = true;
+                return new(null, ModPageUpdateFailure.InvalidApiKey);
+            }
+            if (response.StatusCode == HttpStatusCode.Forbidden) return new(null, ModPageUpdateFailure.AccessDenied);
+            if (response.StatusCode == HttpStatusCode.TooManyRequests)
+            {
+                var now = clock.GetUtcNow();
+                var retry = response.Headers.RetryAfter;
+                var delay = retry?.Delta ?? (retry?.Date is { } date ? date - now : TimeSpan.FromMinutes(1));
+                if (delay <= TimeSpan.Zero) delay = TimeSpan.FromMinutes(1);
+                // Saturate extreme Retry-After values without overflowing DateTimeOffset.
+                var until = delay >= DateTimeOffset.MaxValue - now ? DateTimeOffset.MaxValue : now + delay;
+                lock (gate) rateLimitedUntil = until;
+                return new(null, ModPageUpdateFailure.RateLimited);
+            }
+            if (response.StatusCode != HttpStatusCode.OK) return new(null, ModPageUpdateFailure.Unavailable);
+            var body = await ReadBodyAsync(response.Content, cancellationToken).ConfigureAwait(false);
+            if (body is null) return new(null, ModPageUpdateFailure.Unavailable);
+            using var json = JsonDocument.Parse(body, new JsonDocumentOptions { MaxDepth = 32 });
+            var root = json.RootElement;
+            if (root.ValueKind != JsonValueKind.Object) return new(null, ModPageUpdateFailure.Unavailable);
+            if (validate)
+                return new(null, root.TryGetProperty("user_id", out var id) && id.ValueKind == JsonValueKind.Number
+                    && id.TryGetInt64(out var userId) && userId > 0 ? ModPageUpdateFailure.None : ModPageUpdateFailure.Unavailable);
+            if ((root.TryGetProperty("available", out var available) && available.ValueKind != JsonValueKind.True)
+                || (root.TryGetProperty("status", out var status)
+                    && (status.ValueKind != JsonValueKind.String || status.GetString() != "published"))
+                || !root.TryGetProperty("version", out var value) || value.ValueKind != JsonValueKind.String)
+                return new(null, ModPageUpdateFailure.Unavailable);
+            var version = value.GetString()?.Trim();
+            lock (gate)
+            {
+                if (deactivated || string.IsNullOrEmpty(version) || version.Length > 128 || version.Any(char.IsControl)
+                    || version.Contains(apiKey!, StringComparison.Ordinal))
+                    return new(null, ModPageUpdateFailure.Unavailable);
+                return new(version, ModPageUpdateFailure.None);
+            }
+        }
+        finally
+        {
+            request.Headers.Remove("apikey");
+            apiRequests.Release();
+        }
     }
 
     private async Task<string?> ReadPageAsync(string url, CancellationToken cancellationToken)
@@ -118,7 +287,14 @@ public sealed class ModPageUpdates
             || (response.RequestMessage?.RequestUri is { } final && NormalizeUrl(final.AbsoluteUri) != url)
             || response.Content.Headers.ContentLength > MaxResponseBytes) return null;
 
-        await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
+        var body = await ReadBodyAsync(response.Content, cancellationToken).ConfigureAwait(false);
+        return body is null ? null : ReadVersion(body);
+    }
+
+    private static async Task<string?> ReadBodyAsync(HttpContent content, CancellationToken cancellationToken)
+    {
+        if (content.Headers.ContentLength > MaxResponseBytes) return null;
+        await using var stream = await content.ReadAsStreamAsync(cancellationToken).ConfigureAwait(false);
         using var bytes = new MemoryStream();
         var buffer = new byte[8192];
         while (true)
@@ -129,7 +305,7 @@ public sealed class ModPageUpdates
             bytes.Write(buffer, 0, count);
             if (bytes.Length > MaxResponseBytes) return null;
         }
-        return ReadVersion(Encoding.UTF8.GetString(bytes.GetBuffer(), 0, (int)bytes.Length));
+        return Encoding.UTF8.GetString(bytes.GetBuffer(), 0, (int)bytes.Length);
     }
 
     private static string? ReadVersion(string html)
@@ -229,5 +405,6 @@ public sealed class ModPageUpdates
         return version.Split('.').Select(p => p.TrimStart('0') is { Length: > 0 } digits ? digits : "0").ToArray();
     }
 
-    private sealed record CachedVersion(string? Version, DateTimeOffset Expires);
+    private sealed record ApiReply(string? Version, ModPageUpdateFailure Failure);
+    private sealed record CachedVersion(string? Version, DateTimeOffset Expires, ModPageUpdateFailure Failure);
 }

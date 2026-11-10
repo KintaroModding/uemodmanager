@@ -40,6 +40,33 @@
             </StackPanel>
         </Border>
 
+        <!-- API keys are entered in a password box and encrypted for the current Windows user. -->
+        <Border Margin="0,20,0,0" Style="{StaticResource Card}">
+            <StackPanel>
+                <TextBlock Style="{StaticResource Text.Title}" Text="{ui:Loc 'Nexus Mods API key'}" />
+                <TextBlock Margin="0,6,0,14" Style="{StaticResource Text.Body}"
+                           Text="{ui:Loc 'Use your personal Nexus Mods API key for mod update checks instead of scraping public pages. Account permissions and API rate limits still apply.'}" />
+                <StackPanel IsEnabled="{Binding CanEditNexusApiKey}">
+                    <DockPanel Style="{StaticResource Field}">
+                        <TextBlock Style="{StaticResource FieldLabel}" Text="{ui:Loc 'New API key'}" />
+                        <PasswordBox x:Name="NexusApiKeyInput" MinHeight="38" MaxLength="4096" Padding="10,8"
+                                     Background="{StaticResource Brush.Field}" Foreground="{StaticResource Brush.Text}"
+                                     BorderBrush="{StaticResource Brush.LineStrong}"
+                                     AutomationProperties.Name="{ui:Loc 'New API key'}" />
+                    </DockPanel>
+                    <WrapPanel>
+                        <Button Content="{ui:Loc 'Save and test API key'}" Click="SaveNexusApiKeyClick" />
+                        <Button Margin="8,0,0,0" Content="{ui:Loc 'Test saved API key'}" Command="{Binding TestNexusApiKeyCommand}" IsEnabled="{Binding HasNexusApiKey}" />
+                        <Button Margin="8,0,0,0" Content="{ui:Loc 'Clear saved API key'}" Click="ClearNexusApiKeyClick" />
+                        <Button Margin="8,0,0,0" Content="{ui:Loc 'Get an API key'}" Command="{Binding OpenNexusApiAccessCommand}" />
+                    </WrapPanel>
+                </StackPanel>
+                <TextBlock Margin="0,12,0,0" Style="{StaticResource Text.Body}" Text="{Binding NexusApiKeyStatus}" />
+                <TextBlock Margin="0,6,0,0" Style="{StaticResource Text.Body}"
+                           Text="{ui:Loc 'The key is stored encrypted for your Windows account, never in logs or help reports. Enter it again after moving to another Windows account or PC. Clear removes the saved key.'}" />
+            </StackPanel>
+        </Border>
+
         <!-- Game installation -->
         <Border Margin="0,20,0,0" Style="{StaticResource Card}">
             <StackPanel>
