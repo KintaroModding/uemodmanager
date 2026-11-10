@@ -14,7 +14,7 @@ public class SameNameModsTests : IDisposable
     public SameNameModsTests()
     {
         game = GameLocator.Resolve(TestFolder.Profile(), folder.Game(), GameStore.Manual)!;
-        manager = new ModManager(game, new AppPaths(folder.Combine("Data")), _ => false);
+        manager = new ModManager(game, new AppPaths(folder.Combine("Data")));
     }
 
     public void Dispose() => folder.Dispose();

@@ -150,9 +150,9 @@ installed: …"), so a file that matters cannot pass as a readme.
 
 ### Safety
 
-- Nothing in the game folder changes while the game runs: every install,
-  enable, disable, uninstall and UE4SS change first looks for the game's
-  executables among the running processes.
+- The app does not check whether the game is running. Close it before
+  changing mods, UE4SS or saves: files held open by the game can make an
+  operation fail, and a change made while it is active may affect the session.
 - A removal changes all of a mod's files or none: every file is moved aside
   before any is deleted, so a file in use puts everything back.
 - Saving the mod list (`mods.json`) is the last step of every change, and
@@ -344,21 +344,21 @@ every game start. Lines that speak of an error are red, warnings orange, and
 the mod folders an error names are listed. The page reads the log each time it
 opens; **Refresh**, **Copy** and **Open log file** are next to it. **Clear**
 deletes `UE4SS.log`, so the old lines are gone; UE4SS writes a new one at the
-next game start. Like every change in the game folder, it waits until the game
-is closed. The error marks in the Mods list go with the log, and until the next
-game start a help report holds no log and the page shows no UE4SS version from it. The search box
-shows only the lines that contain its text, in any case, such as a mod's name,
-together with **Only errors and warnings**, and counts them.
+next game start. The app does not check whether the game is running, so close
+it before changing or clearing UE4SS files; a file held open by the game may
+make the operation fail. The error marks in the Mods list go with the log,
+and the page shows the latest log it could read. The search box shows only
+the lines that contain its text, in any case, such as a mod's name, together
+with **Only errors and warnings**, and counts them.
 
-The app looks every 5 seconds whether the game runs. When a game it saw running
-closes, however it was started, the app reads the log of that game start. If
-errors name a UE4SS mod the manager installed, a note says so, with **Show
-log**. Errors of UE4SS's own mods, such as `BPModLoaderMod`, never cause one.
-On the Mods page, such a mod, while enabled, carries a red line: **UE4SS
+The app does not monitor game processes or notify when the game closes.
+A script mod's generated settings file in `~mods` is taken into the mod when
+the manager next starts. The app reads UE4SS's log at start and whenever the
+UE4SS page is opened or refreshed. If errors name a UE4SS mod the manager
+installed, that enabled mod carries a red line on the Mods page: **UE4SS
 reported errors at the last game start**. A click on it opens the UE4SS page
-with the log searched for the mod's folder. The app reads the log for this at
-start too, so the line stays until a game start without those errors, or until
-the mod is updated.
+with the log searched for the mod's folder. Errors in UE4SS's own mods, such
+as `BPModLoaderMod`, are not marked.
 
 ## openmods page
 
@@ -421,8 +421,8 @@ game anyway. Starting the game from Steam, Epic or a shortcut makes no backup.
 **Settings → Save backups** shows the folder and the backups, turns the backup
 at launch on or off, and offers **Back up now**.
 
-**Restore…** next to a backup puts it back, after a question and with the game
-closed: the save folder then holds exactly the backup's files. The saves of now
+**Restore…** next to a backup puts it back, after a question. Close the game
+before restoring: the save folder then holds exactly the backup's files. The saves of now
 are backed up first, so a restore can be undone. The backup is unpacked next to
 the save folder before anything changes; the old folder moves aside until the
 new one is in place, and moves back when a step fails (a file in use). Steam

@@ -4,18 +4,17 @@ using UEManager.Core.Storage;
 
 namespace UEManager.Core.Tests;
 
-/// <summary>Nothing changes while the game runs, and a file in use leaves a mod as it was.</summary>
+/// <summary>Operations are transactional when a game file is in use.</summary>
 public class SafetyTests : IDisposable
 {
     private readonly TestFolder folder = new();
     private readonly GameInstall game;
     private readonly ModManager manager;
-    private bool gameRunning;
 
     public SafetyTests()
     {
         game = GameLocator.Resolve(TestFolder.Profile(), folder.Game(), GameStore.Manual)!;
-        manager = new ModManager(game, new AppPaths(folder.Combine("Data")), _ => gameRunning);
+        manager = new ModManager(game, new AppPaths(folder.Combine("Data")));
     }
 
     public void Dispose() => folder.Dispose();
@@ -39,23 +38,7 @@ public class SafetyTests : IDisposable
     /// <summary>Opens a file the way the running game holds its paks: others may read it, but not move or delete it.</summary>
     private static FileStream Hold(string path) => File.Open(path, FileMode.Open, FileAccess.Read, FileShare.Read);
 
-    [Fact]
-    public void Nothing_changes_while_the_game_runs()
-    {
-        var mod = Install(Download("Sharp"));
-        gameRunning = true;
 
-        var error = Assert.Throws<ModException>(() => manager.SetEnabled(mod.Id, false));
-        Assert.Contains("Close the game", error.Message);
-        Assert.Throws<ModException>(() => manager.Uninstall(mod.Id));
-        Assert.Throws<ModException>(() => Install(Download("Other")));
-        Assert.Throws<ModException>(() => manager.InstallUe4ss(folder.Combine("Nowhere")));
-        Assert.Throws<ModException>(() => manager.RemoveUe4ss());
-
-        Assert.True(File.Exists(Deployed("Sharp_P.pak")));
-        Assert.False(File.Exists(Deployed("Other_P.pak")));
-        Assert.True(Assert.Single(manager.Mods).Enabled);
-    }
 
     [Fact]
     public void A_file_in_use_leaves_the_mod_in_place()

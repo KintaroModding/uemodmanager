@@ -32,11 +32,6 @@ public sealed partial class MainViewModel : LocalizedObservableObject
     private readonly DispatcherTimer toastTimer = new();
     private Action? toastAction;
 
-    /// <summary>Looks every few seconds whether the game runs, to read UE4SS's log once it closed.</summary>
-    private readonly DispatcherTimer gameWatch = new() { Interval = TimeSpan.FromSeconds(5) };
-    private DateTime? gameRunningSince;
-    private bool watching;
-
     /// <summary>
     /// The app's only connection: the UE4SS manifest and the update check at start, the openmods
     /// lists and covers when the openmods page opens, and the downloads the user starts.
@@ -87,73 +82,6 @@ public sealed partial class MainViewModel : LocalizedObservableObject
         sortDescending = settings.ModsSortDescending;
         ApplySort();
         toastTimer.Tick += (_, _) => DismissToast();
-        gameWatch.Tick += async (_, _) => await WatchGameAsync();
-    }
-
-    /// <summary>
-    /// One look at the game: when it ran and runs no more, however it was started, UE4SS's log of that game start
-    /// is read, and errors that name a mod the manager installed are reported, with the way to the log.
-    /// </summary>
-    private async Task WatchGameAsync()
-    {
-        if (watching || Game is not { } game)
-            return;
-        watching = true;
-        try
-        {
-            var running = await Task.Run(() => GameProcess.IsRunning(game));
-            if (running)
-                gameRunningSince ??= DateTime.Now;
-            else if (gameRunningSince is { } since)
-            {
-                gameRunningSince = null;
-                await TakeMadeSettingsAsync();
-                await ReportUe4ssErrorsAsync(game, since);
-            }
-        }
-        finally
-        {
-            watching = false;
-        }
-    }
-
-    /// <summary>
-    /// A script mod may make its settings file in the mods folder while the game runs, such as Auto Collect Loot's
-    /// PBZAutoCollect.txt: when the game closes, the manager takes it into the mod, as it does at its own start.
-    /// </summary>
-    private async Task TakeMadeSettingsAsync()
-    {
-        if (manager is not { } current)
-            return;
-        try
-        {
-            if (await Task.Run(() => current.TakeMadeSettings()) > 0)
-                RefreshMods();
-        }
-        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
-        {
-            Log.Warn($"The settings files that mods made could not be taken: {ex.Message}");
-        }
-    }
-
-    private async Task ReportUe4ssErrorsAsync(GameInstall game, DateTime since)
-    {
-        if (await ReadUe4ssErrorsAsync(game) is not { } read)
-            return;
-        var (log, named) = read;
-        // A log older than this game start comes from another one: UE4SS did not run this time.
-        if (log.WrittenAt < since.AddMinutes(-1) || named.Count == 0)
-            return;
-        var mods = string.Join(", ", manager!.Mods.Where(m => Ue4ssFolders(m).Any(named.Contains)).Select(m => m.Name));
-        Log.Info($"After the game closed, UE4SS's log names these mods in errors: {mods}.");
-        ShowToast(L.F($"The game closed, and UE4SS reported errors in these mods: {mods}."), isError: true,
-            L.T("Show log"), () =>
-            {
-                Ue4ssLogPanel.Tab = Ue4ssLogSource.Mod;
-                SelectedPage = "Ue4ss";
-            });
-        if (SelectedPage == "Ue4ss")
-            await RefreshUe4ssLogAsync();
     }
 
     /// <summary>
@@ -687,7 +615,6 @@ public sealed partial class MainViewModel : LocalizedObservableObject
         GameInstall? found = null;
         await RunAsync(L.T("Looking for the game…"), async () => found = await Task.Run(FindGame));
         await SetGameAsync(found);
-        gameWatch.Start();
         _ = CheckUe4ssManifestAsync();
         _ = Update.CheckAsync();
         if (downloads.Count > 0)
@@ -1447,11 +1374,6 @@ public sealed partial class MainViewModel : LocalizedObservableObject
     {
         if (!EnsureGame() || SaveFolder is not { } saves)
             return;
-        if (GameProcess.IsRunning(Game!))
-        {
-            ShowToast(L.F($"{GameDisplayName} is running. Close the game first, then try again."), isError: true);
-            return;
-        }
         var made = File.GetLastWriteTime(backup);
         if (!await AskAsync(L.T("Restore saves"),
                 L.F($"Put back the saves of {made:G}? Your saves of now are backed up first, so you can go back to them.\n\nIf Steam then asks about a conflict with its cloud saves, choose the files on this PC."),

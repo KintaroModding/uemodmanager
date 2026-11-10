@@ -16,7 +16,7 @@ public class SaveFailureTests : IDisposable
     {
         game = GameLocator.Resolve(TestFolder.Profile(), folder.Game(), GameStore.Manual)!;
         paths = new AppPaths(folder.Combine("Data"));
-        manager = new ModManager(game, paths, _ => false);
+        manager = new ModManager(game, paths);
     }
 
     public void Dispose() => folder.Dispose();
@@ -40,7 +40,7 @@ public class SaveFailureTests : IDisposable
     /// <summary>Holds the mod list the way a virus scanner may: others may read it, but not replace it.</summary>
     private FileStream HoldList() => File.Open(paths.StateFile(game.Profile.Id), FileMode.Open, FileAccess.Read, FileShare.Read);
 
-    private ModRecord AfterRestart(string id) => new ModManager(game, paths, _ => false).Mods.Single(m => m.Id == id);
+    private ModRecord AfterRestart(string id) => new ModManager(game, paths).Mods.Single(m => m.Id == id);
 
     [Fact]
     public void A_failed_enable_is_undone()

@@ -17,7 +17,7 @@ public class Ue4ssSharedTests : IDisposable
     public Ue4ssSharedTests()
     {
         game = GameLocator.Resolve(TestFolder.Profile(), folder.Game(), GameStore.Manual)!;
-        manager = new ModManager(game, new AppPaths(folder.Combine("Data")), _ => false);
+        manager = new ModManager(game, new AppPaths(folder.Combine("Data")));
         // UE4SS 3.x with one of its own shared libraries.
         File.WriteAllText(Path.Combine(game.BinariesPath, "dwmapi.dll"), "proxy");
         Directory.CreateDirectory(Path.Combine(game.BinariesPath, "ue4ss", "Mods", "shared", "UEHelpers"));

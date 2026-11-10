@@ -10,12 +10,11 @@ public class Ue4ssLogClearTests : IDisposable
     private readonly TestFolder folder = new();
     private readonly GameInstall game;
     private readonly ModManager manager;
-    private bool gameRunning;
 
     public Ue4ssLogClearTests()
     {
         game = GameLocator.Resolve(TestFolder.Profile(), folder.Game(), GameStore.Manual)!;
-        manager = new ModManager(game, new AppPaths(folder.Combine("Data")), _ => gameRunning);
+        manager = new ModManager(game, new AppPaths(folder.Combine("Data")));
     }
 
     public void Dispose() => folder.Dispose();
@@ -45,14 +44,5 @@ public class Ue4ssLogClearTests : IDisposable
         Assert.False(manager.ClearUe4ssLog());
     }
 
-    [Fact]
-    public void Waits_while_the_game_runs()
-    {
-        var log = WriteLog();
-        gameRunning = true;
 
-        Assert.Throws<ModException>(() => manager.ClearUe4ssLog());
-
-        Assert.True(File.Exists(log));
-    }
 }

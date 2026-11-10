@@ -10,12 +10,11 @@ public class RenameTests : IDisposable
     private readonly TestFolder folder = new();
     private readonly GameInstall game;
     private readonly ModManager manager;
-    private bool gameRunning;
 
     public RenameTests()
     {
         game = GameLocator.Resolve(TestFolder.Profile(), folder.Game(), GameStore.Manual)!;
-        manager = new ModManager(game, new AppPaths(folder.Combine("Data")), _ => gameRunning);
+        manager = new ModManager(game, new AppPaths(folder.Combine("Data")));
     }
 
     public void Dispose() => folder.Dispose();
@@ -37,7 +36,7 @@ public class RenameTests : IDisposable
 
         manager.Rename(mod.Id, "  Sharp Blades ", " 1.2 ");
 
-        var restarted = new ModManager(game, new AppPaths(folder.Combine("Data")), _ => false);
+        var restarted = new ModManager(game, new AppPaths(folder.Combine("Data")));
         var renamed = Assert.Single(restarted.Mods);
         Assert.Equal(("Sharp Blades", "1.2"), (renamed.Name, renamed.Version));
         Assert.True(renamed.Enabled);
@@ -60,10 +59,9 @@ public class RenameTests : IDisposable
     }
 
     [Fact]
-    public void A_rename_works_while_the_game_runs()
+    public void A_rename_changes_only_mod_metadata()
     {
         var mod = Install("Sharp");
-        gameRunning = true;
 
         manager.Rename(mod.Id, "Sharp Blades", null);
 

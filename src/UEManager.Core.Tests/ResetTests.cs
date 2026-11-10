@@ -11,13 +11,12 @@ public class ResetTests : IDisposable
     private readonly GameInstall game;
     private readonly AppPaths paths;
     private readonly ModManager manager;
-    private bool gameRunning;
 
     public ResetTests()
     {
         game = GameLocator.Resolve(TestFolder.Profile(), folder.Game(), GameStore.Manual)!;
         paths = new AppPaths(folder.Combine("Data"));
-        manager = new ModManager(game, paths, _ => gameRunning);
+        manager = new ModManager(game, paths);
     }
 
     public void Dispose() => folder.Dispose();
@@ -89,7 +88,7 @@ public class ResetTests : IDisposable
         Assert.Equal("by hand", File.ReadAllText(Path.Combine(result.BackupFolder, "~mods", "Sub", "Deep_P.pak")));
         Assert.Equal("by hand", File.ReadAllText(Path.Combine(result.BackupFolder, "LogicMods", "Blue.pak")));
 
-        var restarted = new ModManager(game, paths, _ => false);
+        var restarted = new ModManager(game, paths);
         Assert.Equal(3, restarted.Mods.Count);
         Assert.All(restarted.Mods, mod => Assert.False(mod.Enabled));
         Assert.All(new[] { sharp, witch, off }, mod => Assert.True(Directory.Exists(manager.LibraryFolderOf(mod))));
@@ -106,25 +105,14 @@ public class ResetTests : IDisposable
 
         Assert.Equal(3, result.ModsDeleted);
         Assert.Empty(manager.Mods);
-        Assert.Empty(new ModManager(game, paths, _ => false).Mods);
+        Assert.Empty(new ModManager(game, paths).Mods);
         Assert.False(Directory.Exists(manager.LibraryFolderOf(sharp)));
         Assert.False(Directory.Exists(manager.LibraryFolderOf(witch)));
         var backups = Directory.GetFiles(paths.BackupDir(game.Profile.Id), "config.lua", SearchOption.AllDirectories);
         Assert.Equal("speed = 9", File.ReadAllText(Assert.Single(backups)));
     }
 
-    [Fact]
-    public void Nothing_is_reset_while_the_game_runs()
-    {
-        ModdedGame();
-        gameRunning = true;
 
-        Assert.Throws<ModException>(() => manager.ResetModding(deleteMods: true));
-
-        Assert.True(File.Exists(Path.Combine(game.ModsPath, "Sharp_P.pak")));
-        Assert.True(File.Exists(Path.Combine(Win64, "ue4ss", "UE4SS.dll")));
-        Assert.Equal(3, manager.Mods.Count);
-    }
 
     [Fact]
     public void A_mod_file_in_use_stops_the_reset_before_anything_changes()

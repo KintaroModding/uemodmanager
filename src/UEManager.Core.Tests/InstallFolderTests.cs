@@ -59,20 +59,7 @@ public class InstallFolderTests : IDisposable
         Assert.False(File.Exists(Deployed(second, "Sharp_P.pak")));
     }
 
-    [Fact]
-    public void Nothing_moves_while_the_game_runs_from_the_other_install()
-    {
-        Install(new ModManager(first, paths), "Sharp");
-        var second = Resolve(folder.Game(name: "Copy"));
-        var manager = new ModManager(second, paths, install => install.RootPath == first.RootPath);
 
-        var error = Assert.Throws<ModException>(() => manager.MoveHere());
-
-        Assert.Contains("Close the game", error.Message);
-        Assert.True(File.Exists(Deployed(first, "Sharp_P.pak")));
-        Assert.False(File.Exists(Deployed(second, "Sharp_P.pak")));
-        Assert.Equal(first.RootPath, manager.OtherInstallRoot);
-    }
 
     [Fact]
     public void A_file_in_use_in_the_other_install_moves_nothing()

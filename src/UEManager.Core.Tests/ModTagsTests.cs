@@ -13,7 +13,7 @@ public class ModTagsTests : IDisposable
     public ModTagsTests()
     {
         game = GameLocator.Resolve(TestFolder.Profile(), folder.Game(), GameStore.Manual)!;
-        manager = new ModManager(game, new AppPaths(folder.Combine("Data")), _ => false);
+        manager = new ModManager(game, new AppPaths(folder.Combine("Data")));
     }
 
     public void Dispose() => folder.Dispose();
@@ -43,7 +43,7 @@ public class ModTagsTests : IDisposable
 
         manager.Rename(mod.Id, "Sharp", null, ["Combat", "UI"]);
 
-        var restarted = new ModManager(game, new AppPaths(folder.Combine("Data")), _ => false);
+        var restarted = new ModManager(game, new AppPaths(folder.Combine("Data")));
         var saved = Assert.Single(restarted.Mods);
         Assert.Equal(["Combat", "UI"], saved.Tags);
         Assert.Equal("Sharp", saved.Name);

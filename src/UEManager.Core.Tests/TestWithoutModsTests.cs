@@ -10,12 +10,11 @@ public class TestWithoutModsTests : IDisposable
     private readonly TestFolder folder = new();
     private readonly GameInstall game;
     private readonly ModManager manager;
-    private bool gameRunning;
 
     public TestWithoutModsTests()
     {
         game = GameLocator.Resolve(TestFolder.Profile(), folder.Game(), GameStore.Manual)!;
-        manager = new ModManager(game, new AppPaths(folder.Combine("Data")), _ => gameRunning);
+        manager = new ModManager(game, new AppPaths(folder.Combine("Data")));
     }
 
     public void Dispose() => folder.Dispose();
@@ -61,7 +60,7 @@ public class TestWithoutModsTests : IDisposable
         Install("Sharp");
         manager.TurnOffForTest();
 
-        var restarted = new ModManager(game, new AppPaths(folder.Combine("Data")), _ => false);
+        var restarted = new ModManager(game, new AppPaths(folder.Combine("Data")));
 
         Assert.Equal("Sharp", Assert.Single(restarted.OffForTest).Name);
         Assert.Equal(1, restarted.TurnBackOn());
@@ -96,13 +95,5 @@ public class TestWithoutModsTests : IDisposable
         Assert.True(File.Exists(Deployed("Sharp")));
     }
 
-    [Fact]
-    public void Nothing_changes_while_the_game_runs()
-    {
-        Install("Sharp");
-        gameRunning = true;
 
-        Assert.Throws<ModException>(() => manager.TurnOffForTest());
-        Assert.True(File.Exists(Deployed("Sharp")));
-    }
 }

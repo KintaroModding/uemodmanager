@@ -17,7 +17,7 @@ public class Ue4ssFolderTests : IDisposable
     public Ue4ssFolderTests()
     {
         game = GameLocator.Resolve(TestFolder.Profile(), folder.Game(), GameStore.Manual)!;
-        manager = new ModManager(game, new AppPaths(folder.Combine("Data")), _ => false);
+        manager = new ModManager(game, new AppPaths(folder.Combine("Data")));
         File.WriteAllText(Path.Combine(game.BinariesPath, "dwmapi.dll"), "proxy");
         Directory.CreateDirectory(Path.Combine(game.BinariesPath, "ue4ss", "Mods"));
         File.WriteAllText(Path.Combine(game.BinariesPath, "ue4ss", "UE4SS.dll"), "runtime");

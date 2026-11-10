@@ -10,8 +10,8 @@ namespace UEManager.Core.Mods;
 /// Every installed mod keeps a manager-owned copy in the library. Enabling copies
 /// it into the game; disabling removes exactly the files that were deployed, and
 /// only when their checksum still matches. A file the manager did not deploy is
-/// never overwritten or deleted. Nothing is changed while the game runs, and a
-/// removal changes all of a mod's files or none of them. Saving the mod list is
+/// never overwritten or deleted. The manager does not detect whether the game is running;
+/// close it before changing game files. A removal changes all of a mod's files or none of them. Saving the mod list is
 /// the last step of a change; when it fails, the change is undone.
 ///
 /// The mod list belongs to the game, not to one install of it. When the player
@@ -29,7 +29,6 @@ public sealed class ModManager
     private readonly object gate = new();
     private readonly AppPaths paths;
     private readonly List<ModRecord> mods;
-    private readonly Func<GameInstall, bool> isGameRunning;
 
     /// <summary>The ids of the mods <see cref="TurnOffForTest"/> turned off, saved with the mod list.</summary>
     private List<string> offForTest;
@@ -37,12 +36,10 @@ public sealed class ModManager
     /// <summary>The player's mod sets, saved with the mod list. A change puts a new list in place, so the old one can be put back.</summary>
     private List<ModSet> sets;
 
-    /// <param name="isGameRunning">Whether the game runs now from an install. By default, the install's executables are looked for among the running processes.</param>
-    public ModManager(GameInstall game, AppPaths paths, Func<GameInstall, bool>? isGameRunning = null)
+    public ModManager(GameInstall game, AppPaths paths)
     {
         Game = game;
         this.paths = paths;
-        this.isGameRunning = isGameRunning ?? GameProcess.IsRunning;
         var state = JsonFile.Read<ModState>(StateFile);
         mods = state?.Mods ?? [];
         offForTest = state?.OffForTest ?? [];
@@ -880,10 +877,6 @@ public sealed class ModManager
         {
             if (OtherInstallRoot is not { } other)
                 return [];
-            if (isGameRunning(Game)
-                || (GameLocator.Resolve(Game.Profile, other, GameStore.Manual) is { } install && isGameRunning(install)))
-                throw new ModException($"{Game.Profile.DisplayName} is running. Close the game first, then try again.");
-
             var moving = mods.Where(IsInOtherInstall).ToList();
             var removal = Undeploy(moving);
             var stayed = new List<ModRecord>();
@@ -1067,8 +1060,8 @@ public sealed class ModManager
         && string.Equals(FileSystem.Sha256(path), sha256, StringComparison.OrdinalIgnoreCase);
 
     /// <summary>
-    /// Deletes UE4SS's log, so the old lines are gone and the next game start begins a fresh one. It waits for the
-    /// game to close, as every change in the game folder does: UE4SS writes the log while the game runs.
+    /// Deletes UE4SS's log, so the old lines are gone and the next game start begins a fresh one. The app does not
+    /// detect whether the game is running; a log held open by UE4SS may make deletion fail.
     /// </summary>
     /// <returns>Whether there was a log to delete.</returns>
     public bool ClearUe4ssLog()
@@ -1314,8 +1307,8 @@ public sealed class ModManager
 
     /// <summary>
     /// Takes the settings files that script mods made in the mods folder into those mods (see
-    /// <see cref="TakeMadeSettings(ModRecord)"/>). The app does this at its start and when the game closes, as a mod
-    /// makes such a file while the game runs. Only the library and the mod list change, so the game may run.
+    /// <see cref="TakeMadeSettings(ModRecord)"/>). The app does this at its start; a file made while playing
+    /// is taken the next time the manager starts. Only the library and the mod list change, so the game may run.
     /// </summary>
     /// <returns>How many mods took a file.</returns>
     public int TakeMadeSettings()
@@ -1397,15 +1390,12 @@ public sealed class ModManager
         mods.FirstOrDefault(m => m.Id == id) ?? throw new ModException($"That mod is no longer installed.");
 
     /// <summary>
-    /// Every change to the game folder stops while the game runs: it holds the mounted paks and UE4SS.
-    /// Changes stop as well while enabled mods are still in another install of the game.
+    /// Changes stop while enabled mods are still in another install of the game.
     /// </summary>
     private void EnsureCanChange()
     {
         if (OtherInstallRoot is not null)
             throw new ModException($"Your enabled mods are still in another folder of {Game.Profile.DisplayName}: {OtherInstallRoot}. Move them to this folder first.");
-        if (isGameRunning(Game))
-            throw new ModException($"{Game.Profile.DisplayName} is running. Close the game first, then try again.");
     }
 
     private bool IsInThisInstall(string path) =>
