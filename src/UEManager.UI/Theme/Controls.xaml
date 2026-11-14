@@ -68,10 +68,13 @@
                         <ContentPresenter Margin="12,8,34,8" VerticalAlignment="Center" IsHitTestVisible="False"
                                           Content="{Binding SelectedItem.Name, RelativeSource={RelativeSource TemplatedParent}}" />
                         <Popup x:Name="PART_Popup" Placement="Bottom" AllowsTransparency="True" Focusable="False"
-                               IsOpen="{TemplateBinding IsDropDownOpen}">
-                            <Border MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
+                               HorizontalOffset="-12" IsOpen="{TemplateBinding IsDropDownOpen}">
+                            <Border Margin="12,2,12,12" MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
                                     Background="{StaticResource Brush.PanelSolid}" BorderBrush="{StaticResource Brush.LineStrong}"
-                                    BorderThickness="1" Padding="2">
+                                    BorderThickness="1" CornerRadius="2" Padding="2">
+                                <Border.Effect>
+                                    <DropShadowEffect BlurRadius="16" ShadowDepth="0" Opacity="0.6" Color="Black" />
+                                </Border.Effect>
                                 <ScrollViewer MaxHeight="240" CanContentScroll="True">
                                     <ItemsPresenter KeyboardNavigation.DirectionalNavigation="Contained" />
                                 </ScrollViewer>
@@ -150,6 +153,32 @@
     </Style>
 
     <!-- ===== Surfaces ===== -->
+
+    <!-- A top-level window with the app's own title bar: a 1 px DWM glass frame gives it the native Windows shadow,
+         its border dims when another window is in front, and maximized it has no border at the screen edge. -->
+    <Style x:Key="Window.Chrome" TargetType="Window">
+        <Setter Property="Background" Value="{DynamicResource Brush.Ink}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource Brush.LineStrong}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Foreground" Value="{DynamicResource Brush.Text}" />
+        <Setter Property="FontFamily" Value="{DynamicResource Font.Body}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="UseLayoutRounding" Value="True" />
+        <Setter Property="WindowChrome.WindowChrome">
+            <Setter.Value>
+                <WindowChrome CaptionHeight="34" ResizeBorderThickness="6" GlassFrameThickness="1"
+                              CornerRadius="0" UseAeroCaptionButtons="False" />
+            </Setter.Value>
+        </Setter>
+        <Style.Triggers>
+            <Trigger Property="IsActive" Value="False">
+                <Setter Property="BorderBrush" Value="{DynamicResource Brush.Line}" />
+            </Trigger>
+            <Trigger Property="WindowState" Value="Maximized">
+                <Setter Property="BorderThickness" Value="0" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
 
     <Style x:Key="Card" TargetType="Border">
         <Setter Property="Background" Value="{StaticResource Brush.Panel}" />
@@ -1246,9 +1275,12 @@
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ToolTip">
-                    <Border Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
+                    <Border Margin="10" Background="{TemplateBinding Background}" BorderBrush="{TemplateBinding BorderBrush}"
                             BorderThickness="{TemplateBinding BorderThickness}" Padding="{TemplateBinding Padding}"
                             CornerRadius="2">
+                        <Border.Effect>
+                            <DropShadowEffect BlurRadius="12" ShadowDepth="0" Opacity="0.6" Color="Black" />
+                        </Border.Effect>
                         <ContentPresenter />
                     </Border>
                 </ControlTemplate>

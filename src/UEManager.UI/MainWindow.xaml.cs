@@ -15,6 +15,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        WindowFrame.Attach(this);
         // The start size is also the smallest, so there are fewer layouts to keep right.
         var smallest = Smallest(new Size(Width, Height), SystemParameters.WorkArea);
         MinWidth = Width = smallest.Width;

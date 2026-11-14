@@ -1,5 +1,8 @@
 using System.Windows;
+using System.Windows.Interop;
+using System.Windows.Shell;
 using UEManager.Core.Storage;
+using UEManager.UI.Services;
 using Xunit;
 
 namespace UEManager.UI.Tests;
@@ -55,4 +58,27 @@ public class WindowPlacementTests
     {
         Assert.Null(MainWindow.Usable(new WindowPlacement(double.NaN, 10, 1400, 900, false), TwoScreens, Minimum));
     }
+
+    [Fact]
+    public void The_window_chrome_enables_the_native_shadow_dims_when_inactive_and_drops_its_border_when_maximized() => UiThread.Run(() =>
+    {
+        var window = new Window();
+        GameTheme.Apply(window.Resources, null);
+        window.Style = (Style)window.Resources["Window.Chrome"];
+
+        Assert.Equal(new Thickness(1), WindowChrome.GetWindowChrome(window).GlassFrameThickness);
+        Assert.Same(window.Resources["Brush.Line"], window.BorderBrush);
+        Assert.Equal(new Thickness(1), window.BorderThickness);
+
+        window.WindowState = WindowState.Maximized;
+        Assert.Equal(new Thickness(0), window.BorderThickness);
+    });
+
+    [Fact]
+    public void The_window_frame_turns_on_the_dwm_shadow_and_dark_frame() => UiThread.Run(() =>
+    {
+        using var source = new HwndSource(new HwndSourceParameters("UEModManager.TestFrame") { Width = 100, Height = 100 });
+
+        Assert.True(WindowFrame.Apply(source.Handle));
+    });
 }

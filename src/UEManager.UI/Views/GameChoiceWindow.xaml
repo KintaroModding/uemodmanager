@@ -3,20 +3,9 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:ui="clr-namespace:UEManager.UI"
         xmlns:views="clr-namespace:UEManager.UI.Views"
+        Style="{StaticResource Window.Chrome}"
         Width="1360" Height="800"
-        WindowStartupLocation="CenterScreen"
-        Background="{StaticResource Brush.Ink}"
-        BorderBrush="{StaticResource Brush.LineStrong}"
-        BorderThickness="1"
-        Foreground="{StaticResource Brush.Text}"
-        FontFamily="{DynamicResource Font.Body}"
-        FontSize="13"
-        UseLayoutRounding="True">
-
-    <WindowChrome.WindowChrome>
-        <WindowChrome CaptionHeight="34" ResizeBorderThickness="6" GlassFrameThickness="0"
-                      CornerRadius="0" UseAeroCaptionButtons="False" />
-    </WindowChrome.WindowChrome>
+        WindowStartupLocation="CenterScreen">
 
     <!-- The app at a start without a chosen game: the app's window, as large and in the same place, with the game
          picker over a blurred picture. The same picker shows over the blurred app after "Switch game". -->
