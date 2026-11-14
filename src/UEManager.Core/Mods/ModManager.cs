@@ -1357,9 +1357,11 @@ public sealed class ModManager
     }
 
     /// <summary>
-    /// Files in the ~mods folder that no installed mod deployed, relative to that folder. A file a mod derives from one
-    /// of its own files stays out, such as the SpeakerHighlight.txt that a mod writes beside the SpeakerHighlight.json
-    /// it shipped, so the command in its Mods Menu can edit the settings: same folder, same name, another extension.
+    /// Files in the ~mods folder that no installed mod deployed, relative to that folder. A settings file a mod derives
+    /// from one of its own settings files stays out, such as the SpeakerHighlight.txt that a mod writes beside the
+    /// SpeakerHighlight.json it shipped, so the command in its Mods Menu can edit the settings: same folder, same name,
+    /// another extension, both settings files. A file that is no settings file, such as a hand-copied MyMod_P.utoc beside
+    /// a mod's MyMod_P.pak, is the player's and shows.
     /// </summary>
     public IReadOnlyList<string> UnmanagedFiles()
     {
@@ -1373,11 +1375,14 @@ public sealed class ModManager
                 .Where(f => f.DeployedPath is not null)
                 .Select(f => Path.GetFullPath(f.DeployedPath!))
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
-            derived = owned.Select(WithoutExtension).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            // Only settings files: a hand-copied MyMod_P.utoc next to a mod's MyMod_P.pak is the player's, and shows.
+            derived = owned.Where(SettingsFiles.IsPakSettings)
+                .Select(WithoutExtension)
+                .ToHashSet(StringComparer.OrdinalIgnoreCase);
         }
         return Directory.EnumerateFiles(Game.ModsPath, "*", SearchOption.AllDirectories)
             .Where(f => !owned.Contains(Path.GetFullPath(f)))
-            .Where(f => !derived.Contains(WithoutExtension(Path.GetFullPath(f))))
+            .Where(f => !(SettingsFiles.IsPakSettings(f) && derived.Contains(WithoutExtension(Path.GetFullPath(f)))))
             .Select(f => Path.GetRelativePath(Game.ModsPath, f))
             .ToList();
 

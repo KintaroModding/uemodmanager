@@ -58,4 +58,20 @@ public class DerivedFilesTests : IDisposable
 
         Assert.Contains(Path.Combine("Sub", "SpeakerHighlight.txt"), manager.UnmanagedFiles());
     }
+
+    [Fact]
+    public void A_hand_copied_utoc_beside_the_mods_pak_still_shows()
+    {
+        var manager = new ModManager(game, new AppPaths(folder.Combine("Data")));
+        folder.File(@"Downloads\PakMod\TestGame\Content\Paks\~mods\MyMod_P.pak", "pak");
+        using var preview = manager.Inspect(folder.Combine("Downloads", "PakMod"));
+        var parts = preview.Packages.ToList();
+        var check = manager.Check(preview, parts);
+        manager.Install(preview, parts, "My Mod", "PakMod", check.Replaces is not null);
+        File.WriteAllText(Path.Combine(game.ModsPath, "MyMod_P.utoc"), "utoc");
+
+        var started = new ModManager(game, new AppPaths(folder.Combine("Data")));
+
+        Assert.Contains("MyMod_P.utoc", started.UnmanagedFiles());
+    }
 }
