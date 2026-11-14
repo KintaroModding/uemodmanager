@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <!-- A console program over UEManager.Core: no WPF, no UI, no third-party package. -->
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <RootNamespace>UEManager.Cli</RootNamespace>
+    <AssemblyName>uemm</AssemblyName>
+    <InvariantGlobalization>false</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\UEManager.Core\UEManager.Core.csproj" />
+  </ItemGroup>
+
+</Project>
