@@ -1356,23 +1356,33 @@ public sealed class ModManager
         return ModIntegrity.Intact;
     }
 
-    /// <summary>Files in the ~mods folder that no installed mod deployed, relative to that folder.</summary>
+    /// <summary>
+    /// Files in the ~mods folder that no installed mod deployed, relative to that folder. A file a mod derives from one
+    /// of its own files stays out, such as the SpeakerHighlight.txt that a mod writes beside the SpeakerHighlight.json
+    /// it shipped, so the command in its Mods Menu can edit the settings: same folder, same name, another extension.
+    /// </summary>
     public IReadOnlyList<string> UnmanagedFiles()
     {
         if (!Directory.Exists(Game.ModsPath))
             return [];
         HashSet<string> owned;
+        HashSet<string> derived;
         lock (gate)
         {
             owned = mods.SelectMany(m => m.Files)
                 .Where(f => f.DeployedPath is not null)
                 .Select(f => Path.GetFullPath(f.DeployedPath!))
                 .ToHashSet(StringComparer.OrdinalIgnoreCase);
+            derived = owned.Select(WithoutExtension).ToHashSet(StringComparer.OrdinalIgnoreCase);
         }
         return Directory.EnumerateFiles(Game.ModsPath, "*", SearchOption.AllDirectories)
             .Where(f => !owned.Contains(Path.GetFullPath(f)))
+            .Where(f => !derived.Contains(WithoutExtension(Path.GetFullPath(f))))
             .Select(f => Path.GetRelativePath(Game.ModsPath, f))
             .ToList();
+
+        static string WithoutExtension(string path) =>
+            Path.Combine(Path.GetDirectoryName(path)!, Path.GetFileNameWithoutExtension(path));
     }
 
     /// <summary>
