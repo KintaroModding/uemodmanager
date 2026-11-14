@@ -8,23 +8,12 @@
         xmlns:vm="clr-namespace:UEManager.UI.ViewModels"
         mc:Ignorable="d"
         d:DataContext="{d:DesignInstance Type=vm:MainViewModel}"
+        Style="{StaticResource Window.Chrome}"
         Title="{Binding WindowTitle}"
         Language="{Binding SelectedLanguage, ConverterCulture=en-US}"
         Width="1360" Height="800"
         WindowStartupLocation="CenterScreen"
-        Background="{StaticResource Brush.Ink}"
-        BorderBrush="{StaticResource Brush.LineStrong}"
-        BorderThickness="1"
-        Foreground="{StaticResource Brush.Text}"
-        FontFamily="{DynamicResource Font.Body}"
-        FontSize="13"
-        UseLayoutRounding="True"
         AllowDrop="True">
-
-    <WindowChrome.WindowChrome>
-        <WindowChrome CaptionHeight="34" ResizeBorderThickness="6" GlassFrameThickness="0"
-                      CornerRadius="0" UseAeroCaptionButtons="False" />
-    </WindowChrome.WindowChrome>
 
     <Grid x:Name="Root">
         <Grid.RowDefinitions>

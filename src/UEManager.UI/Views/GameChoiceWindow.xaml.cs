@@ -17,6 +17,7 @@ public partial class GameChoiceWindow : Window
     public GameChoiceWindow(GamePickerViewModel picker, ImageSource? backdrop, WindowPlacement? placement)
     {
         InitializeComponent();
+        WindowFrame.Attach(this);
         Title = AppInfo.Name;
         AppName.Text = AppInfo.Name;
         DataContext = picker;
