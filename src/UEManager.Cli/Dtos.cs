@@ -65,8 +65,11 @@ internal sealed record TogglePayload(int SchemaVersion, string Command, string G
 internal sealed record UninstallModDto(string Id, string Name, string? Version, bool Enabled, int FileCount, long TotalSize,
     string LibraryFolder, IReadOnlyList<ModFileDto> Files);
 
+/// <summary>A file a mod left in the game, such as a log it wrote; an uninstall keeps it unless asked to move it.</summary>
+internal sealed record LeftoverDto(string Path, string RelativePath, long SizeBytes, bool IsLog);
+
 internal sealed record UninstallPayload(int SchemaVersion, string Command, string GameId, bool Confirmed, string? BackupFolder,
-    int RemainingMods, UninstallModDto Mod);
+    IReadOnlyList<LeftoverDto> Leftovers, string? LeftoverBackup, int RemainingMods, UninstallModDto Mod);
 
 /// <summary>One save backup: a zip of the game's save folder, with the player's note and whether it is a personal one.</summary>
 internal sealed record SaveBackupDto(string Name, string Path, bool Personal, DateTimeOffset CreatedAt, long SizeBytes, string? Note);

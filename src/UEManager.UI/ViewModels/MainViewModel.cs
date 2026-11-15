@@ -821,18 +821,53 @@ public sealed partial class MainViewModel : LocalizedObservableObject
 
     internal async Task UninstallAsync(ModItemViewModel item)
     {
+        // The files the mod wrote itself, such as its logs, stay when it goes: say so before, and offer to move them after.
+        IReadOnlyList<ModLeftover> leftovers = [];
+        try
+        {
+            if (manager is not null)
+                leftovers = manager.LeftoversOf(item.Id);
+        }
+        catch (ModException)
+        {
+            leftovers = [];
+        }
         if (!await AskAsync(L.T("Uninstall mod"),
                 L.Join(L.F($"Remove \"{item.Name}\" from the game and from the manager's library? The original download is not touched."),
-                    item.HasSettings ? L.T("Settings you changed are backed up first.") : null),
+                    item.HasSettings ? L.T("Settings you changed are backed up first.") : null,
+                    leftovers.Count > 0
+                        ? L.F($"It also left {leftovers.Count} file(s) of its own in the game ({Format.Size(leftovers.Sum(leftover => leftover.Size))}): {LeftoverNames(leftovers)}. They stay unless you move them into the backups.")
+                        : null),
                 L.T("Uninstall")))
             return;
-        string? backup = null;
-        if (await RunAsync(L.T("Uninstalling…"), async () => backup = await Task.Run(() => manager!.Uninstall(item.Id))))
-            ShowToast(backup is null
-                ? L.F($"Uninstalled \"{item.Name}\".")
-                : L.F($"Uninstalled \"{item.Name}\". The settings you changed were backed up to {backup}."));
+        ModUninstallResult? result = null;
+        if (!await RunAsync(L.T("Uninstalling…"), async () => result = await Task.Run(() => manager!.Uninstall(item.Id))))
+            return;
+        var message = result!.SettingsBackup is null
+            ? L.F($"Uninstalled \"{item.Name}\".")
+            : L.F($"Uninstalled \"{item.Name}\". The settings you changed were backed up to {result.SettingsBackup}.");
+        if (result.Leftovers.Count > 0 && result.LeftoverBackup is null)
+        {
+            if (await AskAsync(L.T("Files left behind"),
+                    L.F($"\"{item.Name}\" left {result.Leftovers.Count} file(s) of its own in the game ({Format.Size(result.Leftovers.Sum(leftover => leftover.Size))}): {LeftoverNames(result.Leftovers)}. Move them into the manager's backups?"),
+                    L.T("Move to backups")))
+            {
+                string? moved = null;
+                if (await RunAsync(L.T("Moving the files left behind…"),
+                        async () => moved = await Task.Run(() => manager!.MoveLeftoversToBackups(result.Leftovers, item.Name))))
+                    message = L.F($"Uninstalled \"{item.Name}\". {result.Leftovers.Count} file(s) it left were moved to {moved}.");
+            }
+        }
+        ShowToast(message);
         RefreshMods();
+        if (IsUnmanagedOpen)
+            ShowUnmanaged();
     }
+
+    /// <summary>The first few names of what a mod left behind, for a question: its files' paths below the game, and a count.</summary>
+    private static string LeftoverNames(IReadOnlyList<ModLeftover> leftovers) =>
+        string.Join(", ", leftovers.Take(3).Select(leftover => leftover.RelativePath))
+        + (leftovers.Count > 3 ? $" and {leftovers.Count - 3} more" : "");
 
     /// <summary>Opens the mod's settings files in the game in the app's own settings editor.</summary>
     internal void EditSettings(ModItemViewModel item)

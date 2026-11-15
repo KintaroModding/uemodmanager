@@ -17,7 +17,7 @@ internal sealed class CliArguments
     private static readonly string[] RepeatableOptions = ["--part"];
 
     private static readonly string[] FlagOptions =
-        ["--json", "--yes", "--all-parts", "--keep-both", "--check", "--help", "--version", "--on", "--off", "--clear"];
+        ["--json", "--yes", "--all-parts", "--keep-both", "--check", "--help", "--version", "--on", "--off", "--clear", "--remove-leftovers"];
 
     public string Command { get; private set; } = "";
 
@@ -39,6 +39,9 @@ internal sealed class CliArguments
     public bool Yes => Flags.Contains("--yes");
 
     public bool AllParts => Flags.Contains("--all-parts");
+
+    /// <summary>uninstall: move the files the mod left in the game, such as its logs, into the manager's backups.</summary>
+    public bool RemoveLeftovers => Flags.Contains("--remove-leftovers");
 
     /// <summary>Keep an installed mod that the download would replace, and install the download beside it.</summary>
     public bool KeepBoth => Flags.Contains("--keep-both");

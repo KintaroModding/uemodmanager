@@ -142,7 +142,7 @@ public class SettingsFileTests : IDisposable
         Assert.Equal("Size=320", File.ReadAllText(ini));
         Assert.Equal("dll 0.2.3", File.ReadAllText(Path.Combine(dlls, "main.dll")));
 
-        Assert.NotNull(manager.Uninstall(mod.Id));
+        Assert.NotNull(manager.Uninstall(mod.Id).SettingsBackup);
         Assert.False(File.Exists(ini));
         Assert.Contains(Backups(), f => File.ReadAllText(f) == "Size=320");
     }
@@ -192,7 +192,7 @@ public class SettingsFileTests : IDisposable
         manager.SetEnabled(mod.Id, true);
         Assert.Equal("edited again, a little longer", File.ReadAllText(Main));
 
-        var backup = manager.Uninstall(mod.Id);
+        var backup = manager.Uninstall(mod.Id).SettingsBackup;
         Assert.NotNull(backup);
         Assert.Equal("edited again, a little longer", File.ReadAllText(Path.Combine(backup, "Witch", "Scripts", "main.lua")));
     }
@@ -281,7 +281,7 @@ public class SettingsFileTests : IDisposable
         var mod = Install(Download("1.0"));
         File.WriteAllText(Config, "speed = 5");
 
-        var backup = manager.Uninstall(mod.Id);
+        var backup = manager.Uninstall(mod.Id).SettingsBackup;
 
         Assert.NotNull(backup);
         Assert.Equal("speed = 5", File.ReadAllText(Path.Combine(backup, "Witch", "Scripts", "config.lua")));
@@ -293,7 +293,7 @@ public class SettingsFileTests : IDisposable
     {
         var mod = Install(Download("1.0"));
 
-        Assert.Null(manager.Uninstall(mod.Id));
+        Assert.Null(manager.Uninstall(mod.Id).SettingsBackup);
         Assert.Empty(Backups());
     }
 

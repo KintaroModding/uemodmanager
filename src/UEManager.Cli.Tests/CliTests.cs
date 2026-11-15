@@ -377,4 +377,50 @@ public sealed class CliTests : IDisposable
         Assert.Contains("outside the game", error);
         Assert.False(Directory.Exists(Path.Combine(ModsFolder, "unpacked")));
     }
+
+    /// <summary>A UE4SS mod in a folder of its own, so it can leave a log behind like the real ones do.</summary>
+    private string Ue4ssModDownload()
+    {
+        Write(Path.Combine(GameRoot, "platform", "steam", "ue4ss", "UE4SS.dll"), "ue4ss");
+        return Zip("MyMod.zip", ("ue4ss/Mods/MyMod/enabled.txt", ""), ("ue4ss/Mods/MyMod/Scripts/main.lua", "main"));
+    }
+
+    private string Ue4ssModFolder => Path.Combine(GameRoot, "platform", "steam", "ue4ss", "Mods", "MyMod");
+
+    [Fact]
+    public void An_uninstall_reports_a_log_the_mod_left_behind()
+    {
+        Assert.Equal(0, Run("install", Ue4ssModDownload(), "--yes").Code);
+        Write(Path.Combine(Ue4ssModFolder, "compatibility.log"), "Verified UE4SS ...");
+
+        var preview = Run("uninstall", "MyMod");
+        Assert.Equal(2, preview.Code);
+        Assert.Contains("compatibility.log", preview.Out);
+        Assert.Contains("--remove-leftovers", preview.Out);
+
+        var kept = Run("uninstall", "MyMod", "--yes", "--json");
+        Assert.Equal(0, kept.Code);
+        using var json = JsonDocument.Parse(kept.Out);
+        var leftovers = json.RootElement.GetProperty("leftovers");
+        var leftover = leftovers.EnumerateArray().Single();
+        Assert.EndsWith("compatibility.log", leftover.GetProperty("relativePath").GetString());
+        Assert.True(leftover.GetProperty("isLog").GetBoolean());
+        Assert.True(File.Exists(Path.Combine(Ue4ssModFolder, "compatibility.log")));
+    }
+
+    [Fact]
+    public void Remove_leftovers_moves_them_into_the_backups()
+    {
+        Assert.Equal(0, Run("install", Ue4ssModDownload(), "--yes").Code);
+        var log = Path.Combine(Ue4ssModFolder, "compatibility.log");
+        Write(log, "Verified UE4SS ...");
+
+        var moved = Run("uninstall", "MyMod", "--yes", "--remove-leftovers", "--json");
+        Assert.Equal(0, moved.Code);
+        Assert.False(File.Exists(log));
+        using var json = JsonDocument.Parse(moved.Out);
+        var backup = json.RootElement.GetProperty("leftoverBackup").GetString()!;
+        Assert.True(Directory.Exists(backup));
+        Assert.Contains(Directory.GetFiles(backup, "*", SearchOption.AllDirectories), file => file.EndsWith("compatibility.log"));
+    }
 }

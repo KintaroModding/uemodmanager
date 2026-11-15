@@ -740,14 +740,163 @@ public sealed class ModManager
         });
     }
 
-    /// <summary>Removes a mod from the game and from the library.</summary>
-    /// <returns>The folder the player's changed settings were backed up to, or null when there were none.</returns>
-    public string? Uninstall(string id)
+    /// <summary>The files a mod left in the game that its record does not own, such as logs it wrote while running.</summary>
+    /// <remarks>
+    /// A file counts as left behind when it sits in a folder of this mod, that is a folder below a target that holds no
+    /// file of another mod, and no mod's record names it. Files in a shared folder such as ~mods are never counted: the
+    /// player put them there.
+    /// </remarks>
+    /// <exception cref="ModException">No mod has that id.</exception>
+    public IReadOnlyList<ModLeftover> LeftoversOf(string id)
+    {
+        lock (gate)
+            return LeftoversOf(Find(id));
+    }
+
+    private IReadOnlyList<ModLeftover> LeftoversOf(ModRecord mod)
+    {
+        var leftovers = new List<ModLeftover>();
+        var managed = mods.SelectMany(record => record.Files)
+            .Where(file => file.DeployedPath is { Length: > 0 })
+            .Select(file => Path.GetFullPath(file.DeployedPath!))
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        foreach (var folder in OwnedFolders(mod))
+        {
+            IEnumerable<string> files;
+            try
+            {
+                if (!Directory.Exists(folder))
+                    continue;
+                files = Directory.EnumerateFiles(folder, "*", SearchOption.AllDirectories).ToList();
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                Log.Warn($"The folder '{folder}' could not be read for the files a mod left behind: {ex.Message}");
+                continue;
+            }
+            foreach (var file in files)
+            {
+                var path = Path.GetFullPath(file);
+                if (managed.Contains(path) || file.EndsWith(RemovingSuffix, StringComparison.OrdinalIgnoreCase))
+                    continue;
+                long size;
+                try
+                {
+                    size = new FileInfo(path).Length;
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    size = 0;
+                }
+                leftovers.Add(new ModLeftover(path, BelowGame(path), size));
+            }
+        }
+        return leftovers.OrderBy(leftover => leftover.RelativePath, StringComparer.OrdinalIgnoreCase).ToList();
+    }
+
+    /// <summary>
+    /// The folders a mod has to itself: the parent of each of its deployed files that is below a target and has no file
+    /// of another mod anywhere below it. A folder already under one of these is not listed again.
+    /// </summary>
+    private IReadOnlyList<string> OwnedFolders(ModRecord mod)
+    {
+        var others = mods.Where(record => record != mod).SelectMany(record => record.Files)
+            .Where(file => file.DeployedPath is { Length: > 0 })
+            .Select(file => Path.GetFullPath(file.DeployedPath!))
+            .ToList();
+        var folders = new List<string>();
+        foreach (var file in mod.Files.Where(file => file.DeployedPath is { Length: > 0 }))
+        {
+            var path = Path.GetFullPath(file.DeployedPath!);
+            var root = Path.GetFullPath(TargetFolder(file.Target));
+            var chain = new List<string>();
+            for (var folder = Path.GetDirectoryName(path); folder is not null && IsUnder(folder, root); folder = Path.GetDirectoryName(folder))
+                chain.Insert(0, folder);
+            // The shallowest folder of this file that no other mod has a file in: the mod's own folder, not a shared one.
+            var owned = chain.FirstOrDefault(folder => !others.Any(other => IsUnder(other, folder)));
+            if (owned is not null)
+                folders.Add(owned);
+        }
+        var candidates = folders.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+        return candidates.Where(folder => !candidates.Any(other => !IsSame(other, folder) && IsUnder(folder, other))).ToList();
+    }
+    private bool IsSame(string a, string b) => string.Equals(Path.TrimEndingDirectorySeparator(a), Path.TrimEndingDirectorySeparator(b), StringComparison.OrdinalIgnoreCase);
+
+    private static bool IsUnder(string path, string folder) =>
+        path.Length > folder.Length
+        && path.StartsWith(Path.TrimEndingDirectorySeparator(folder) + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+
+    private string BelowGame(string path) => Path.GetRelativePath(Game.RootPath, path);
+
+    /// <summary>
+    /// Moves the files a mod left behind into the manager's backups, under "leftovers", and returns that folder; null
+    /// when there was nothing to move. The files are moved, not deleted, so the player can take them back out.
+    /// </summary>
+    public string? MoveLeftoversToBackups(IReadOnlyList<ModLeftover> leftovers, string modName)
+    {
+        lock (gate)
+        {
+            EnsureCanChange();
+            var moving = leftovers.Where(leftover => File.Exists(leftover.Path)).ToList();
+            if (moving.Count == 0)
+                return null;
+            var folder = Path.Combine(paths.BackupDir(Game.Profile.Id),
+                $"{DateTime.Now:yyyyMMdd-HHmmss} {FileSystem.SafeName(modName, "leftovers")} leftovers");
+            var moved = 0;
+            foreach (var leftover in moving)
+            {
+                var below = Path.IsPathRooted(leftover.RelativePath) ? Path.GetFileName(leftover.Path) : leftover.RelativePath;
+                var destination = Path.Combine(folder, below.Replace('/', Path.DirectorySeparatorChar));
+                try
+                {
+                    Directory.CreateDirectory(Path.GetDirectoryName(destination)!);
+                    File.Move(leftover.Path, destination);
+                    moved++;
+                    RemoveEmptyFolders(leftover.Path);
+                }
+                catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+                {
+                    Log.Warn($"The file '{leftover.Path}' a mod left behind could not be moved: {ex.Message}");
+                }
+            }
+            if (moved == 0)
+            {
+                FileSystem.TryDeleteDirectory(folder);
+                return null;
+            }
+            Log.Info($"Moved {moved} file(s) a mod left behind to '{folder}'.");
+            return folder;
+        }
+    }
+
+    /// <summary>Removes the folders a removed file leaves empty, up to the target folder, and stops at the game's folder.</summary>
+    private void RemoveEmptyFolders(string removedPath)
+    {
+        var root = Path.GetFullPath(Game.RootPath);
+        for (var folder = Path.GetDirectoryName(Path.GetFullPath(removedPath)); folder is not null && IsUnder(folder, root); folder = Path.GetDirectoryName(folder))
+        {
+            try
+            {
+                if (!Directory.Exists(folder) || Directory.EnumerateFileSystemEntries(folder).Any())
+                    return;
+                Directory.Delete(folder);
+            }
+            catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
+            {
+                return;
+            }
+        }
+    }
+
+    /// <summary>Removes a mod from the game and from the library, keeping the files it left behind, or moving them aside.</summary>
+    /// <param name="moveLeftovers">Move the files the mod left in the game into the backups instead of keeping them there.</param>
+    public ModUninstallResult Uninstall(string id, bool moveLeftovers = false)
     {
         lock (gate)
         {
             EnsureCanChange();
             var mod = Find(id);
+            var leftovers = LeftoversOf(mod);
             var removal = mod.Enabled ? Undeploy(mod) : null;
             string? backup;
             try
@@ -771,8 +920,9 @@ public sealed class ModManager
                     FileSystem.TryDeleteDirectory(backup);
             });
             FileSystem.TryDeleteDirectory(LibraryFolderOf(mod));
-            Log.Info($"Uninstalled \"{mod.Name}\".");
-            return backup;
+            var leftoverBackup = moveLeftovers ? MoveLeftoversToBackups(leftovers, mod.Name) : null;
+            Log.Info($"Uninstalled \"{mod.Name}\"{ (leftovers.Count > 0 ? $", keeping {leftovers.Count} file(s) it left behind" : "") }.");
+            return new ModUninstallResult(backup, leftovers, leftoverBackup);
         }
     }
 

@@ -757,7 +757,7 @@ UEModManager.exe --cli status | list | verify
 UEModManager.exe --cli plan <archive|folder>
 UEModManager.exe --cli install <archive|folder> --yes
 UEModManager.exe --cli enable <mod> | disable <mod>
-UEModManager.exe --cli uninstall <mod> --yes
+UEModManager.exe --cli uninstall <mod> --yes [--remove-leftovers]
 UEModManager.exe --cli backup list | create | restore | personal | note | delete
 UEModManager.exe --cli ue4ss status [--check]
 UEModManager.exe --cli ue4ss install [--package <file>] [--ue4ss-version <tag>]
@@ -832,6 +832,9 @@ UEModManager.exe --cli ue4ss remove --yes
   download is left behind.
 - `--ue4ss-manifest-url <url>` reads a test copy of the UE4SS manifest, as the
   app's own option of that name does.
+- `uninstall` keeps the files a mod wrote itself, such as its logs, and lists them: they are not in the
+  mod's record, so its record cannot remove them with it. `--remove-leftovers` moves them into the
+  manager's backups first, below `leftovers`, so the player can take them out again.
 - `UEModManager.exe` is a window program, so a terminal does not wait for it.
   Pipe the output (`... --cli list | more`, in PowerShell `| Out-String`), use
   `start /wait` in cmd or `Start-Process -Wait` in PowerShell. Scripts that wait

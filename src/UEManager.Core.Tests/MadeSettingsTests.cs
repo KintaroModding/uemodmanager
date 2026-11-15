@@ -130,7 +130,7 @@ public class MadeSettingsTests : IDisposable
         GameMakesTheFile();
         manager = Start();
 
-        var backup = manager.Uninstall(manager.Mods.Single().Id);
+        var backup = manager.Uninstall(manager.Mods.Single().Id).SettingsBackup;
 
         Assert.False(File.Exists(MadeFile));
         Assert.NotNull(backup);
