@@ -39,6 +39,24 @@ public static partial class ModNaming
     }
 
     /// <summary>
+    /// The file's own name on the mod site, from a download that kept the site's file name, such as "PBZMapMarkers
+    /// 1.8.4 Fog Teleport" in "PBZMapMarkers 1.8.4 Fog Teleport 134 1.8.4 2026-11-13T06-56Z R1oU2qvzl.zip"; null for
+    /// any other name. The update check uses it to find the file the player has among the page's files.
+    /// </summary>
+    public static string? SiteFileName(string? fileName)
+    {
+        if (string.IsNullOrWhiteSpace(fileName))
+            return null;
+        var name = Path.GetFileName(Path.TrimEndingDirectorySeparator(fileName));
+        foreach (var stem in new[] { name, Path.GetFileNameWithoutExtension(name) })
+        {
+            if (SiteMatch(stem) is { } site)
+                return site.Match.Groups["name"].Value;
+        }
+        return null;
+    }
+
+    /// <summary>
     /// Whether <paramref name="name"/> is one the app made from the download's file name, as the install review suggests
     /// it now or as older versions did from the whole name; false for a name the player gave the mod. An update keeps a
     /// player's name, and takes the new download's name for any other.

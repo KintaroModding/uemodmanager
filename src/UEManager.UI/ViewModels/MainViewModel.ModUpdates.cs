@@ -34,10 +34,10 @@ public sealed partial class MainViewModel
     public bool IsCheckingModUpdates => checkingModUpdates;
 
     /// <summary>
-    /// The page version per mod number on the site, from the last check. A mod's state comes from its own version at
-    /// the time, so an update in the manager shows at once, without asking the site again.
+    /// The page version and files per mod number on the site, from the last check. A mod's state comes from its own
+    /// version at the time, so an update in the manager shows at once, without asking the site again.
     /// </summary>
-    private readonly Dictionary<string, string> pageVersions = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, ModSitePage> sitePages = new(StringComparer.Ordinal);
 
     private bool checkingModUpdates;
     /// <summary>When the last check started, on the system's running clock (<see cref="Environment.TickCount64"/>), which a change of the PC's clock does not move; null before the first.</summary>
@@ -57,13 +57,14 @@ public sealed partial class MainViewModel
             return null;
         if (IsFromCatalog(mod))
             return CatalogUpdateOf(mod);
-        if (ModNaming.SiteModId(mod.SourceFileName) is not { } id || !pageVersions.TryGetValue(id, out var page)
+        if (ModNaming.SiteModId(mod.SourceFileName) is not { } id || !sitePages.TryGetValue(id, out var page)
             || InstalledVersion(mod) is not { } installed)
             return null;
-        return ModSiteVersions.Compare(installed, page) switch
+        var check = ModSiteVersions.Check(installed, mod.SourceFileName, page);
+        return check.State switch
         {
-            ModSiteState.UpdateAvailable => new ModUpdateStatus(true, page, installed),
-            ModSiteState.UpToDate => new ModUpdateStatus(false, page, installed),
+            ModSiteState.UpdateAvailable => new ModUpdateStatus(true, check.ComparedVersion!, installed),
+            ModSiteState.UpToDate => new ModUpdateStatus(false, check.ComparedVersion!, installed),
             _ => null,
         };
     }
@@ -119,12 +120,12 @@ public sealed partial class MainViewModel
         RefreshMods();
     }
 
-    /// <summary>Puts in the page versions a check found, per mod number, and shows them in the rows.</summary>
-    internal void ShowModUpdates(IReadOnlyDictionary<string, string> found)
+    /// <summary>Puts in the pages a check found, per mod number, and shows them in the rows.</summary>
+    internal void ShowModUpdates(IReadOnlyDictionary<string, ModSitePage> found)
     {
-        pageVersions.Clear();
-        foreach (var (id, version) in found)
-            pageVersions[id] = version;
+        sitePages.Clear();
+        foreach (var (id, page) in found)
+            sitePages[id] = page;
         RefreshMods();
     }
 
@@ -150,12 +151,12 @@ public sealed partial class MainViewModel
     /// </summary>
     public IReadOnlyList<string> UpdateNotes =>
     [
-        L.T("What is compared: your version of a mod against the version on its mod page. The app finds the page by the mod's number in the download's file name, such as 61 in \"Travel Anywhere 61 1.0.1 2026-10-29T13-42Z LbtEo64mS.zip\", so keep that name: a renamed download has no mod page and no check. Your version, 1.0.1 here, comes from the same name, or from Edit."),
+        L.T("What is compared: your version of a mod against the version of the file you have on its page, as the file's name in the download tells it; else against the page's main file, else the version the author set on the page. The app finds the page by the mod's number in the download's file name, such as 61 in \"Travel Anywhere 61 1.0.1 2026-10-29T13-42Z LbtEo64mS.zip\", so keep that name: a renamed download has no mod page and no check. Your version, 1.0.1 here, comes from the same name, or from Edit."),
         L.T("When: at each start and when you click the button; then the button waits 30 seconds. The app sends only the game's ID and the mod IDs, needs no account and downloads nothing. Settings ▸ Mod updates turns off the check at start."),
-        L.T("The box: Update available when the page has a newer version, Up to date when it has the same or an older one. Its tooltip shows both versions. An empty box means the check failed or could not compare the two: the app log says why."),
+        L.T("The box: Update available when the file you have has a newer version, Up to date when it has the same or an older one. Its tooltip shows both versions. An empty box means the check failed or could not compare the two: the app log says why."),
         L.T("The rules: numbers are compared one by one, so 1.10 is newer than 1.9, and 1.6 equals 1.6.0. Text after the numbers counts only when the numbers are the same: a single letter in the alphabet's order, so 1.2b is newer than 1.2a; other text, such as 1.2-beta against 1.2, leaves the box empty unless both versions are the same."),
         L.T("Mods from the openmods page are compared with their newest release on openmods, which the app reads at most every 10 minutes. Their box says Install update: one click downloads and installs it."),
-        L.T("The limits: a mod page has one version, the one its author sets, and the check does not know which file you have. So a new file without a new page version shows no update, a file version unlike the page's, such as 10 against 1.2.4, cannot be compared, and all files on one page, such as optional files, share one version."),
+        L.T("The limits: the download's file name is the only sign of which file you have, so a renamed download is compared with the page's main file. A file the page no longer lists counts as the newest file of its variant; a page whose files the site does not tell leaves only the version the author set on the page."),
         L.T("If a box looks wrong, compare the versions in its tooltip with the mod page, and fix yours with Edit. To keep your version, turn off Check this mod for updates in the mod's details: the box then says Not tracked."),
     ];
 
@@ -218,7 +219,7 @@ public sealed partial class MainViewModel
             // the rows change when it stops. The openmods list shows its mods' boxes itself once it is read.
             var shortest = Task.Delay(ModUpdateSpin);
             var asking = ids.Count == 0
-                ? Task.FromResult<IReadOnlyDictionary<string, string>?>(null)
+                ? Task.FromResult<IReadOnlyDictionary<string, ModSitePage>?>(null)
                 : ModSiteVersions.FetchAsync(Http, Profile.ModSiteApiUrl!, Profile.ModSiteGameId!, ids, AppInfo.Version, ModUpdateTimeout);
             var reading = fromCatalog ? Catalog!.LoadAsync() : Task.CompletedTask;
             await Task.WhenAll(shortest, asking, reading);

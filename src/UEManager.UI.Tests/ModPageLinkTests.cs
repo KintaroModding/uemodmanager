@@ -2,6 +2,7 @@ using System.IO;
 using UEManager.Core.Games;
 using UEManager.Core.Mods;
 using UEManager.Core.Storage;
+using UEManager.Core.Updates;
 using UEManager.UI.Services;
 using UEManager.UI.ViewModels;
 using Xunit;
@@ -14,6 +15,8 @@ namespace UEManager.UI.Tests;
 /// </summary>
 public class ModPageLinkTests : IDisposable
 {
+    private static IReadOnlyDictionary<string, ModSitePage> Pages(params (string Id, string Version)[] pages) =>
+        pages.ToDictionary(p => p.Id, p => new ModSitePage(p.Version, []));
     private const string SiteDownload = "Travel Anywhere 61 1.0.1 2026-10-29T13-42Z LbtEo64mS.zip";
 
     private readonly string folder = Path.Combine(Path.GetTempPath(), "uemm-mod-page-" + Guid.NewGuid().ToString("N"));
@@ -71,7 +74,7 @@ public class ModPageLinkTests : IDisposable
     [Fact]
     public void The_update_box_shows_what_the_check_found() => With("https://example.test/game/mods/{id}", model =>
     {
-        model.ShowModUpdates(new Dictionary<string, string> { ["61"] = "1.0.2" });
+        model.ShowModUpdates(Pages(("61", "1.0.2")));
         var row = Row(model, SiteDownload);
         model.Mods.Add(row);
 
@@ -82,7 +85,7 @@ public class ModPageLinkTests : IDisposable
         Assert.True(model.IsAnyUpdateAvailable);
         Assert.True(Details(model, SiteDownload).IsUpdateAvailable);
 
-        model.ShowModUpdates(new Dictionary<string, string> { ["61"] = "1.0.1" });
+        model.ShowModUpdates(Pages(("61", "1.0.1")));
         var again = Row(model, SiteDownload);
 
         Assert.False(again.IsUpdateAvailable);
@@ -95,7 +98,7 @@ public class ModPageLinkTests : IDisposable
         Assert.False(Row(model, SiteDownload).IsUpdateAvailable);
         Assert.False(Row(model, SiteDownload).IsUpToDate);
 
-        model.ShowModUpdates(new Dictionary<string, string> { ["61"] = "1.0.2" });
+        model.ShowModUpdates(Pages(("61", "1.0.2")));
 
         Assert.False(Row(model, "Travel Anywhere.zip").IsUpdateAvailable);
         Assert.False(Row(model, SiteDownload, recommended: true).IsUpdateAvailable);
@@ -106,7 +109,7 @@ public class ModPageLinkTests : IDisposable
     [Fact]
     public void A_mod_update_shows_at_once_from_the_page_version_already_known() => With("https://example.test/game/mods/{id}", model =>
     {
-        model.ShowModUpdates(new Dictionary<string, string> { ["61"] = "1.0.2" });
+        model.ShowModUpdates(Pages(("61", "1.0.2")));
         Assert.True(Row(model, SiteDownload).IsUpdateAvailable);
 
         // The updated mod's new download has the same number on the site and the page's version.
@@ -121,13 +124,13 @@ public class ModPageLinkTests : IDisposable
     {
         // Installed on 2026-10-31, before the app read a name that ends in "(1)": no version in the list.
         const string source = "Cutscene Skip 1.0.0 32 1.0.0 2026-10-29T07-06Z Q3IfNbyi9(1).zip";
-        model.ShowModUpdates(new Dictionary<string, string> { ["32"] = "1.0.0" });
+        model.ShowModUpdates(Pages(("32", "1.0.0")));
 
         var row = new ModItemViewModel(model, new ModRecord { Id = "c", Name = "Cutscene Skip", SourceFileName = source }, Path.Combine(folder, "library"));
 
         Assert.True(row.IsUpToDate);
 
-        model.ShowModUpdates(new Dictionary<string, string> { ["32"] = "1.1.0" });
+        model.ShowModUpdates(Pages(("32", "1.1.0")));
         var newer = new ModItemViewModel(model, new ModRecord { Id = "c", Name = "Cutscene Skip", SourceFileName = source }, Path.Combine(folder, "library"));
 
         Assert.True(newer.IsUpdateAvailable);
@@ -137,7 +140,7 @@ public class ModPageLinkTests : IDisposable
     [Fact]
     public void A_mod_the_player_keeps_shows_not_tracked_instead_of_a_result() => With("https://example.test/game/mods/{id}", model =>
     {
-        model.ShowModUpdates(new Dictionary<string, string> { ["61"] = "1.0.2" });
+        model.ShowModUpdates(Pages(("61", "1.0.2")));
         var record = new ModRecord { Id = "a", Name = "Travel Anywhere", Version = "1.0.1", SourceFileName = SiteDownload, NotTracked = true };
 
         var row = new ModItemViewModel(model, record, Path.Combine(folder, "library"));
