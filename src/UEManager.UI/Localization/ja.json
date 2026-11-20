@@ -519,6 +519,7 @@
   "Show tray icon": "トレイアイコンを表示",
   "Showing the last {0} lines.": "末尾の{0}行を表示しています。",
   "Size": "サイズ",
+  "Smooth scrolling": "スムーズスクロール",
   "Some deployed files are gone. Disable and enable the mod to put them back.": "配置したファイルの一部がありません。MODを無効にしてから有効にすると復元できます。",
   "Some UE4SS files differ from the official build. Click for the list.": "一部のUE4SSファイルが公式ビルドと異なります。クリックで一覧を表示します。",
   "Something does not work? Make a report for the help channel on Discord: you say what happened, the manager adds the facts a helper asks for first.": "うまく動きませんか？Discordのヘルプチャンネル用のレポートを作成できます。起きたことを書けば、マネージャーがサポートに必要な基本情報を追加します。",

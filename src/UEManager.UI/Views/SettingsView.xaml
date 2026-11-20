@@ -83,6 +83,8 @@
                                    Text="{Binding Value, ElementName=UiScaleSlider, StringFormat={}{0:0}%}" />
                     </StackPanel>
                 </DockPanel>
+                <CheckBox Margin="0,14,0,0" HorizontalAlignment="Left" Content="{ui:Loc 'Smooth scrolling'}"
+                          IsChecked="{Binding SmoothScrolling}" />
             </StackPanel>
         </Border>
 

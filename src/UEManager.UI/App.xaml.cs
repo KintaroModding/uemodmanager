@@ -138,6 +138,7 @@ public partial class App : Application
         LanguageFonts.SetFont(settings.Font);
         LanguageFonts.SetUiScale(settings.UiScale);
         LanguageFonts.Follow(Resources);
+        SmoothScroll.Allowed = settings.SmoothScrolling;
         try
         {
             paths.EnsureWritable();

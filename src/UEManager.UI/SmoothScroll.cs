@@ -24,6 +24,9 @@ public static class SmoothScroll
     /// <summary>The pixels of a scroll line, as WPF's own wheel scrolling uses them.</summary>
     private const double LinePixels = 16;
 
+    /// <summary>The player's setting (Settings ▸ Smooth scrolling); off, every scroll area keeps Windows' own scrolling.</summary>
+    public static bool Allowed { get; set; } = true;
+
     public static readonly DependencyProperty IsEnabledProperty = DependencyProperty.RegisterAttached(
         "IsEnabled", typeof(bool), typeof(SmoothScroll), new PropertyMetadata(false, OnIsEnabledChanged));
 
@@ -46,7 +49,7 @@ public static class SmoothScroll
     private static void OnWheel(object sender, MouseWheelEventArgs e)
     {
         var viewer = (ScrollViewer)sender;
-        if (e.Handled || e.Delta == 0 || Keyboard.Modifiers != ModifierKeys.None || !SystemParameters.ClientAreaAnimation)
+        if (!Allowed || e.Handled || e.Delta == 0 || Keyboard.Modifiers != ModifierKeys.None || !SystemParameters.ClientAreaAnimation)
             return;
         // The preview reaches the outer scroll areas first: each lets it pass unless it is the one the wheel belongs to.
         if (!ReferenceEquals(Target(e.OriginalSource as DependencyObject, e.Delta), viewer) || viewer.CanContentScroll)

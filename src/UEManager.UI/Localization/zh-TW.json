@@ -519,6 +519,7 @@
   "Show tray icon": "顯示系統匣圖示",
   "Showing the last {0} lines.": "僅顯示最後 {0} 行。",
   "Size": "大小",
+  "Smooth scrolling": "平滑捲動",
   "Some deployed files are gone. Disable and enable the mod to put them back.": "部分已部署的檔案已遺失。請停用並重新啟用模組以還原檔案。",
   "Some UE4SS files differ from the official build. Click for the list.": "部分 UE4SS 檔案與官方組建不同。點選以查看清單。",
   "Something does not work? Make a report for the help channel on Discord: you say what happened, the manager adds the facts a helper asks for first.": "遇到問題嗎？建立一份報告，貼到 Discord 求助頻道。你只需描述發生的情況，管理器會補上協助排查問題所需的基本資訊。",

@@ -519,6 +519,7 @@
   "Show tray icon": "显示托盘图标",
   "Showing the last {0} lines.": "仅显示最后 {0} 行。",
   "Size": "大小",
+  "Smooth scrolling": "平滑滚动",
   "Some deployed files are gone. Disable and enable the mod to put them back.": "部分已部署的文件缺失。请禁用并重新启用模组以恢复文件。",
   "Some UE4SS files differ from the official build. Click for the list.": "部分 UE4SS 文件与官方版本不同。点击查看列表。",
   "Something does not work? Make a report for the help channel on Discord: you say what happened, the manager adds the facts a helper asks for first.": "遇到问题？为 Discord 帮助频道生成一份报告。您描述发生了什么，管理器补充排查所需的信息。",

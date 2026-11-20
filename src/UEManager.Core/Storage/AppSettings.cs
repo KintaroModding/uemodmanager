@@ -99,6 +99,12 @@ public sealed class AppSettings
     /// <summary>The openmods page hides the mods and tools the player installed from it. Off until the player turns it on.</summary>
     public bool CatalogHideInstalled { get; set; }
 
+    /// <summary>
+    /// The mouse wheel glides instead of jumping (SmoothScroll). On until the player turns it off; a glide draws a frame
+    /// at every screen refresh while it runs.
+    /// </summary>
+    public bool SmoothScrolling { get; set; } = true;
+
     /// <summary>The player removed the Donate button from the sidebar. The About page keeps it.</summary>
     public bool HideDonateButton { get; set; }
 

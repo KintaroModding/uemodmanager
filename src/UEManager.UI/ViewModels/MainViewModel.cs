@@ -309,6 +309,21 @@ public sealed partial class MainViewModel : LocalizedObservableObject
         }
     }
 
+    /// <summary>The mouse wheel glides (SmoothScroll); off, it jumps as Windows scrolls.</summary>
+    public bool SmoothScrolling
+    {
+        get => settings.SmoothScrolling;
+        set
+        {
+            if (value == settings.SmoothScrolling)
+                return;
+            settings.SmoothScrolling = value;
+            SmoothScroll.Allowed = value;
+            SaveSettings();
+            OnPropertyChanged();
+        }
+    }
+
     public int UiScaleMin => AppSettings.MinUiScale;
 
     public int UiScaleMax => AppSettings.MaxUiScale;

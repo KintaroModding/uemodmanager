@@ -519,6 +519,7 @@
   "Show tray icon": "트레이 아이콘 표시",
   "Showing the last {0} lines.": "마지막 {0}줄을 표시합니다.",
   "Size": "크기",
+  "Smooth scrolling": "부드러운 스크롤",
   "Some deployed files are gone. Disable and enable the mod to put them back.": "배치한 파일 일부가 없습니다. 모드를 비활성화한 뒤 다시 활성화하면 복원됩니다.",
   "Some UE4SS files differ from the official build. Click for the list.": "일부 UE4SS 파일이 공식 빌드와 다릅니다. 클릭하면 목록을 표시합니다.",
   "Something does not work? Make a report for the help channel on Discord: you say what happened, the manager adds the facts a helper asks for first.": "작동하지 않는 부분이 있습니까? Discord 도움말 채널용 보고서를 만드십시오. 일어난 일을 적으면 매니저가 도움을 주는 데 필요한 기본 정보를 추가합니다.",

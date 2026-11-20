@@ -79,6 +79,23 @@ public class AppSettingsTests
     }
 
     [Fact]
+    public void Smooth_scrolling_is_on_until_the_player_turns_it_off()
+    {
+        using var folder = new TestFolder();
+        var paths = new AppPaths(folder.Combine("Data"));
+        Directory.CreateDirectory(paths.Root);
+        File.WriteAllText(paths.SettingsFile, "{\"backUpSavesOnLaunch\":true}");
+
+        var settings = AppSettings.Load(paths);
+        Assert.True(settings.SmoothScrolling);
+
+        settings.SmoothScrolling = false;
+        settings.Save(paths);
+
+        Assert.False(AppSettings.Load(paths).SmoothScrolling);
+    }
+
+    [Fact]
     public void The_window_place_survives_a_restart()
     {
         using var folder = new TestFolder();
