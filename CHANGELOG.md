@@ -4,6 +4,10 @@ What changed in each release of UE MM, newest first: one short line per change.
 The app shows this list (the **Changelog** link in the sidebar's update box), so
 every release adds its section at the top, as `## <version> (<yyyy-mm-dd>)`.
 
+## 2.4.1 (2026-11-20)
+- The open window no longer keeps the graphics card busy while nothing happens: a hidden busy spinner kept it redrawing
+- Settings ▸ Interface language: Smooth scrolling can be turned off
+
 ## 2.4.0 (2026-11-19)
 - Settings ▸ Interface language: choose the font and the interface scale (85 to 140 %); titles keep the game's own font (thanks, HumanMus1c)
 

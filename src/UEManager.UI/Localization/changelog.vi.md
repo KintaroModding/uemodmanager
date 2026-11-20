@@ -2,6 +2,10 @@
 
 Bản tiếng Việt của CHANGELOG.md: giữ nguyên tiêu đề, mỗi thay đổi một dòng. Phiên bản chưa dịch hiển thị bằng tiếng Anh.
 
+## 2.4.1 (2026-11-20)
+- Cửa sổ đang mở không còn làm card đồ họa bận liên tục khi không có gì xảy ra: một biểu tượng đang xử lý bị ẩn đã khiến nó vẽ lại liên tục
+- Cài đặt ▸ Ngôn ngữ giao diện: có thể tắt Cuộn mượt
+
 ## 2.4.0 (2026-11-19)
 - Cài đặt ▸ Ngôn ngữ giao diện: chọn phông chữ và tỷ lệ giao diện (85 đến 140 %); tiêu đề vẫn giữ phông chữ riêng của trò chơi (cảm ơn HumanMus1c)
 
