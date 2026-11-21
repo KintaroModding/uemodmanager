@@ -233,6 +233,58 @@ public sealed class CliTests : IDisposable
     }
 
     [Fact]
+    public void Share_files_keeps_both_mods_and_shares_the_files_that_are_the_same()
+    {
+        // Two character mods of one author with the same framework, as Mo Yuan and Play as Bai Chilian (2026-11-21).
+        (string, string)[] Files(string name) =>
+        [
+            ("Bridge_P.pak", "bridge"),
+            ($"{name}_P.pak", $"{name} pak"),
+            ("Core/Scripts/main.lua", "-- core"),
+            ($"Core/Scripts/Profile_{name}.lua", $"-- {name}"),
+            ("Core/enabled.txt", ""),
+        ];
+        var mo = Zip("Mo-446-7-1730000010.zip", Files("Mo"));
+        var bai = Zip("Bai-388-11-1730000011.zip", Files("Bai"));
+        Assert.Equal(0, Run("install", mo, "--yes").Code);
+
+        // Without --share-files the plan replaces Mo, and offers to share.
+        using (var plan = JsonDocument.Parse(Run("plan", bai).Out))
+        {
+            Assert.Equal(JsonValueKind.Object, plan.RootElement.GetProperty("replaces").ValueKind);
+            Assert.False(plan.RootElement.GetProperty("shareFiles").GetBoolean());
+            var offer = plan.RootElement.GetProperty("shareOffer");
+            Assert.Equal("Mo", offer.GetProperty("mods")[0].GetString());
+            Assert.Equal(3, offer.GetProperty("files").GetInt32());
+        }
+
+        var both = Run("install", bai, "--share-files", "--keep-both", "--yes");
+        Assert.Equal(1, both.Code);
+        Assert.Contains("cannot be used together", both.Error);
+
+        using (var plan = JsonDocument.Parse(Run("plan", bai, "--share-files").Out))
+        {
+            Assert.True(plan.RootElement.GetProperty("canInstall").GetBoolean());
+            Assert.Equal(JsonValueKind.Null, plan.RootElement.GetProperty("replaces").ValueKind);
+            Assert.Equal(3, plan.RootElement.GetProperty("sharesWith").GetProperty("files").GetInt32());
+        }
+
+        var (code, output, _) = Run("install", bai, "--share-files", "--yes");
+        Assert.Equal(0, code);
+        Assert.Contains("Shares 3 file(s) with \"Mo\".", output);
+        using var list = JsonDocument.Parse(Run("list", "--json").Out);
+        Assert.Equal(2, list.RootElement.GetProperty("count").GetInt32());
+        Assert.True(File.Exists(Path.Combine(ModsFolder, "Mo_P.pak")));
+        Assert.True(File.Exists(Path.Combine(ModsFolder, "Bai_P.pak")));
+        Assert.Equal("bridge", File.ReadAllText(Path.Combine(ModsFolder, "Bridge_P.pak")));
+
+        // Turning Mo off keeps the framework for Bai.
+        Assert.Equal(0, Run("disable", "Mo").Code);
+        Assert.False(File.Exists(Path.Combine(ModsFolder, "Mo_P.pak")));
+        Assert.True(File.Exists(Path.Combine(ModsFolder, "Bridge_P.pak")));
+    }
+
+    [Fact]
     public void Keep_both_says_so_when_the_download_must_take_the_mods_place()
     {
         // A pak and a Lua mod: a folder of its own keeps the pak apart, but the Lua mod has one place in the game.

@@ -42,17 +42,25 @@ internal sealed record PlanIgnoredDto(int Count, int LeftOutCount, IReadOnlyList
 
 internal sealed record PlanSelectionDto(bool AllParts, int PartCount, int SelectedCount, IReadOnlyList<string> SelectedLabels);
 
+/// <summary>Installed mods with files at a download's places, byte for byte the same, and how many such files.</summary>
+internal sealed record PlanSharingDto(IReadOnlyList<string> Mods, int Files);
+
 /// <summary>The read-only install plan: the same Check the install review runs, without touching the game.</summary>
 /// <param name="KeepBoth">The download is installed as another mod beside the installed one with its file names or mod page.</param>
 /// <param name="OwnFolder">
 /// The folder below ~mods for the download's files that go there: a kept mod's own folder, or the folder of the mod it
 /// updates; null puts them directly in ~mods.
 /// </param>
+/// <param name="ShareFiles">--share-files: the download is kept beside the installed mods it shares files with.</param>
+/// <param name="ShareOffer">Without --share-files: installed mods it could share files with, when both sides have files
+/// of their own and the shared ones are byte for byte the same; null for none.</param>
+/// <param name="SharesWith">The installed mods this install shares files with, and how many; null for none.</param>
 internal sealed record PlanPayload(int SchemaVersion, string Command, string Source, string SourceFileName, string SuggestedName,
     string? SuggestedVersion, string GameId, GameInfo Game, PlanSelectionDto Selection, IReadOnlyList<PlanPartDto> Parts,
     IReadOnlyList<PlanEntryDto> Entries, IReadOnlyList<PlanEntryDto> ExistingFiles, IReadOnlyList<PlanEntryDto> GameFilesReplaced,
     PlanReplacedDto? Replaces, bool KeepBoth, string? OwnFolder, IReadOnlyList<string> EditedSettings, bool NeedsUe4ss,
-    bool CanInstall, IReadOnlyList<string> Problems, IReadOnlyList<string> Warnings, PlanIgnoredDto Ignored);
+    bool CanInstall, bool ShareFiles, PlanSharingDto? ShareOffer, PlanSharingDto? SharesWith,
+    IReadOnlyList<string> Problems, IReadOnlyList<string> Warnings, PlanIgnoredDto Ignored);
 
 internal sealed record InstallPayload(int SchemaVersion, string Command, string Source, ModDto Installed, PlanReplacedDto? Replaced,
     bool KeepBoth, string? OwnFolder, IReadOnlyList<string> Warnings);

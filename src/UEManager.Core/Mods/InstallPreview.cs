@@ -50,14 +50,27 @@ public sealed class InstallPreview : IDisposable
 /// <summary>The result of checking a selection against the game and the library before anything is written.</summary>
 /// <param name="NeedsUe4ss">The selection holds Lua, DLL or Blueprint mods, and UE4SS is not installed.</param>
 /// <param name="EditedSettings">Settings files of <paramref name="Replaces"/> that the player changed, such as "ModName/Scripts/config.lua".</param>
+/// <param name="ShareOffer">
+/// Installed mods have files at the download's places, each byte for byte the same, and both sides have files of their
+/// own: the player may say they work together and keep both, sharing those files (see <see cref="ModManager.Install"/>'s
+/// shareFiles). Null when that is not possible, or already chosen.
+/// </param>
+/// <param name="Sharing">The installed mods this install shares files with, and how many: by the player's choice, or
+/// because those files are shared already. Null when it shares none.</param>
+/// <param name="Clashes">Installed mods with files at the download's places that it neither replaces nor shares: the
+/// install waits for them (a problem says so), so keeping both in a folder of its own does not help then.</param>
 public sealed record InstallCheck(IReadOnlyList<FormattableString> Problems, IReadOnlyList<FormattableString> Warnings, ModRecord? Replaces,
-    bool NeedsUe4ss = false, IReadOnlyList<string>? EditedSettings = null)
+    bool NeedsUe4ss = false, IReadOnlyList<string>? EditedSettings = null, FileSharing? ShareOffer = null, FileSharing? Sharing = null,
+    IReadOnlyList<ModRecord>? Clashes = null)
 {
     public bool CanInstall => Problems.Count == 0;
 
     /// <summary>An update would replace settings the player changed, so the player chooses whether to keep them.</summary>
     public bool HasEditedSettings => EditedSettings is { Count: > 0 };
 }
+
+/// <summary>Installed mods with files at a download's places, byte for byte the same, and how many such files there are.</summary>
+public sealed record FileSharing(IReadOnlyList<ModRecord> Mods, int Files);
 
 /// <summary>
 /// An installed mod with a file of the same name as one of a download's files that go to ~mods, such as another style of

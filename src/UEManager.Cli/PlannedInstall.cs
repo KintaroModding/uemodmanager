@@ -10,7 +10,7 @@ namespace UEManager.Cli;
 internal sealed class PlannedInstall : IDisposable
 {
     private PlannedInstall(ModManager manager, InstallPreview preview, IReadOnlyList<PackageGroup> selected, InstallCheck check,
-        bool keepBoth, string? ownFolder, PlanPayload plan)
+        bool keepBoth, string? ownFolder, bool shareFiles, PlanPayload plan)
     {
         Manager = manager;
         Preview = preview;
@@ -18,6 +18,7 @@ internal sealed class PlannedInstall : IDisposable
         Check = check;
         KeepBoth = keepBoth;
         OwnFolder = ownFolder;
+        ShareFiles = shareFiles;
         Plan = plan;
     }
 
@@ -32,6 +33,9 @@ internal sealed class PlannedInstall : IDisposable
 
     /// <summary>The download is installed as another mod beside the installed one with its file names or mod page.</summary>
     public bool KeepBoth { get; }
+
+    /// <summary>--share-files: kept beside the installed mods that have some of its files, sharing those.</summary>
+    public bool ShareFiles { get; }
 
     /// <summary>
     /// The folder below ~mods for the download's files that go there: a kept mod's folder of its own, or the folder of
@@ -59,10 +63,21 @@ internal sealed class PlannedInstall : IDisposable
             var selected = arguments.Parts.Count > 0
                 ? Parts(preview, arguments.Parts).ToList()
                 : arguments.AllParts ? preview.Packages.ToList() : manager.FirstSelection(preview).ToList();
+            if (arguments.ShareFiles && arguments.KeepBoth)
+                throw new CliError("invalid-arguments", "Options '--share-files' and '--keep-both' cannot be used together.",
+                    details: ["--share-files keeps the installed mod and shares the files that are the same in both; --keep-both puts the download into a folder of its own."]);
             var check = manager.Check(preview, selected);
             // An update keeps the variant that is installed now, as the review does. A part the player named stays.
             if (arguments.Parts.Count == 0 && !arguments.AllParts && KeepInstalledVariant(preview, selected, check))
                 check = manager.Check(preview, selected);
+            // The player says the mods work together, as the review's box: keep both, sharing the files that are the
+            // same in both. No folder of its own, and no update.
+            if (arguments.ShareFiles)
+            {
+                check = manager.Check(preview, selected, shareFiles: true);
+                return new PlannedInstall(manager, preview, selected, check, false, null, true,
+                    BuildPlan(context, manager, preview, selected, check, arguments.AllParts, false, null, true));
+            }
             // Installed mods with the download's file names or mod page: the review's first choice, by the same rule in
             // Core, so a file from the same mod page is kept beside the mod and does not remove it. --keep-both keeps
             // the installed mod in any case: the download goes into a folder of its own below ~mods, as the review's
@@ -78,8 +93,8 @@ internal sealed class PlannedInstall : IDisposable
                 throw new CliError("keep-both-impossible",
                     $"Option '--keep-both' cannot keep \"{replaced.Name}\": this download takes its place, and the two cannot be in the game together.",
                     details: ["Install without --keep-both to update it, or uninstall it first."]);
-            return new PlannedInstall(manager, preview, selected, check, keepBoth, ownFolder,
-                BuildPlan(context, manager, preview, selected, check, arguments.AllParts, keepBoth, ownFolder));
+            return new PlannedInstall(manager, preview, selected, check, keepBoth, ownFolder, false,
+                BuildPlan(context, manager, preview, selected, check, arguments.AllParts, keepBoth, ownFolder, false));
         }
         catch
         {
@@ -162,7 +177,7 @@ internal sealed class PlannedInstall : IDisposable
     }
 
     private static PlanPayload BuildPlan(CliContext context, ModManager manager, InstallPreview preview,
-        IReadOnlyList<PackageGroup> selected, InstallCheck check, bool allParts, bool keepBoth, string? ownFolder)
+        IReadOnlyList<PackageGroup> selected, InstallCheck check, bool allParts, bool keepBoth, string? ownFolder, bool shareFiles)
     {
         var parts = preview.Packages.Select((part, index) => new PlanPartDto(index + 1, part.Name, part.Folder, part.Label,
             part.Kind.ToString(), part.Target.ToString(), part.TypeLabel, part.Size, part.Files.Count, selected.Contains(part),
@@ -195,10 +210,14 @@ internal sealed class PlannedInstall : IDisposable
                 [.. selected.Select(part => part.Label)]),
             parts, entries, existing, gameFiles, replaces, keepBoth, ownFolder, check.EditedSettings ?? [],
             check.NeedsUe4ss, check.CanInstall,
+            shareFiles, Sharing(check.ShareOffer), Sharing(check.Sharing),
             [.. check.Problems.Select(Output.Text)], [.. check.Warnings.Select(Output.Text)],
             new PlanIgnoredDto(preview.IgnoredFileCount, preview.LeftOutFiles.Count, preview.IgnoredFiles, preview.LeftOutFiles,
                 preview.NestedArchiveCount, preview.ContainsUe4ssRuntime));
     }
+
+    private static PlanSharingDto? Sharing(FileSharing? sharing) =>
+        sharing is null ? null : new PlanSharingDto([.. sharing.Mods.Select(mod => mod.Name)], sharing.Files);
 
     /// <summary>The installed mod whose file is at this place, if any; null for the game's own file or none.</summary>
     private static string? Owner(ModManager manager, DeployTarget target, string relativePath) =>

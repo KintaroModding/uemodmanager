@@ -741,6 +741,34 @@ keeps its place. The review warns that two mods may still change the same things
 the game: only one style or version shows then, and only the author can make both
 work together, with one combined mod.
 
+### Mods that share files
+
+Some authors give several mods the same base, byte for byte: the character mods
+of one author that bring the same framework, each with its own character pak and
+profile. When a download has files of an installed mod, all of them exactly the
+same (by SHA-256), and both have files of their own, the install review's choices
+end with **Keep both, and share the N files that are the same in both**. **Update**
+stays the first choice. Chosen, the download is installed beside the mod, and the
+files that are the same are shared: one copy in the game serves both, it stays
+while one of the mods is on, and it goes with the last of them, as UE4SS's shared
+libraries do. Only the player knows whether the mods work together, so tick it
+only when their authors say so. A settings file or a file of the game's own
+folders is never shared.
+
+Above the choices, the box **CHOICES EXPLAINED** opens a short note on each one:
+Update for a newer version of the same mod, Keep both in a folder of its own for
+another mod with only the same pak names, Keep both and share for mods of one author
+with the same base files. A choice that cannot work for the download is not shown:
+a folder of its own keeps only files for `~mods` apart, so with other files in
+common (as UE4SS files) it is left out.
+
+The mods' records remember it (`sharedWithMods` on each shared file in
+`mods.json`). A later mod with the same shared files shares them without the box,
+and an update of one of them keeps sharing. When an update brings those files in
+another version, the review asks to update or disable the other mod first, and
+the other mod cannot be turned on beside it until it has the same version, so two
+versions never mix in the game's one copy.
+
 ## Donating
 
 **Donate** above the Discord button opens a thank-you window with the PayPal link. A
@@ -866,6 +894,12 @@ UEModManager.exe --cli ue4ss remove --yes
   `keepBoth` and the folder as `ownFolder`, with no `replaces`. When the
   download must still take the mod's place (another choice of the same mod, or
   files outside `~mods`), `--keep-both` stops with an error.
+- `--share-files` is the install review's box for mods that share files (see
+  Mods that share files): the download is kept beside the installed mods that
+  have some of its files, byte for byte the same, and those files are shared.
+  The plan shows `shareOffer` when the box would be offered, and `sharesWith`
+  (the mods and the number of files) when the install shares files. It cannot be
+  combined with `--keep-both`.
 - `--staging <folder>` unpacks the download there instead of the data folder's
   `staging` folder, for example on a drive with more room. It must be outside
   the game folder.

@@ -4,6 +4,10 @@ What changed in each release of UE MM, newest first: one short line per change.
 The app shows this list (the **Changelog** link in the sidebar's update box), so
 every release adds its section at the top, as `## <version> (<yyyy-mm-dd>)`.
 
+## 2.5.0 (2026-11-21)
+- Mods of one author that bring the same base files can be installed together: the install review offers Keep both, and share the files that are the same in both
+- The install review: CHOICES EXPLAINED says what Update and the two ways to keep both are for, and a choice that cannot work for the download is no longer shown
+
 ## 2.4.1 (2026-11-20)
 - The open window no longer keeps the graphics card busy while nothing happens: a hidden busy spinner kept it redrawing
 - Settings ▸ Interface language: Smooth scrolling can be turned off

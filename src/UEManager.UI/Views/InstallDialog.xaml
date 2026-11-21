@@ -93,8 +93,42 @@
                     </DockPanel>
                     </StackPanel>
 
+                    <!-- What each choice below is for, like the technical notes' box: opens and closes below it. -->
+                    <StackPanel Margin="0,14,0,0" Visibility="{Binding HasPlaces, Converter={StaticResource Visible}}">
+                        <Button Padding="7,3" HorizontalAlignment="Left" Style="{StaticResource Button.StatusBox}" Command="{Binding ToggleChoicesHelpCommand}"
+                                Foreground="{StaticResource Brush.Info}" BorderBrush="{StaticResource Brush.Info}" Background="{StaticResource Brush.InfoWash}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Style="{StaticResource Text.Icon}" FontSize="11" Text="&#xE946;" />
+                                <TextBlock Margin="6,0,0,0" VerticalAlignment="Center" FontSize="11" Text="{ui:Loc 'CHOICES EXPLAINED'}" />
+                            </StackPanel>
+                        </Button>
+                        <Border Margin="0,8,0,0" Padding="14,4,14,10" CornerRadius="2" BorderThickness="1"
+                                Background="{StaticResource Brush.Field}" BorderBrush="{StaticResource Brush.LineStrong}"
+                                Visibility="{Binding IsChoicesHelpOpen, Converter={StaticResource Visible}}">
+                            <StackPanel>
+                                <StackPanel Margin="0,6,0,0">
+                                    <TextBlock FontWeight="SemiBold" TextWrapping="Wrap" Text="{ui:Loc 'Update'}" />
+                                    <TextBlock Margin="0,2,0,0" TextWrapping="Wrap" LineHeight="18" Style="{StaticResource Text.Small}" TextTrimming="None"
+                                               Text="{ui:Loc 'For a newer version of the same mod. Its files take the place of the installed ones, which come back if the update fails.'}" />
+                                </StackPanel>
+                                <StackPanel Margin="0,10,0,0">
+                                    <TextBlock FontWeight="SemiBold" TextWrapping="Wrap" Text="{ui:Loc 'Keep both, in a folder of its own'}" />
+                                    <TextBlock Margin="0,2,0,0" TextWrapping="Wrap" LineHeight="18" Style="{StaticResource Text.Small}" TextTrimming="None"
+                                               Text="{ui:Loc 'For another mod whose pak files only have the same names, such as a second style of an outfit. Its paks go into a folder of their own in ~mods. Both are in the game, but often only one of them shows.'}" />
+                                </StackPanel>
+                                <StackPanel Margin="0,10,0,0">
+                                    <TextBlock FontWeight="SemiBold" TextWrapping="Wrap" Text="{ui:Loc 'Keep both, and share the same files'}" />
+                                    <TextBlock Margin="0,2,0,0" TextWrapping="Wrap" LineHeight="18" Style="{StaticResource Text.Small}" TextTrimming="None"
+                                               Text="{ui:Loc 'For mods of one author that bring the same base files, such as several character mods with one framework. The files that are byte for byte the same are kept once and serve both. Choose it only when the authors say the mods work together.'}" />
+                                </StackPanel>
+                                <TextBlock Margin="0,10,0,0" TextWrapping="Wrap" Style="{StaticResource Text.Small}" TextTrimming="None"
+                                           Foreground="{StaticResource Brush.TextDim}" Text="{ui:Loc 'A choice that cannot work for this download is not shown.'}" />
+                            </StackPanel>
+                        </Border>
+                    </StackPanel>
+
                     <!-- The same file names as an installed mod: only the player knows whether this is its update. -->
-                    <Border Margin="0,14,0,0" Padding="14,10" CornerRadius="2" BorderThickness="1"
+                    <Border Margin="0,8,0,0" Padding="14,10" CornerRadius="2" BorderThickness="1"
                             Background="{StaticResource Brush.InfoPanel}" BorderBrush="{StaticResource Brush.Info}"
                             Visibility="{Binding HasPlaces, Converter={StaticResource Visible}}">
                         <StackPanel>
@@ -110,7 +144,17 @@
                             </ItemsControl>
                             <TextBlock Margin="0,6,0,0" TextWrapping="Wrap" LineHeight="19" Foreground="{StaticResource Brush.Warning}"
                                        Text="{Binding KeepBothText}" Visibility="{Binding KeepBothText, Converter={StaticResource VisibleIfSet}}" />
+                            <TextBlock Margin="0,6,0,0" TextWrapping="Wrap" LineHeight="19" Foreground="{StaticResource Brush.Warning}"
+                                       Text="{Binding ShareNote}" Visibility="{Binding ShareNote, Converter={StaticResource VisibleIfSet}}" />
                         </StackPanel>
+                    </Border>
+
+                    <!-- Files that other mods share already: this mod shares them too, with nothing to choose. -->
+                    <Border Margin="0,10,0,0" Padding="14,10" CornerRadius="2" BorderThickness="1"
+                            Background="{StaticResource Brush.Field}" BorderBrush="{StaticResource Brush.LineStrong}"
+                            Visibility="{Binding AlreadySharedText, Converter={StaticResource VisibleIfSet}}">
+                        <TextBlock TextWrapping="Wrap" LineHeight="18" Style="{StaticResource Text.Small}" TextTrimming="None"
+                                   Text="{Binding AlreadySharedText}" />
                     </Border>
 
                     <!-- Packages -->

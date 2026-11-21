@@ -320,6 +320,120 @@ public sealed class InstallDialogEntryTests : IDisposable
         Assert.Equal("Update", dialog.ConfirmText);
     }
 
+    /// <summary>Two character mods of one author that bring the same framework, as Mo Yuan and Play as Bai Chilian.</summary>
+    private void Character(string name)
+    {
+        foreach (var (relative, text) in new[]
+                 {
+                     ("Bridge_P.pak", "bridge"), ($"{name}_P.pak", name), (@"Core\Scripts\main.lua", "core"),
+                     ($@"Core\Scripts\Profile_{name}.lua", name), (@"Core\enabled.txt", ""),
+                 })
+        {
+            var path = Path.Combine(root, name, relative);
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            System.IO.File.WriteAllText(path, text);
+        }
+    }
+
+    [Fact]
+    public async Task Mods_with_the_same_framework_offer_to_keep_both_and_share_it()
+    {
+        var manager = Manager();
+        Character("Mo");
+        Character("Bai");
+        using (var mo = manager.Inspect(Path.Combine(root, "Mo")))
+            manager.Install(mo, mo.Packages.ToList(), "Mo", null);
+        using var preview = manager.Inspect(Path.Combine(root, "Bai"));
+
+        var dialog = new InstallDialogViewModel(manager, preview, () => { });
+
+        // One choice: update Mo (first, as before), or keep both and share. A folder of its own would not keep the
+        // framework's UE4SS files apart, so it is no choice here.
+        Assert.True(dialog.HasPlaces);
+        Assert.Equal(["Update \"Mo\"", "Keep both, and share the 3 files that are the same in both"], dialog.Places.Select(p => p.Label));
+        Assert.True(dialog.Places[0].IsSelected);
+        Assert.False(dialog.ShareFiles);
+        Assert.Null(dialog.ShareNote);
+        Assert.Equal("Update", dialog.ConfirmText);
+
+        dialog.Places[1].IsSelected = true;
+
+        Assert.False(dialog.Places[0].IsSelected);
+        Assert.True(dialog.ShareFiles);
+        Assert.Null(dialog.ReplaceText);
+        Assert.Null(dialog.KeepBothText);
+        Assert.Equal("Install", dialog.ConfirmText);
+        Assert.Contains("\"Mo\"", dialog.ShareNote);
+        Assert.Contains("only when the mods' authors say they work together", dialog.ShareNote);
+        Assert.True(dialog.InstallCommand.CanExecute(null));
+
+        // Back to the update, and then sharing again, which installs it beside Mo.
+        dialog.Places[0].IsSelected = true;
+        Assert.Equal("Update", dialog.ConfirmText);
+        Assert.Null(dialog.ShareNote);
+        dialog.Places[1].IsSelected = true;
+        dialog.InstallCommand.Execute(null);
+
+        var choice = (await dialog.Result)!;
+        Assert.True(choice.ShareFiles);
+        Assert.False(choice.Replace);
+        Assert.Null(choice.OwnFolder);
+        manager.Install(preview, choice.Packages, choice.Name, choice.Version, choice.Replace, ownFolder: choice.OwnFolder,
+            shareFiles: choice.ShareFiles);
+        Assert.Equal(["Bai", "Mo"], manager.Mods.Select(m => m.Name).Order(StringComparer.Ordinal));
+        Assert.All(manager.Mods, m => Assert.Equal(ModIntegrity.Intact, ModManager.Integrity(m)));
+    }
+
+    [Fact]
+    public void A_mod_that_shares_little_offers_sharing_without_a_choice_that_cannot_work()
+    {
+        // Few files in common, so not an update of Mo: keeping both in a folder of its own would still clash with Mo's
+        // UE4SS files, so only sharing is offered, and nothing is ticked until the player chooses it.
+        var manager = Manager();
+        Character("Mo");
+        using (var mo = manager.Inspect(Path.Combine(root, "Mo")))
+            manager.Install(mo, mo.Packages.ToList(), "Mo", null);
+        foreach (var (relative, text) in new[] { ("Big_P.pak", "big"), ("Big2_P.pak", "big 2"), (@"Core\Scripts\main.lua", "core"), (@"Core\enabled.txt", ""), (@"Core\Scripts\Big.lua", "big") })
+        {
+            var path = Path.Combine(root, "Big", relative);
+            Directory.CreateDirectory(Path.GetDirectoryName(path)!);
+            System.IO.File.WriteAllText(path, text);
+        }
+        using var preview = manager.Inspect(Path.Combine(root, "Big"));
+
+        var dialog = new InstallDialogViewModel(manager, preview, () => { });
+
+        Assert.Equal("An installed mod has some of the same files. Update it, or keep both:", dialog.PlacesTitle);
+        var share = Assert.Single(dialog.Places);
+        Assert.True(share.Shares);
+        Assert.False(share.IsSelected);
+        Assert.False(dialog.InstallCommand.CanExecute(null));
+
+        share.IsSelected = true;
+
+        Assert.True(dialog.InstallCommand.CanExecute(null));
+    }
+
+    [Fact]
+    public void A_third_mod_that_shares_the_framework_already_says_so_with_nothing_to_choose()
+    {
+        var manager = Manager();
+        foreach (var name in new[] { "Mo", "Bai", "Yu" })
+            Character(name);
+        using (var mo = manager.Inspect(Path.Combine(root, "Mo")))
+            manager.Install(mo, mo.Packages.ToList(), "Mo", null);
+        using (var bai = manager.Inspect(Path.Combine(root, "Bai")))
+            manager.Install(bai, bai.Packages.ToList(), "Bai", null, shareFiles: true);
+        using var preview = manager.Inspect(Path.Combine(root, "Yu"));
+
+        var dialog = new InstallDialogViewModel(manager, preview, () => { });
+
+        Assert.False(dialog.HasPlaces);
+        Assert.Contains("as they do already", dialog.AlreadySharedText);
+        Assert.Equal("Install", dialog.ConfirmText);
+        Assert.True(dialog.InstallCommand.CanExecute(null));
+    }
+
     [Fact]
     public void A_mod_that_shares_too_little_stops_until_the_player_keeps_both()
     {

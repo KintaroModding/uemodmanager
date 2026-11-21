@@ -10,8 +10,9 @@ namespace UEManager.UI.ViewModels;
 /// <param name="KeepSettings">On an update, keep the settings files the player changed instead of the new defaults.</param>
 /// <param name="Tags">The tags as the player typed them; null keeps the ones of the mod it updates.</param>
 /// <param name="OwnFolder">The folder below ~mods for the files that go there; null puts them directly in ~mods.</param>
+/// <param name="ShareFiles">The player said the mod works with the installed mods that have some of its files: keep both, sharing those.</param>
 public sealed record InstallChoice(IReadOnlyList<PackageGroup> Packages, string Name, string? Version, bool Replace,
-    string? CatalogId = null, bool KeepSettings = true, string? Tags = null, string? OwnFolder = null);
+    string? CatalogId = null, bool KeepSettings = true, string? Tags = null, string? OwnFolder = null, bool ShareFiles = false);
 
 /// <summary>A download from the catalog: the mod's id there, and the name and version the catalog gives.</summary>
 public sealed record CatalogSource(string Id, string Name, string Version);
@@ -132,12 +133,28 @@ public sealed partial class InstallDialogViewModel : LocalizedObservableObject
     /// <summary>What to do with a download that has the same file names as an installed mod; empty for any other.</summary>
     public ObservableCollection<PlaceOptionViewModel> Places { get; } = [];
 
-    public bool HasPlaces => Places.Count > 0;
+    /// <summary>
+    /// The places box: a choice between updating an installed mod and keeping both. A single update is no choice: the
+    /// update notice says it, and the place still gives its folder.
+    /// </summary>
+    public bool HasPlaces => Places.Count > 1 || Places.Any(p => p.KeepsBoth || p.Shares);
 
-    /// <summary>Above the places: the same file names, or only the same mod page, with keeping both first.</summary>
+    /// <summary>Above the places: the same file names, only the same mod page (keeping both first), or only shared files.</summary>
     public string PlacesTitle => isSamePage
         ? L.T("An installed mod comes from the same mod page. Keep both, or update it:")
-        : L.T("An installed mod has the same file names. Update it, or keep both:");
+        : placesBySharing
+            ? L.T("An installed mod has some of the same files. Update it, or keep both:")
+            : L.T("An installed mod has the same file names. Update it, or keep both:");
+
+    /// <summary>The places come only from files that the download and an installed mod have the same.</summary>
+    private bool placesBySharing;
+
+    /// <summary>What each choice of the places is for, below the box above them (the player's wish, 2026-11-21).</summary>
+    [ObservableProperty]
+    private bool isChoicesHelpOpen;
+
+    [RelayCommand]
+    private void ToggleChoicesHelp() => IsChoicesHelpOpen = !IsChoicesHelpOpen;
 
     private PlaceOptionViewModel? SelectedPlace => Places.FirstOrDefault(p => p.IsSelected);
 
@@ -145,6 +162,7 @@ public sealed partial class InstallDialogViewModel : LocalizedObservableObject
     private string? OwnFolder => SelectedPlace switch
     {
         null => null,
+        { Shares: true } => null,
         { KeepsBoth: true } => manager.NewModFolder(Name),
         var place => place.Folder,
     };
@@ -152,6 +170,20 @@ public sealed partial class InstallDialogViewModel : LocalizedObservableObject
     /// <summary>Both mods are in the game then, but the game may show only one of them.</summary>
     [ObservableProperty]
     private string? keepBothText;
+
+    /// <summary>
+    /// The player chose to keep both and share the files that are the same in both, byte for byte, as character mods of
+    /// one author that bring the same framework: the mods work together, which only the player can tell.
+    /// </summary>
+    public bool ShareFiles => SelectedPlace is { Shares: true };
+
+    /// <summary>What sharing means, and when to choose it; shown while it is chosen.</summary>
+    [ObservableProperty]
+    private string? shareNote;
+
+    /// <summary>This install shares files that other mods share already, so there is nothing to choose.</summary>
+    [ObservableProperty]
+    private string? alreadySharedText;
 
     [ObservableProperty]
     private string version;
@@ -212,7 +244,8 @@ public sealed partial class InstallDialogViewModel : LocalizedObservableObject
         catalog?.Id,
         KeepSettings,
         Tags,
-        OwnFolder));
+        OwnFolder,
+        ShareFiles && check?.Sharing is not null));
 
     [RelayCommand]
     private void Cancel() => result.TrySetResult(null);
@@ -244,25 +277,36 @@ public sealed partial class InstallDialogViewModel : LocalizedObservableObject
     /// <summary>
     /// The choice follows the ticked parts. Each mod that this may update is a place, an update first, as before; keeping
     /// both is the last. When only the number on the mod site matches, keeping both is first and ticked. The first choice
-    /// is Core's (see <see cref="InstallPlaces"/>), which the command line tool takes too.
+    /// is Core's (see <see cref="InstallPlaces"/>), which the command line tool takes too. Keeping both in a folder of
+    /// its own keeps only the files for ~mods apart: with other files in common the download would still take the mod's
+    /// place, so it is no choice then, as the command line tool says too. When the files in common are the same in both,
+    /// keeping both and sharing them is the last choice (see <see cref="InstallCheck.ShareOffer"/>).
     /// </summary>
-    private void RefreshPlaces(IReadOnlyCollection<PackageGroup> selected)
+    /// <param name="plain">The check without a choice: the mod it would update, and what it could share.</param>
+    private void RefreshPlaces(IReadOnlyCollection<PackageGroup> selected, InstallCheck plain)
     {
         var places = manager.PlacesFor(selected, catalog?.Id, SiteId);
-        var key = string.Join('|', places.Found.Select(f => $"{f.Mod.Id}:{f.CanUpdate}:{f.BySiteNumber}"));
+        var offer = plain.ShareOffer;
+        var folderWorks = places.Any
+            && manager.Check(preview, selected, catalog?.Id, manager.NewModFolder(preview.SuggestedName)) is { Replaces: null, Clashes: null or [] };
+        var key = string.Join('|', places.Found.Select(f => $"{f.Mod.Id}:{f.CanUpdate}:{f.BySiteNumber}"))
+            + $"|{folderWorks}|{plain.Replaces?.Id}|{offer?.Files}|{string.Join(',', offer?.Mods.Select(m => m.Id) ?? [])}";
         if (key == placesKey)
             return;
         placesKey = key;
         placing = true;
         Places.Clear();
         isSamePage = places.SamePage;
+        placesBySharing = !places.Any && offer is not null;
+        var keep = folderWorks
+            ? new PlaceOptionViewModel(places.SamePage
+                ? L.T("Keep both: install this as another mod")
+                : L.T("Keep both: install this as another mod, in a folder of its own in ~mods"), true, null, OnPlaceChanged)
+            : null;
+        if (places.SamePage && keep is not null)
+            Places.Add(keep);
         if (places.Any)
         {
-            var keep = new PlaceOptionViewModel(places.SamePage
-                ? L.T("Keep both: install this as another mod")
-                : L.T("Keep both: install this as another mod, in a folder of its own in ~mods"), true, null, OnPlaceChanged);
-            if (places.SamePage)
-                Places.Add(keep);
             foreach (var mod in places.Updates)
             {
                 var update = new PlaceOptionViewModel(L.F($"Update \"{mod.Mod.Name}\""), false, mod.Folder, OnPlaceChanged);
@@ -270,11 +314,20 @@ public sealed partial class InstallDialogViewModel : LocalizedObservableObject
                 if (mod == places.FirstUpdate)
                     update.IsSelected = true;
             }
-            if (!places.SamePage)
-                Places.Add(keep);
-            if (places.SamePage)
-                keep.IsSelected = true;
         }
+        else if (offer is not null && plain.Replaces is { } replaced)
+        {
+            var update = new PlaceOptionViewModel(L.F($"Update \"{replaced.Name}\""), false, null, OnPlaceChanged);
+            Places.Add(update);
+            update.IsSelected = true;
+        }
+        if (!places.SamePage && keep is not null)
+            Places.Add(keep);
+        if (offer is not null)
+            Places.Add(new PlaceOptionViewModel(L.F($"Keep both, and share the {offer.Files} files that are the same in both"), false, null,
+                OnPlaceChanged, shares: true));
+        if (places.SamePage && keep is not null)
+            keep.IsSelected = true;
         placing = false;
         OnPropertyChanged(nameof(HasPlaces));
         OnPropertyChanged(nameof(PlacesTitle));
@@ -303,10 +356,14 @@ public sealed partial class InstallDialogViewModel : LocalizedObservableObject
     private void Recheck()
     {
         var chosen = Packages.Where(p => p.IsSelected).Select(p => p.Package).ToList();
-        RefreshPlaces(chosen);
+        var plain = manager.Check(preview, chosen, catalog?.Id);
+        RefreshPlaces(chosen, plain);
         var ownFolder = OwnFolder;
         KeepBothText = SelectedPlace is { KeepsBoth: true } ? KeepBothNote(manager.PlacesFor(chosen, catalog?.Id, SiteId)) : null;
-        check = manager.Check(preview, chosen, catalog?.Id, ownFolder);
+        check = ShareFiles ? manager.Check(preview, chosen, catalog?.Id, shareFiles: true)
+            : ownFolder is null ? plain
+            : manager.Check(preview, chosen, catalog?.Id, ownFolder);
+        RefreshSharing(check);
         // A kept mod's folder takes the name: with a new name, the review starts over with it.
         if (FillName() && SelectedPlace is { KeepsBoth: true })
         {
@@ -341,6 +398,18 @@ public sealed partial class InstallDialogViewModel : LocalizedObservableObject
         CanInstall = check.CanInstall;
         NeedsUe4ss = check.NeedsUe4ss;
         Rows = ModDetailsViewModel.Tree(FilesOf(chosen, ownFolder));
+    }
+
+    /// <summary>What sharing files means, while the player chose it, or when this install shares files shared already.</summary>
+    private void RefreshSharing(InstallCheck checkNow)
+    {
+        static string Names(FileSharing sharing) => string.Join(", ", sharing.Mods.Select(m => $"\"{m.Name}\""));
+        ShareNote = ShareFiles && checkNow.Sharing is { } chosen
+            ? L.F($"Both stay installed, and one copy of the shared files serves {Names(chosen)} and this mod while one of them is on. Choose this only when the mods' authors say they work together.")
+            : null;
+        AlreadySharedText = !ShareFiles && checkNow.ShareOffer is null && checkNow.Sharing is { } already
+            ? L.F($"This mod shares {already.Files} files with {Names(already)}, as they do already. One copy stays in the game while one of these mods is on.")
+            : null;
     }
 
     /// <summary>The files of the ticked parts, in the tree of their folders in the game.</summary>
@@ -392,11 +461,15 @@ public sealed partial class InstallDialogViewModel : LocalizedObservableObject
 
 /// <summary>One answer when a download has the same file names as an installed mod: update that mod, or keep both.</summary>
 /// <param name="folder">Where the mod it updates has its files below ~mods; null directly in ~mods, or when keeping both.</param>
-public sealed partial class PlaceOptionViewModel(string label, bool keepsBoth, string? folder, Action<PlaceOptionViewModel> changed) : LocalizedObservableObject
+/// <param name="shares">Keep both, and share the files that are the same in both (see <see cref="InstallCheck.ShareOffer"/>).</param>
+public sealed partial class PlaceOptionViewModel(string label, bool keepsBoth, string? folder, Action<PlaceOptionViewModel> changed,
+    bool shares = false) : LocalizedObservableObject
 {
     public string Label => label;
 
     public bool KeepsBoth => keepsBoth;
+
+    public bool Shares => shares;
 
     public string? Folder => folder;
 

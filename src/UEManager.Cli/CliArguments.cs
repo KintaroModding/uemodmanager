@@ -17,7 +17,7 @@ internal sealed class CliArguments
     private static readonly string[] RepeatableOptions = ["--part"];
 
     private static readonly string[] FlagOptions =
-        ["--json", "--yes", "--all-parts", "--keep-both", "--check", "--help", "--version", "--on", "--off", "--clear", "--remove-leftovers"];
+        ["--json", "--yes", "--all-parts", "--keep-both", "--share-files", "--check", "--help", "--version", "--on", "--off", "--clear", "--remove-leftovers"];
 
     public string Command { get; private set; } = "";
 
@@ -45,6 +45,12 @@ internal sealed class CliArguments
 
     /// <summary>Keep an installed mod that the download would replace, and install the download beside it.</summary>
     public bool KeepBoth => Flags.Contains("--keep-both");
+
+    /// <summary>
+    /// The download works with the installed mods that have some of its files, byte for byte the same: keep both, and let
+    /// them share those files, as the install review's box does.
+    /// </summary>
+    public bool ShareFiles => Flags.Contains("--share-files");
 
     public bool Check => Flags.Contains("--check");
 

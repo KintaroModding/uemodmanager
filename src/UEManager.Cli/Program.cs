@@ -165,6 +165,8 @@ internal static class Program
           --all-parts           Select every part of the download, not only the default selection
           --part <index|name>   Select only this part; repeat for more. Cannot be used with --all-parts
           --keep-both           Keep an installed mod the download would replace: install it as another mod
+          --share-files         Keep the installed mods that have some of the download's files, byte for byte the same,
+                                and let them share those files; only when the mods' authors say they work together
           --staging <folder>    Unpack downloads here, outside the game, instead of the data folder's staging folder
           --remove-leftovers    uninstall: move the files a UE4SS mod left in its own folder into the manager's backups
           --yes                 Confirm a change; install, uninstall, ue4ss remove, backup restore and backup delete need it

@@ -1163,7 +1163,7 @@ public sealed partial class MainViewModel : LocalizedObservableObject
     {
         ModRecord? installed = null;
         await RunAsync(L.F($"Installing {choice.Name}…"), async () => installed = await Task.Run(() =>
-            manager!.Install(preview, choice.Packages, choice.Name, choice.Version, choice.Replace, choice.CatalogId, choice.KeepSettings, choice.Tags is null ? null : ModTags.Parse(choice.Tags), choice.OwnFolder)));
+            manager!.Install(preview, choice.Packages, choice.Name, choice.Version, choice.Replace, choice.CatalogId, choice.KeepSettings, choice.Tags is null ? null : ModTags.Parse(choice.Tags), choice.OwnFolder, choice.ShareFiles)));
         if (installed is null)
             return;
         RefreshMods();

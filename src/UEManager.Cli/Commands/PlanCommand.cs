@@ -5,7 +5,7 @@ internal static class PlanCommand
 {
     public static int Run(CliArguments arguments)
     {
-        arguments.Allow(["--json", "--all-parts", "--keep-both"],
+        arguments.Allow(["--json", "--all-parts", "--keep-both", "--share-files"],
             ["--data-dir", "--game", "--game-root", "--staging", "--part"]);
         var source = arguments.Single("a download (a .zip, .7z, .rar, .pak, .utoc, .ucas file, or a folder)");
         // plan changes nothing in the game. It unpacks the download into staging (--staging names another folder) and

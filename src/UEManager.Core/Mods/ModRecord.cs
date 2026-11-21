@@ -164,11 +164,21 @@ public sealed class ModFileRecord
     public bool IsEdited => IsPlayerFile && (Made || !string.Equals(Sha256, DefaultSha256 ?? Sha256, StringComparison.OrdinalIgnoreCase));
 
     /// <summary>
-    /// A Lua library in UE4SS's shared folder ("shared/json/json.lua"), next to UE4SS's own. Several mods may bring
-    /// the same one: one copy in the game serves them all, and it goes when the last of them is disabled.
+    /// A file several mods bring, byte for byte the same: one copy in the game serves them all, and it goes when the last
+    /// of them is disabled. A Lua library in UE4SS's shared folder ("shared/json/json.lua") always is one; any other file
+    /// only when the player said at install that the mods work together (<see cref="SharedWithMods"/>).
     /// </summary>
     [JsonIgnore]
-    public bool IsShared => SharedFiles.Is(Target, FileName);
+    public bool IsShared => SharedFiles.Is(Target, FileName) || SharedWithMods;
+
+    /// <summary>
+    /// The player installed a mod that brings this file too, byte for byte the same, and said the mods work together, as
+    /// the character mods of one author that bring the same framework (2026-11-21, a player's report: Mo Yuan and Play
+    /// as Bai Chilian). Set on the file of each of those mods; only such an install sets it, so every other mod keeps
+    /// the rule that a file in the game is one mod's.
+    /// </summary>
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
+    public bool SharedWithMods { get; set; }
 
     /// <summary>
     /// A shared file that was already in the game, with the same content, when the mod was enabled, such as one of

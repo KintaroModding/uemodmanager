@@ -153,7 +153,12 @@ public sealed class ModManager
     /// one it updates, and it never takes over the files of another enabled mod.
     /// </param>
     /// <param name="ownFolder">The folder below ~mods for the files that go there; null puts them directly in ~mods.</param>
-    public InstallCheck Check(InstallPreview preview, IReadOnlyCollection<PackageGroup> selected, string? catalogId = null, string? ownFolder = null)
+    /// <param name="shareFiles">
+    /// The player said this mod works with the installed mods that have some of its files, byte for byte the same: it
+    /// replaces none of them and shares those files (see <see cref="InstallCheck.ShareOffer"/>).
+    /// </param>
+    public InstallCheck Check(InstallPreview preview, IReadOnlyCollection<PackageGroup> selected, string? catalogId = null, string? ownFolder = null,
+        bool shareFiles = false)
     {
         var problems = new List<FormattableString>();
         var warnings = new List<FormattableString>();
@@ -257,24 +262,34 @@ public sealed class ModManager
         }
         var shared = entries.Where(e => SharedFiles.Is(e.Target, e.Path)).DistinctBy(e => e.Path.ToUpperInvariant()).ToList();
 
-        ModRecord? replaces;
+        ModRecord? replaces = null;
         IReadOnlyList<string> editedSettings = [];
+        FileSharing? shareOffer;
+        FileSharing? sharing;
+        List<ModRecord> clashes;
         lock (gate)
         {
             var owners = new List<ModRecord>();
+            // The download's places that installed mods have files at too, each with those mods.
+            var overlap = new List<(DeployTarget Target, string Path, string Source, List<ModRecord> Holders)>();
+            var places = 0;
             // UE4SS's own files are not a mod's to replace: overwriting them would break UE4SS and every mod on it.
             var ue4ss = ReadUe4ssRecord()?.Files;
             var handPlaced = new Dictionary<DeployTarget, ILookup<string, string>>();
             // Files of the download the player already put into the game by hand, each with the folder that holds it.
             var byHand = new List<(string Name, string Folder)>();
             // Shared libraries say nothing about which mod this is: other mods may bring the same ones.
-            foreach (var (target, path, _) in entries.Where(e => !SharedFiles.Is(e.Target, e.Path)).DistinctBy(e => (e.Target, e.Path.ToUpperInvariant())))
+            foreach (var (target, path, source) in entries.Where(e => !SharedFiles.Is(e.Target, e.Path)).DistinctBy(e => (e.Target, e.Path.ToUpperInvariant())))
             {
-                var owner = mods.FirstOrDefault(m => m.Files.Any(f => IsSameFile(f, target, path)));
-                if (owner is not null)
+                places++;
+                var holders = mods.Where(m => m.Files.Any(f => IsSameFile(f, target, path))).ToList();
+                if (holders.Count > 0)
                 {
-                    if (!owners.Contains(owner))
-                        owners.Add(owner);
+                    overlap.Add((target, path, source, holders));
+                    // A file the player let mods share says nothing about which mod this is, nor does any when the
+                    // player shares them now.
+                    if (!shareFiles && !holders.Any(m => FileAt(m, target, path).SharedWithMods) && !owners.Contains(holders[0]))
+                        owners.Add(holders[0]);
                 }
                 else if (target == DeployTarget.ExeFolder && ue4ss is not null && ue4ss.ContainsKey(path))
                 {
@@ -314,7 +329,11 @@ public sealed class ModManager
                 }
             }
 
-            if (catalogId is not null)
+            if (shareFiles)
+            {
+                // Kept beside the mods it shares files with: it replaces none of them.
+            }
+            else if (catalogId is not null)
             {
                 // The same catalog entry, or else the same mod installed by hand from a download.
                 replaces = mods.FirstOrDefault(m => string.Equals(m.CatalogId, catalogId, StringComparison.OrdinalIgnoreCase))
@@ -331,18 +350,21 @@ public sealed class ModManager
                     problems.Add($"\"{other.Name}\" uses the same files. Disable or uninstall it first.");
             }
             // The download's other choice is installed: this one takes its place, so the mod is never in the game twice.
-            if (replaces is null && owners.Count == 0 && ownFolder is null)
+            if (!shareFiles && replaces is null && owners.Count == 0 && ownFolder is null)
             {
                 var others = preview.Packages.Where(p => p.VariantOf is not null && !selected.Contains(p) && selected.Any(s => s.VariantOf == p.VariantOf)).ToList();
                 replaces = mods.FirstOrDefault(m => others.Any(o => IsSameMod(m, o.RelativePaths.Select(path => (o.Target, path)))));
             }
             // The player chose Update for a mod of the same mod page that shares no file, such as one that moved from a
             // pak to a script: the old one goes. Keep both gives the new one a folder of its own, so the old one stays.
-            if (replaces is null && owners.Count == 0 && ownFolder is null
+            if (!shareFiles && replaces is null && owners.Count == 0 && ownFolder is null
                 && ModNaming.SiteModId(preview.SourceFileName) is { } siteId)
                 replaces = SameSiteMod(selected, siteId);
             if (replaces is not null)
                 editedSettings = EditedSettings(replaces);
+
+            (shareOffer, sharing) = CheckSharing(overlap, places, replaces, shareFiles, problems);
+            clashes = owners.Where(o => o != replaces).ToList();
 
             // One copy of a shared library serves every mod: one that is there must have the same content.
             foreach (var (target, path, source) in shared)
@@ -357,8 +379,94 @@ public sealed class ModManager
                     problems.Add($"{path} is already in {TargetName(target)}, but the manager did not install it. Move or delete it first.");
             }
         }
-        return new InstallCheck(problems, warnings, replaces, needsUe4ss, editedSettings);
+        return new InstallCheck(problems, warnings, replaces, needsUe4ss, editedSettings, shareOffer, sharing, clashes);
     }
+
+    /// <summary>
+    /// Files the download has at the places of installed mods' files, which mods may share when they are byte for byte
+    /// the same: what the review offers (the player says the mods work together), what this install shares, and why
+    /// it cannot. Only files of the mods folders that are not settings: a settings file is the player's to change for
+    /// one mod, and a game file is saved and put back by the one mod that replaced it. Call it under the lock.
+    /// </summary>
+    /// <param name="places">How many places the download has, so whether it has files of its own beside the shared ones.</param>
+    private static (FileSharing? Offer, FileSharing? Sharing) CheckSharing(
+        List<(DeployTarget Target, string Path, string Source, List<ModRecord> Holders)> overlap, int places, ModRecord? replaces,
+        bool shareFiles, List<FormattableString> problems)
+    {
+        var hashes = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        bool Same(string source, ModFileRecord file)
+        {
+            if (new FileInfo(source).Length != file.Size)
+                return false;
+            if (!hashes.TryGetValue(source, out var hash))
+                hashes[source] = hash = FileSystem.Sha256(source);
+            return string.Equals(hash, file.Sha256, StringComparison.OrdinalIgnoreCase);
+        }
+        static bool Shareable(DeployTarget target, string path, ModFileRecord file) =>
+            target is DeployTarget.Mods or DeployTarget.LogicMods or DeployTarget.Ue4ssMods
+            && !SettingsFiles.Is(target, path) && !file.IsPlayerFile && !file.IsGameFile && !file.Made;
+
+        if (shareFiles)
+        {
+            if (overlap.Count == 0)
+            {
+                problems.Add($"No installed mod has files of this download, so there is nothing to share.");
+                return (null, null);
+            }
+            var holders = overlap.SelectMany(o => o.Holders).Distinct().ToList();
+            if (overlap.Count == places)
+            {
+                problems.Add($"This download has no files of its own beside those of {string.Join(", ", holders.Select(m => m.Name))}, so keeping both adds nothing. Update the mod instead.");
+                return (null, null);
+            }
+            var before = problems.Count;
+            foreach (var mod in holders)
+            {
+                var differ = overlap.Where(o => o.Holders.Contains(mod))
+                    .Where(o => FileAt(mod, o.Target, o.Path) is var file && (!Shareable(o.Target, o.Path, file) || !Same(o.Source, file)))
+                    .Select(o => o.Path).ToList();
+                if (differ.Count > 0)
+                    problems.Add($"{differ.Count} file(s) of this download are not the same as those of \"{mod.Name}\", or are settings, so they cannot share them: {Shown(differ)}.");
+            }
+            return (null, problems.Count == before ? new FileSharing(holders, overlap.Count) : null);
+        }
+
+        // Files the player let mods share before: this install shares them too. A mod that is on must have the same
+        // ones, or both would need the game's single copy in two versions.
+        var shared = overlap.Where(o => o.Holders.Any(m => FileAt(m, o.Target, o.Path).SharedWithMods)).ToList();
+        FileSharing? sharing = null;
+        if (shared.Count > 0)
+        {
+            var others = shared.SelectMany(o => o.Holders).Where(m => m != replaces).Distinct().ToList();
+            foreach (var mod in others.Where(m => m.Enabled))
+            {
+                var differ = shared.Where(o => o.Holders.Contains(mod) && !Same(o.Source, FileAt(mod, o.Target, o.Path))).Select(o => o.Path).ToList();
+                if (differ.Count > 0)
+                    problems.Add($"\"{mod.Name}\" shares {differ.Count} file(s) with this mod in another version: {Shown(differ)}. Update or disable \"{mod.Name}\" first.");
+            }
+            if (others.Count > 0)
+                sharing = new FileSharing(others, shared.Count);
+        }
+
+        // Offered only when both sides have files of their own: else the download is the mod itself, or an update.
+        var unshared = overlap.Except(shared).ToList();
+        if (unshared.Count == 0 || overlap.Count == places)
+            return (null, sharing);
+        var holding = unshared.SelectMany(o => o.Holders).Distinct().ToList();
+        if (holding.Any(m => m.Files.All(f => f.Made || overlap.Any(o => IsSameFile(f, o.Target, o.Path)))))
+            return (null, sharing);
+        var same = overlap.All(o => o.Holders.All(m => FileAt(m, o.Target, o.Path) is var file
+            && Shareable(o.Target, o.Path, file) && Same(o.Source, file)));
+        return (same ? new FileSharing(overlap.SelectMany(o => o.Holders).Distinct().ToList(), overlap.Count) : null, sharing);
+    }
+
+    /// <summary>The first few names of a list, for a message.</summary>
+    private static string Shown(IReadOnlyList<string> names, int count = 8) =>
+        string.Join(", ", names.Take(count)) + (names.Count > count ? ", …" : "");
+
+    /// <summary>A mod's file at a place, which the mod has.</summary>
+    private static ModFileRecord FileAt(ModRecord mod, DeployTarget target, string path) =>
+        mod.Files.First(f => IsSameFile(f, target, path));
 
     /// <summary>
     /// Copies the selected parts into the library and deploys them. When the
@@ -372,14 +480,18 @@ public sealed class ModManager
     /// </param>
     /// <param name="tags">The mod's tags, none when empty; null keeps the ones of the mod it updates.</param>
     /// <param name="ownFolder">The folder below ~mods for the files that go there; see <see cref="Check"/>.</param>
+    /// <param name="shareFiles">
+    /// The player said the mod works with the installed mods that have some of its files, byte for byte the same: it is
+    /// kept beside them, and those files are shared (see <see cref="ModFileRecord.SharedWithMods"/>).
+    /// </param>
     public ModRecord Install(InstallPreview preview, IReadOnlyCollection<PackageGroup> selected,
         string name, string? version, bool replace = false, string? catalogId = null, bool keepSettings = true,
-        IReadOnlyList<string>? tags = null, string? ownFolder = null)
+        IReadOnlyList<string>? tags = null, string? ownFolder = null, bool shareFiles = false)
     {
         lock (gate)
         {
             EnsureCanChange();
-            var check = Check(preview, selected, catalogId, ownFolder);
+            var check = Check(preview, selected, catalogId, ownFolder, shareFiles);
             // The install window shows every problem before this; a direct call reports the first.
             if (!check.CanInstall)
                 throw new ModException(check.Problems[0]);
@@ -403,9 +515,13 @@ public sealed class ModManager
             };
             var libraryFolder = LibraryFolderOf(record);
             var position = old is null ? mods.Count : mods.IndexOf(old);
+            // Files of other mods that this install marked as shared.
+            var markedOthers = new List<ModFileRecord>();
 
             void Undo()
             {
+                foreach (var file in markedOthers)
+                    file.SharedWithMods = false;
                 mods.Remove(record);
                 RemoveDeployedFiles(record);
                 FileSystem.TryDeleteDirectory(libraryFolder);
@@ -448,6 +564,20 @@ public sealed class ModManager
                         record.Files[^1].Made = true;
                     }
                 }
+                // Files that other mods have at the same places, byte for byte the same (see Check): the player lets them
+                // share them now, or they are shared already. One copy in the game serves them all.
+                foreach (var file in record.Files.Where(f => !SharedFiles.Is(f.Target, f.FileName)))
+                {
+                    var others = mods.Where(m => m != old).SelectMany(m => m.Files).Where(f => IsSameFile(f, file.Target, file.FileName)).ToList();
+                    if (others.Count == 0 || (!shareFiles && !others.Any(f => f.SharedWithMods)))
+                        continue;
+                    file.SharedWithMods = true;
+                    foreach (var other in others.Where(f => !f.SharedWithMods))
+                    {
+                        other.SharedWithMods = true;
+                        markedOthers.Add(other);
+                    }
+                }
                 Deploy(record);
                 TakeMadeSettings(record);
                 if (old is not null)
@@ -474,6 +604,8 @@ public sealed class ModManager
             Log.Info(old is null
                 ? $"Installed \"{record.Name}\" ({record.Files.Count} file(s), {record.TypeLabel})."
                 : $"Replaced \"{old.Name}\" with \"{record.Name}\" ({record.Files.Count} file(s), {record.TypeLabel}).");
+            if (record.Files.Count(f => f.SharedWithMods) is var sharedCount and > 0)
+                Log.Info($"\"{record.Name}\" shares {sharedCount} file(s) with {string.Join(", ", mods.Where(m => m != record && m.Files.Any(f => f.SharedWithMods && record.Files.Any(n => n.SharedWithMods && IsSameFile(f, n.Target, n.FileName)))).Select(m => $"\"{m.Name}\""))}.");
             return record;
         }
     }
@@ -1945,7 +2077,9 @@ public sealed class ModManager
                 if (file.IsShared && File.Exists(destination))
                 {
                     if (!Matches(destination, file))
-                        throw new ModException($"{file.FileName} is already in UE4SS's shared folder in another version, from another mod or from UE4SS, so \"{mod.Name}\" cannot bring its own. Disable the mod that uses it first.");
+                        throw SharedFiles.Is(file.Target, file.FileName)
+                            ? new ModException($"{file.FileName} is already in UE4SS's shared folder in another version, from another mod or from UE4SS, so \"{mod.Name}\" cannot bring its own. Disable the mod that uses it first.")
+                            : new ModException($"{file.FileName} is in {TargetName(file.Target)} in another version, from a mod that shares it with \"{mod.Name}\". Update or disable that mod first.");
                     var others = OtherUsers([mod], destination).ToList();
                     file.Borrowed = others.Count == 0 || others.Any(f => f.Borrowed);
                     file.DeployedPath = destination;
@@ -2628,7 +2762,8 @@ public sealed class ModManager
             var taken = new HashSet<string>(StringComparer.Ordinal);
             foreach (var mod in mods)
             {
-                var file = mod.Files.FirstOrDefault(f => f.Target == DeployTarget.Mods && names.Contains(Path.GetFileName(f.FileName)));
+                // A file the player let mods share says nothing about which mod this is (see ModFileRecord.SharedWithMods).
+                var file = mod.Files.FirstOrDefault(f => f.Target == DeployTarget.Mods && !f.SharedWithMods && names.Contains(Path.GetFileName(f.FileName)));
                 if (file is null)
                     continue;
                 var slash = file.FileName.LastIndexOf('/');

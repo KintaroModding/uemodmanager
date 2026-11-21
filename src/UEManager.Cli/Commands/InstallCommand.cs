@@ -10,7 +10,7 @@ internal static class InstallCommand
 {
     public static int Run(CliArguments arguments)
     {
-        arguments.Allow(["--json", "--yes", "--all-parts", "--keep-both"],
+        arguments.Allow(["--json", "--yes", "--all-parts", "--keep-both", "--share-files"],
             ["--data-dir", "--game", "--game-root", "--staging", "--part"]);
         var source = arguments.Single("a download (a .zip, .7z, .rar, .pak, .utoc, .ucas file, or a folder)");
         var context = CliContext.Open(arguments, needInstall: true, write: arguments.Yes);
@@ -38,7 +38,7 @@ internal static class InstallCommand
         {
             // Kept beside an installed mod: no replace, and the plan's folder below ~mods.
             mod = manager.Install(planned.Preview, planned.Selected, plan.SuggestedName, plan.SuggestedVersion,
-                replace: plan.Replaces is not null, ownFolder: planned.OwnFolder);
+                replace: plan.Replaces is not null, ownFolder: planned.OwnFolder, shareFiles: planned.ShareFiles);
         }
         catch (Exception error) when (error is IOException or UnauthorizedAccessException)
         {
@@ -59,6 +59,8 @@ internal static class InstallCommand
             Output.Line(planned.Selected.Any(part => part.Target == DeployTarget.Mods)
                 ? $"Kept the installed mod; the new one is in ~mods/{planned.OwnFolder}."
                 : "Kept the installed mod; the new one is another mod beside it.");
+        if (plan.SharesWith is { } sharing)
+            Output.Line($"Shares {sharing.Files} file(s) with {string.Join(", ", sharing.Mods.Select(name => $"\"{name}\""))}.");
         foreach (var warning in plan.Warnings)
             Output.Line($"Warning: {warning}");
         return 0;
