@@ -2,6 +2,9 @@
 
 Bản tiếng Việt của CHANGELOG.md: giữ nguyên tiêu đề, mỗi thay đổi một dòng. Phiên bản chưa dịch hiển thị bằng tiếng Anh.
 
+## 2.5.1 (2026-11-21)
+- Màn hình xem trước khi cài luôn bắt đầu từ đầu với mỗi bản tải, nên các lựa chọn luôn hiển thị
+
 ## 2.5.0 (2026-11-21)
 - Các mod của cùng một tác giả có cùng các tệp nền giờ có thể cài cùng nhau: màn hình xem trước khi cài có lựa chọn Giữ cả hai, và dùng chung các tệp giống nhau
 - Màn hình xem trước khi cài: GIẢI THÍCH LỰA CHỌN cho biết Cập nhật và hai cách giữ cả hai dùng để làm gì, và lựa chọn không dùng được cho bản tải không còn hiển thị
